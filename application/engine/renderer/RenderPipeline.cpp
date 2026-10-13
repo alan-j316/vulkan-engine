@@ -21,9 +21,7 @@ namespace tempest::renderer
     using namespace tempest::utils;
 
     RenderPipeline::RenderPipeline(const RenderDevice& device, const SwapChain& swapChain) noexcept
-        : _config(),
-          _renderDevice{ device },
-          _swapChain{ swapChain }
+        : _config(), _renderDevice{ device }, _swapChain{ swapChain }
     {}
 
 
@@ -180,7 +178,7 @@ namespace tempest::renderer
 
             { .colorAttachmentCount    = 1,
               .pColorAttachmentFormats = &_swapChain.getFormat().format,
-              .depthAttachmentFormat   = findDepthFormat() }
+              .depthAttachmentFormat   = _config.depthFormat }
         };
         // BasePipelineHandle and BasePipelineIndex -> used for inheriting pipelines
 
@@ -205,7 +203,6 @@ namespace tempest::renderer
         vk::raii::ShaderModule module{ _renderDevice.getBaseDevice(), shaderCreateInfo };
         return module;
     }
-
 
 
 

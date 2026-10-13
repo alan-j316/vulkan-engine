@@ -12,7 +12,6 @@
 
 #include "../utils/Logger.h"
 #include "UniformBufferObject.h"
-#include "Vertex.h"
 
 namespace tempest::renderer
 {
@@ -25,9 +24,15 @@ namespace tempest::renderer
           _swapChain{ _device, _surface, _window },
           _vertexBuffer{ _device },
           _indexBuffer{ _device },
-          _uniformBuffer{ _device },
-          // _colorImage(),
-          // _depthImage(),
+          _colorImage(_device, _swapChain.getExtent().width, _swapChain.getExtent().height,
+                      _swapChain.getFormat().format, vk::ImageTiling::eOptimal,
+                      vk::ImageUsageFlagBits::eTransientAttachment | vk::ImageUsageFlagBits::eColorAttachment,
+                      vk::MemoryPropertyFlagBits::eDeviceLocal, 1, vk::SampleCountFlagBits::e1,
+                      vk::ImageAspectFlagBits::eColor),
+          _depthImage(_device, _swapChain.getExtent().width, _swapChain.getExtent().height,
+                      _swapChain.getFormat().format, vk::ImageTiling::eOptimal,
+                      vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal, 1,
+                      vk::SampleCountFlagBits::e1, vk::ImageAspectFlagBits::eDepth),
           _appName{ std::move(appName) },
           _engineName{ std::move(engineName) },
           _appVersion{ appVersion },
@@ -63,6 +68,7 @@ namespace tempest::renderer
         const PipelineConfig pipelineConfig{
             .vertPath     = "shaders/slang.spv",
             .fragPath     = "shaders/slang.spv",
+            .depthFormat  = findDepthFormat(),
             .vertMainName = "vertMain",
             .fragMainName = "fragMain",
             .sampleCount  = vk::SampleCountFlagBits::e1 // TODO: Update
@@ -179,15 +185,11 @@ namespace tempest::renderer
         {
             constexpr vk::DeviceSize size = sizeof(UniformBufferObject);
             _uniformBuffers.emplace_back(std::move(Buffer(_device)));
-
-            auto [buffer, bufferMemory] =
-                createBuffer(size, vk::BufferUsageFlagBits::eUniformBuffer,
-                             vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
-            uniformBuffers.emplace_back(std::move(buffer));
-            uniformBuffersMemory.emplace_back(std::move(bufferMemory));
-            // Persistent mapping since we are updating buffer every frame, it is better to persistent mapping.
-            uniformBuffersMapped.emplace_back(uniformBuffersMemory.back().mapMemory(0, size));
+            _uniformBuffers.back().create(size, vk::BufferUsageFlagBits::eUniformBuffer,
+                                          vk::MemoryPropertyFlagBits::eHostVisible |
+                                              vk::MemoryPropertyFlagBits::eHostCoherent);
         }
+        return true;
     }
 
 
@@ -195,7 +197,8 @@ namespace tempest::renderer
 
     void TempestRenderer::endFrame() const noexcept {}
 
-    void TempestRenderer::applyConfigAndRecreateSwapChain(const RendererConfig& config) {}
+    void TempestRenderer::applyConfigAndRecreateSwapChain(const RendererConfig& config)
+    { _swapChain.recreateSwapChain(config.presentMode); }
 
 
     void TempestRenderer::draw() const noexcept { log::info("Drawing..."); }

@@ -30,7 +30,7 @@ target_sources(
 
 
 target_link_libraries(
-        TempestEngine PRIVATE
+        TempestEngine PUBLIC
 
         # Object Linkage
         TempestPlatform

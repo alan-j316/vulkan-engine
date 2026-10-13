@@ -15,6 +15,17 @@ add_library(
         TempestSurface.cpp
         Texture.cpp
 
+
+)
+
+message(STATUS Vulkan Source Files)
+message(STATUS DIR ${vulkanhpp_SOURCE_DIR})
+message(STATUS ${vulkanhpp_SRC_FILES})
+
+target_sources(TempestRenderer PUBLIC
+        FILE_SET HEADERS
+        BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+        FILES
         Buffer.h
         CommandBuffer.h
         RenderPipeline.h
@@ -30,9 +41,11 @@ add_library(
         Texture.h
         UniformBufferObject.h
         Vertex.h
-
         config/RendererConfig.h
 )
+
+target_include_directories(TempestRenderer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
 
 target_compile_features(TempestRenderer PRIVATE cxx_std_20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

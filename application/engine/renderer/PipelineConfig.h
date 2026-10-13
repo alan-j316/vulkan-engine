@@ -18,6 +18,7 @@ namespace tempest::renderer
     {
         std::string vertPath;
         std::string fragPath;
+        vk::Format depthFormat;
         std::string vertMainName{ "main" };
         std::string fragMainName{ "main" };
         vk::SampleCountFlagBits sampleCount = vk::SampleCountFlagBits::e1;

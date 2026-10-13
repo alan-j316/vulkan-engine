@@ -1,6 +1,6 @@
 #pragma once
 /**
- * @file UniformBufferObject.cppm
+ * @file UniformBufferObject.h
  * @author Alan Abraham P Kochumon
  * @date Created on: September 09, 2026
  *
