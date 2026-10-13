@@ -46,12 +46,12 @@ namespace tempest::renderer
         // Free the image buffer
         stbi_image_free(pixels);
 
-        _image = std::move(Image(_device, static_cast<uint32_t>(_width), static_cast<uint32_t>(_height),
-                                 vk::Format::eR8G8B8A8Srgb, vk::ImageTiling::eOptimal,
-                                 vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc |
-                                     vk::ImageUsageFlagBits::eSampled,
-                                 vk::MemoryPropertyFlagBits::eDeviceLocal, mipLevels, vk::SampleCountFlagBits::e1,
-                                 vk::ImageAspectFlagBits::eColor));
+        _image.create(_device, static_cast<uint32_t>(_width), static_cast<uint32_t>(_height), vk::Format::eR8G8B8A8Srgb,
+                      vk::ImageTiling::eOptimal,
+                      vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc |
+                          vk::ImageUsageFlagBits::eSampled,
+                      vk::MemoryPropertyFlagBits::eDeviceLocal, mipLevels, vk::SampleCountFlagBits::e1,
+                      vk::ImageAspectFlagBits::eColor);
 
         const CommandBuffer commandBuffer{ _device, _device.getQueues()[0], 1 };
         commandBuffer.beginSingleTimeRecording();

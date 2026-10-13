@@ -20,9 +20,11 @@ namespace tempest::renderer
     class Image
     {
     public:
-        Image(const RenderDevice& device, uint32_t width, uint32_t height, vk::Format format, vk::ImageTiling tiling,
-              vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, uint32_t mipLevels,
-              vk::SampleCountFlagBits numSamples, vk::ImageAspectFlags aspectFlags) noexcept;
+        Image() noexcept = default;
+
+        bool create(const RenderDevice& device, uint32_t width, uint32_t height, vk::Format format,
+                    vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties,
+                    uint32_t mipLevels, vk::SampleCountFlagBits numSamples, vk::ImageAspectFlags aspectFlags) noexcept;
 
         Image(const Image& other)            = delete;
         Image& operator=(const Image& other) = delete;
@@ -79,25 +81,20 @@ namespace tempest::renderer
                              size_t commandBufferIndex = 0) const noexcept;
 
     private:
-        explicit Image() noexcept
-            : _format{ vk::Format::eR8G8B8A8Srgb },
-              _tiling{ vk::ImageTiling::eOptimal },
-              _samples{ vk::SampleCountFlagBits::e1 }
-        {}
-        void createImage(const RenderDevice& device) noexcept;
-        void createImageView(const RenderDevice& device, vk::ImageAspectFlags aspectFlags) noexcept;
+        bool createImage(const RenderDevice& device) noexcept;
+        bool createImageView(const RenderDevice& device, vk::ImageAspectFlags aspectFlags) noexcept;
 
     private:
         vk::raii::Image _image{ nullptr };
         vk::raii::ImageView _imageView{ nullptr };
         vk::raii::DeviceMemory _memory{ nullptr };
         vk::ImageLayout _layout{ vk::ImageLayout::eUndefined };
-        vk::Format _format;
-        vk::ImageTiling _tiling;
-        vk::ImageUsageFlags _usageFlags;
-        vk::MemoryPropertyFlags _memoryFlags;
-        vk::SampleCountFlagBits _samples;
-        vk::ImageAspectFlags _aspectFlags;
+        vk::Format _format{};
+        vk::ImageTiling _tiling{};
+        vk::ImageUsageFlags _usageFlags{};
+        vk::MemoryPropertyFlags _memoryFlags{};
+        vk::SampleCountFlagBits _samples{};
+        vk::ImageAspectFlags _aspectFlags{};
         uint32_t _mipLevels{ 0 };
         uint32_t _width{ 0 }, _height{ 0 };
 

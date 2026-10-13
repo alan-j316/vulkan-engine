@@ -16,23 +16,26 @@
 
 namespace tempest::renderer
 {
-
-    Image::Image(const RenderDevice& device, const uint32_t width, const uint32_t height, const vk::Format format,
-                 const vk::ImageTiling tiling, const vk::ImageUsageFlags usage,
-                 const vk::MemoryPropertyFlags properties, const uint32_t mipLevels,
-                 const vk::SampleCountFlagBits numSamples, const vk::ImageAspectFlags aspectFlags) noexcept
-        : _format{ format },
-          _tiling{ tiling },
-          _usageFlags{ usage },
-          _memoryFlags{ properties },
-          _samples{ numSamples },
-          _aspectFlags{ aspectFlags },
-          _mipLevels{ mipLevels },
-          _width{ width },
-          _height{ height }
+    bool Image::create(const RenderDevice& device, const uint32_t width, const uint32_t height, const vk::Format format,
+                       const vk::ImageTiling tiling, const vk::ImageUsageFlags usage,
+                       const vk::MemoryPropertyFlags properties, const uint32_t mipLevels,
+                       const vk::SampleCountFlagBits numSamples, const vk::ImageAspectFlags aspectFlags) noexcept
     {
-        createImage(device);
-        createImageView(device, _aspectFlags);
+        _format      = format;
+        _tiling      = tiling;
+        _usageFlags  = usage;
+        _memoryFlags = properties;
+        _samples     = numSamples;
+        _aspectFlags = aspectFlags;
+        _mipLevels   = mipLevels;
+        _width       = width;
+        _height      = height;
+
+
+        bool imageCreated = createImage(device);
+        bool viewCreated  = createImageView(device, _aspectFlags);
+
+        return imageCreated && viewCreated;
     }
 
 
@@ -178,7 +181,7 @@ namespace tempest::renderer
 
 
 
-    void Image::createImage(const RenderDevice& device) noexcept
+    bool Image::createImage(const RenderDevice& device) noexcept
     {
         const vk::ImageCreateInfo imageInfo{ .imageType   = vk::ImageType::e2D,
                                              .format      = _format,
@@ -198,10 +201,11 @@ namespace tempest::renderer
                                                                                          _memoryFlags) };
         _memory = std::move(vk::raii::DeviceMemory(device.getBaseDevice(), allocInfo));
         _image.bindMemory(_memory, 0);
+        return _image != nullptr;
     }
 
 
-    void Image::createImageView(const RenderDevice& device, const vk::ImageAspectFlags aspectFlags) noexcept
+    bool Image::createImageView(const RenderDevice& device, const vk::ImageAspectFlags aspectFlags) noexcept
     {
         const vk::ImageViewCreateInfo viewInfo{ .image            = _image,
                                                 .viewType         = vk::ImageViewType::e2D,
@@ -213,5 +217,7 @@ namespace tempest::renderer
                                                                       .layerCount     = 1 } };
 
         _imageView = vk::raii::ImageView(device.getBaseDevice(), viewInfo);
+
+        return _imageView != nullptr;
     }
 } // namespace tempest::renderer

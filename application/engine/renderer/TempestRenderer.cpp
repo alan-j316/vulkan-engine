@@ -24,15 +24,6 @@ namespace tempest::renderer
           _swapChain{ _device, _surface, _window },
           _vertexBuffer{ _device },
           _indexBuffer{ _device },
-          _colorImage(_device, _swapChain.getExtent().width, _swapChain.getExtent().height,
-                      _swapChain.getFormat().format, vk::ImageTiling::eOptimal,
-                      vk::ImageUsageFlagBits::eTransientAttachment | vk::ImageUsageFlagBits::eColorAttachment,
-                      vk::MemoryPropertyFlagBits::eDeviceLocal, 1, vk::SampleCountFlagBits::e1,
-                      vk::ImageAspectFlagBits::eColor),
-          _depthImage(_device, _swapChain.getExtent().width, _swapChain.getExtent().height,
-                      _swapChain.getFormat().format, vk::ImageTiling::eOptimal,
-                      vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal, 1,
-                      vk::SampleCountFlagBits::e1, vk::ImageAspectFlagBits::eDepth),
           _appName{ std::move(appName) },
           _engineName{ std::move(engineName) },
           _appVersion{ appVersion },
@@ -85,6 +76,18 @@ namespace tempest::renderer
             return false;
         }
 
+        if (!createColorResources(pipelineConfig.sampleCount))
+        {
+            log::error("There was an error creating color resources");
+            return false;
+        }
+
+        if (!createDepthResources(pipelineConfig.sampleCount))
+        {
+            log::error("There was an error creating depth resources");
+            return false;
+        }
+
         return true;
     }
 
@@ -101,10 +104,9 @@ namespace tempest::renderer
     {
         const vk::Format format     = findDepthFormat();
         const auto& [width, height] = _swapChain.getExtent();
-        _depthImage                 = std::move(Image(
+        return _depthImage.create(
             _device, width, height, format, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment,
-            vk::MemoryPropertyFlagBits::eDeviceLocal, 1, msaaSamples, vk::ImageAspectFlagBits::eDepth));
-        return true;
+            vk::MemoryPropertyFlagBits::eDeviceLocal, 1, msaaSamples, vk::ImageAspectFlagBits::eDepth);
     }
 
 
@@ -112,11 +114,10 @@ namespace tempest::renderer
     {
         const vk::Format format     = _swapChain.getFormat().format;
         const auto& [width, height] = _swapChain.getExtent();
-        _colorImage =
-            std::move(Image(_device, width, height, format, vk::ImageTiling::eOptimal,
-                            vk::ImageUsageFlagBits::eTransientAttachment | vk::ImageUsageFlagBits::eColorAttachment,
-                            vk::MemoryPropertyFlagBits::eDeviceLocal, 1, msaaSamples, vk::ImageAspectFlagBits::eColor));
-        return true;
+        return _colorImage.create(
+            _device, width, height, format, vk::ImageTiling::eOptimal,
+            vk::ImageUsageFlagBits::eTransientAttachment | vk::ImageUsageFlagBits::eColorAttachment,
+            vk::MemoryPropertyFlagBits::eDeviceLocal, 1, msaaSamples, vk::ImageAspectFlagBits::eColor);
     }
 
 
