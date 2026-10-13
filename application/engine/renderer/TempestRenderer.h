@@ -36,6 +36,8 @@ namespace tempest::renderer
         void endFrame() const noexcept;
         void draw() const noexcept;
         void applyConfigAndRecreateSwapChain(const RendererConfig& config);
+        bool createIndexBuffer(const std::vector<uint32_t>& indices) noexcept;
+        bool createVertexBuffer(const std::vector<Vertex>& vertices) noexcept;
 
 
     private:
@@ -44,8 +46,6 @@ namespace tempest::renderer
         bool createDepthResources(vk::SampleCountFlagBits msaaSamples) noexcept;
         bool createColorResources(vk::SampleCountFlagBits msaaSamples) noexcept;
         // bool createDescriptor() noexcept;
-        bool createIndexBuffer(const std::vector<uint32_t>& indices) noexcept;
-        bool createVertexBuffer(const std::vector<Vertex>& vertices) noexcept;
         bool createUniformBuffer() noexcept;
 
     private:

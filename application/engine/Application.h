@@ -32,6 +32,7 @@ namespace tempest
 
     private:
         void handleEvents() noexcept;
+        void loadModel(std::string_view modelPath);
 
         /// Member Variables
     private:
@@ -40,6 +41,10 @@ namespace tempest
 
         std::string _appName;
         uint32_t _appVersion;
+        std::vector<Vertex> _vertices;
+        std::vector<uint32_t> _indices;
+        static constexpr auto MODEL_PATH   = "models/viking_room.obj";
+        static constexpr auto TEXTURE_PATH = "textures/viking_room.png";
 
         bool _isRunning;
     };

@@ -57,4 +57,5 @@ target_link_libraries(
         Vulkan::Headers
         SDL3::SDL3-static
         glm::glm
+        tinyobjloader
 )

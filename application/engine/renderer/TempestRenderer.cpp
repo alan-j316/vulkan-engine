@@ -166,6 +166,7 @@ namespace tempest::renderer
             log::error("There was an error create the staging buffer for vertex.");
             return false;
         }
+        log::info("Size:  " + std::to_string(size));
         stagingBuffer.write(vertices.data(), vertices.size());
 
 

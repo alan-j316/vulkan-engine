@@ -134,7 +134,8 @@ namespace tempest::renderer
 
 
 
-    uint32_t RenderDevice::findMemoryType(const uint32_t typeFilter, const vk::MemoryPropertyFlags properties) const noexcept
+    uint32_t RenderDevice::findMemoryType(const uint32_t typeFilter,
+                                          const vk::MemoryPropertyFlags properties) const noexcept
     {
         const vk::PhysicalDeviceMemoryProperties memProperties = _physicalDevice.getMemoryProperties();
 
@@ -209,10 +210,9 @@ namespace tempest::renderer
             if (_queues[i].familyIndex == INVALID_QUEUE_INDEX)
                 return false; // "Couldn't find a queue supporting both graphics and presentation"
             _queues[i].type = queueFlags[i].second;
-            float queuePriority;
             queueCreateInfos[i] = { .queueFamilyIndex = _queues[i].familyIndex,
                                     .queueCount       = 1,
-                                    .pQueuePriorities = &queuePriority };
+                                    .pQueuePriorities = &_queues[i].priority };
         }
 
         /// TODO: Abstract request chain to enable user config.
@@ -226,8 +226,6 @@ namespace tempest::renderer
                 { .synchronization2 = true, .dynamicRendering = true },                   // Vulkan 1.3 features
                 { .extendedDynamicState = true }                                          // Dynamic state
             };
-
-        std::vector requiredDeviceExtensions{ vk::KHRSwapchainExtensionName };
         vk::DeviceCreateInfo deviceCreateInfo{ .pNext                = &featureChain.get<vk::PhysicalDeviceFeatures2>(),
                                                .queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size()),
                                                .pQueueCreateInfos    = queueCreateInfos.data(),

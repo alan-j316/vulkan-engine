@@ -30,6 +30,7 @@ namespace tempest::renderer
         vk::raii::Queue queue{ nullptr };
         RenderQueueType type{ RenderQueueType::GRAPHICS };
         uint32_t familyIndex{ INVALID_QUEUE_INDEX };
+        float priority{ 1.0f };
     };
 
 
