@@ -11,8 +11,8 @@
 #include "Swapchain.h"
 
 #include "GraphicsContext.h"
-#include "RenderDevice.h"
 #include "PresentMode.h"
+#include "RenderDevice.h"
 
 namespace tempest::renderer
 {
@@ -60,7 +60,7 @@ namespace tempest::renderer
             .presentMode    = toVKPresentMode(choosePresentationMode(presentMode)),
             .clipped        = true, // Clip obscured pixels
             // For swap chain recreation
-            .oldSwapchain = *oldSwapChain
+            .oldSwapchain = oldSwapChain == nullptr ? nullptr : *oldSwapChain
 
         };
         _swapChainInstance = vk::raii::SwapchainKHR(_device.getBaseDevice(), swapChainCreateInfo);
@@ -162,7 +162,7 @@ namespace tempest::renderer
     vk::SurfaceFormatKHR SwapChain::chooseSurfaceFormat() const noexcept
     {
         // Query the surface format
-        const auto surfaceFormats = _device.getPhysicalDevice().getSurfaceFormatsKHR();
+        const auto surfaceFormats = _device.getPhysicalDevice().getSurfaceFormatsKHR(_surface.getBaseSurface());
         assert(surfaceFormats.size() > 0);
         // Find a suitable format with srgb colorspace, and return the first one if not supported
         const auto formatIt = std::ranges::find_if(surfaceFormats, [](const auto& surfaceFormat) {
