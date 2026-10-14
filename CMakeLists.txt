@@ -100,11 +100,12 @@ if (MSVC AND NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options("/MP")
 endif ()
 
-include(dependencies.cmake)
+include(cmake/Dependencies.cmake)
 include(cmake/SlangCompile.cmake)
 
-add_subdirectory(test-suite)
-add_subdirectory(application)
+#add_subdirectory(test-suite)
+add_subdirectory(src/fps)
+add_subdirectory(src/tempest)
 
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT TestSuite)
