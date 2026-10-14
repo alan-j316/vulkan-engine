@@ -4,8 +4,32 @@
 #include <print>
 #include <string>
 
+void custom_terminate_handler()
+{
+    tempest::log::error("An unhandled exception occurred!");
+
+    if (std::current_exception())
+    {
+        try
+        {
+            throw;
+        }
+        catch (const std::exception& e)
+        {
+            tempest::log::error(e.what());
+        }
+        catch (...)
+        {
+            tempest::log::error("Unknown exception");
+        }
+    }
+    std::abort();
+}
+
 int main()
 {
+    auto oldHandler = std::set_terminate(custom_terminate_handler);
+
     const std::string name = "Tempest Application";
     tempest::TempestApp app{ name, 1 };
     if (!app.init())
@@ -17,6 +41,8 @@ int main()
         tempest::log::info("Successfully initalized tempest application");
     }
     app.run();
+
+    std::set_terminate(oldHandler);
 }
 
 // Deprecated
