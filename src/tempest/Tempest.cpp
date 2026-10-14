@@ -11,18 +11,25 @@
 
 #include "Tempest.h"
 
-#include <print>
+#include "core/Logger.h"
 
 namespace tempest
 {
     TEMPEST_API bool TempestEngine::startup() noexcept
     {
-        std::println("Starting up the engine");
+        log::init();
+
+        log::info("Starting up the engine");
         return true;
     }
 
-    TEMPEST_API void TempestEngine::run() noexcept { std::println("Engine is running"); }
+    TEMPEST_API void TempestEngine::run() noexcept { log::info("Engine is running"); }
 
 
-    TEMPEST_API void TempestEngine::shutdown() noexcept { std::println("Shutting down the engine"); }
+    TEMPEST_API void TempestEngine::shutdown() noexcept
+    {
+        log::info("Shutting down the engine");
+
+        log::shutdown();
+    }
 } // namespace tempest

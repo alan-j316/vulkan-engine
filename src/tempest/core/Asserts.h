@@ -10,9 +10,9 @@
  */
 
 
-#include <iostream> // TODO: Replace with logger
+#include "core/Logger.h"
 
-
+#include <format>
 
 /**
  * @brief Triggers a compiler-specific breakpoint.
@@ -25,29 +25,6 @@
     #include <signal.h>
     #define TEMPEST_DEBUG_BREAK() raise(SIGTRAP)
 #endif
-
-/**
- * @brief API directive for handle DLL exports.
- */
-#ifdef TEMPEST_DLL
-    #ifdef _WIN32
-        #ifdef TEMPEST_LIB_BUILD
-            #define TEMPEST_API __declspec(dllexport)
-        #else
-            #define TEMPEST_API __declspec(dllimport)
-        #endif
-    #else
-        #if __GNUC__ >= 4 || defined(__clang__)
-            #define TEMPEST_API __attribute__((visibility("default")))
-        #else
-            #define TEMPEST_API
-        #endif
-    #endif
-#else
-    #define TEMPEST_API
-#endif
-
-
 
 namespace tempest::internal
 {
@@ -69,10 +46,13 @@ namespace tempest::internal
      */
     inline void logAssertion(const char* condition, const char* message, const char* file, const int line)
     {
-        std::cerr << "[TEMPEST ASSERTION FAILED]\n"
-                  << "Condition: " << condition << '\n'
-                  << "Message:   " << (message ? message : "None") << '\n'
-                  << "Location:  " << file << ":" << line << '\n';
+        const auto msg = std::format(
+            "[TEMPEST ASSERTION FAILED]\n"
+            "Condition: {}\n"
+            "Message: {}\n"
+            "Location: {} : {}\n",
+            condition, message ? message : "None", file, line);
+        log::error(msg);
     }
 
 } // namespace tempest::internal

@@ -1,4 +1,6 @@
 set(ENGINE_NAME Tempest)
+set(TEMPEST_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(TEMPEST_INTERNAL_TARGET_SUFFIX _Internal)
 add_library(
         ${ENGINE_NAME}
         Tempest.cpp
@@ -8,24 +10,26 @@ add_library(${ENGINE_NAME}::${ENGINE_NAME} ALIAS ${ENGINE_NAME})
 # TODO: Add dynamic linked library
 # TODO: Supply TEMPEST_LIB_BUILD & TEMPEST_DLL compile definitions as necessary (Enable Position Independent Code)
 
+
 target_sources(
         ${ENGINE_NAME} PUBLIC
         FILE_SET HEADERS
         BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
         FILES
         Tempest.h
-
-        core/Asserts.h
 )
 target_compile_features(${ENGINE_NAME} PUBLIC cxx_std_23)
 target_include_directories(${ENGINE_NAME} PRIVATE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 
+add_subdirectory(core)
+
 target_link_libraries(
         ${ENGINE_NAME}
-        PRIVATE
+        PUBLIC
         ${PROJECT_NAME}-StrictWarnings
+        Tempest::Core
         SDL3::SDL3-static
         std::stb
 )

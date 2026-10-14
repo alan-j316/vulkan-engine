@@ -9,7 +9,7 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
-#include "core/Asserts.h"
+#include "core/Api.h"
 
 namespace tempest
 {
