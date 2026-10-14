@@ -15,20 +15,14 @@
 
 namespace tempest
 {
-    bool TempestEngine::startup() noexcept
+    TEMPEST_API bool TempestEngine::startup() noexcept
     {
         std::println("Starting up the engine");
         return true;
     }
 
-    void TempestEngine::run() noexcept
-    {
-        std::println("Engine is running");
-    }
+    TEMPEST_API void TempestEngine::run() noexcept { std::println("Engine is running"); }
 
 
-    void TempestEngine::shutdown() noexcept
-    {
-        std::println("Shutting donw the engine");
-    }
+    TEMPEST_API void TempestEngine::shutdown() noexcept { std::println("Shutting down the engine"); }
 } // namespace tempest

@@ -9,6 +9,8 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
+#include "core/Asserts.h"
+
 namespace tempest
 {
     class TempestEngine
@@ -17,12 +19,12 @@ namespace tempest
         TempestEngine() noexcept = default;
 
         /// Start the engine and its subsystems.
-        bool startup() noexcept;
+        TEMPEST_API bool startup() noexcept;
 
         /// Start the main engine loop.
-        void run() noexcept;
+        TEMPEST_API void run() noexcept;
 
         /// Shutdown the engine and cleanup the resources.
-        void shutdown() noexcept;
+        TEMPEST_API void shutdown() noexcept;
     };
 } // namespace tempest

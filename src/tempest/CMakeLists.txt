@@ -5,6 +5,8 @@ add_library(
 )
 add_library(${ENGINE_NAME}::${ENGINE_NAME} ALIAS ${ENGINE_NAME})
 
+# TODO: Add dynamic linked library
+# TODO: Supply TEMPEST_LIB_BUILD & TEMPEST_DLL compile definitions as necessary (Enable Position Independent Code)
 
 target_sources(
         ${ENGINE_NAME} PUBLIC
@@ -12,6 +14,8 @@ target_sources(
         BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
         FILES
         Tempest.h
+
+        core/Asserts.h
 )
 target_compile_features(${ENGINE_NAME} PUBLIC cxx_std_23)
 target_include_directories(${ENGINE_NAME} PRIVATE
