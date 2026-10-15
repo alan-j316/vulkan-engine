@@ -24,12 +24,14 @@ target_include_directories(${ENGINE_NAME} PRIVATE
 )
 
 add_subdirectory(core)
+add_subdirectory(platform)
 
 target_link_libraries(
         ${ENGINE_NAME}
         PUBLIC
         ${PROJECT_NAME}-StrictWarnings
-        Tempest::Core
+        Tempest::Internal::Core
+        Tempest::Internal::Platform
         SDL3::SDL3-static
         std::stb
 )

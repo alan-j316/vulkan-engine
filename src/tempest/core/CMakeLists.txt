@@ -4,7 +4,7 @@ add_library(
         OBJECT
         Logger.cpp
 )
-add_library(Tempest::Core ALIAS ${TEMPEST_CORE_LIB})
+add_library(Tempest::Internal::Core ALIAS ${TEMPEST_CORE_LIB})
 
 target_sources(
         ${TEMPEST_CORE_LIB} PUBLIC
