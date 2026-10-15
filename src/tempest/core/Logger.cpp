@@ -18,7 +18,7 @@
 namespace tempest::log
 {
 
-    static std::shared_ptr<quill::Logger> _coreLogger;
+    static quill::Logger* _coreLogger;
 
     TEMPEST_API void init() noexcept
     {
@@ -26,17 +26,20 @@ namespace tempest::log
             return;
 
         quill::Backend::start();
-        _coreLogger = std::shared_ptr<quill::Logger>(quill::simple_logger());
+        _coreLogger = quill::simple_logger();
     }
 
-    TEMPEST_API void shutdown() noexcept {}
+    TEMPEST_API void shutdown() noexcept
+    {
 
-    TEMPEST_API void info(const std::string_view message) noexcept { quill::info(_coreLogger.get(), "{}\n", message); }
+    }
+
+    TEMPEST_API void info(const std::string_view message) noexcept { quill::info(_coreLogger, "{}\n", message); }
 
     TEMPEST_API void warn(const std::string_view message) noexcept
-    { quill::warning(_coreLogger.get(), "{}\n", message); }
+    { quill::warning(_coreLogger, "{}\n", message); }
 
     TEMPEST_API void error(const std::string_view message) noexcept
-    { quill::error(_coreLogger.get(), "{}\n", message); }
+    { quill::error(_coreLogger, "{}\n", message); }
 
 } // namespace tempest::log
