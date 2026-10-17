@@ -10,6 +10,7 @@
 
 #include "Application.h"
 
+#include "Game.h"
 #include "core/Logger.h"
 
 
@@ -17,13 +18,15 @@ namespace tempest::core
 {
     static bool _isInitialized = false; // TODO: Update to TMP based singleton
 
-    bool Application::create(const AppConfig& config) noexcept
+    bool Application::create(Game* game) noexcept
     {
         if (_isInitialized)
         {
             log::error("Application already initialized");
             return false;
         }
+
+        _game = game;
 
         // +=======================+
         // | Initialize Subsystems |
@@ -34,11 +37,15 @@ namespace tempest::core
         _isRunning   = true;
         _isSuspended = false;
 
+        const auto& config = _game->getConfig();
         if (!_platform.startup(config.name, config.startPosX, config.startPosY, config.width, config.height))
         {
             log::error("There was an error initializing the platform");
             return false;
         }
+
+        _game->onResize(_width, _height);
+
         _isInitialized = true;
 
         return true;
@@ -47,10 +54,28 @@ namespace tempest::core
 
     bool Application::run() noexcept
     {
-        while (true)
+        while (_isRunning)
         {
             if (!_platform.pumpMessages())
                 _isRunning = false;
+
+            if (!_isSuspended)
+            {
+                // TODO: Update with delta time.
+                if (!_game->update(0))
+                {
+                    log::error("Game update failed!");
+                    _isRunning = false;
+                    break;
+                }
+
+                if (!_game->render(0))
+                {
+                    log::error("Game render failed!");
+                    _isRunning = false;
+                    break;
+                }
+            }
         }
         _platform.shutdown();
 

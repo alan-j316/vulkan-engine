@@ -1,5 +1,12 @@
 set(FPS_NAME TempestFPS)
-add_executable(${FPS_NAME} Main.cpp)
+add_executable(${FPS_NAME}
+        Entry.cpp
+        FPSGame.cpp
+)
+
+target_sources(${FPS_NAME} PRIVATE
+        FPSGame.h
+)
 
 target_compile_features(${FPS_NAME} PUBLIC cxx_std_23)
 target_include_directories(${FPS_NAME} PRIVATE

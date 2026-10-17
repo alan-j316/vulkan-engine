@@ -3,7 +3,8 @@ set(TEMPEST_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(TEMPEST_INTERNAL_TARGET_SUFFIX _Internal)
 add_library(
         ${ENGINE_NAME}
-        Tempest.cpp
+        $<TARGET_OBJECTS:Tempest::Internal::Core>
+        $<TARGET_OBJECTS:Tempest::Internal::Platform>
 )
 add_library(${ENGINE_NAME}::${ENGINE_NAME} ALIAS ${ENGINE_NAME})
 
@@ -17,6 +18,8 @@ target_sources(
         BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
         FILES
         Tempest.h
+        Entry.h
+        Game.h
 )
 target_compile_features(${ENGINE_NAME} PUBLIC cxx_std_23)
 target_include_directories(${ENGINE_NAME} PRIVATE

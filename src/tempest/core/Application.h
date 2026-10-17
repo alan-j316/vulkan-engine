@@ -10,23 +10,29 @@
  */
 
 #include "Api.h"
-#include "AppConfig.h"
 #include "platform/Platform.h"
 
-namespace tempest::core
+
+namespace tempest
 {
+    /// Forward declaration
+    class Game;
 
-    class Application
+    namespace core
     {
-    public:
-        TEMPEST_API bool create(const AppConfig& config) noexcept;
-        TEMPEST_API bool run() noexcept;
+        class Application
+        {
+        public:
+            TEMPEST_API bool create(Game* game) noexcept;
+            TEMPEST_API bool run() noexcept;
 
-    private:
-        bool _isRunning{};
-        bool _isSuspended{};
-        platform::Platform _platform{};
-        uint32_t _width{}, _height{};
-        double _lastTime{};
-    };
-} // namespace tempest::core
+        private:
+            bool _isRunning{};
+            bool _isSuspended{};
+            platform::Platform _platform{};
+            Game* _game{};
+            uint32_t _width{}, _height{};
+            double _lastTime{};
+        };
+    } // namespace core
+} // namespace tempest
