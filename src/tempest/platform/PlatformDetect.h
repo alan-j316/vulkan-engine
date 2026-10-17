@@ -15,13 +15,19 @@ namespace tempest::platform
     {
         WINDOWS,
         LINUX,
-        MACOS
+        MACOS,
+        GENERIC // SDL Implementation
     };
 } // namespace tempest::platform
 
-#if defined(_WIN32) || defined(_WIN64)
+
+#define FORCE_SDL // TODO: Remove when moving to platform specific apis
+
+
+#if !defined(FORCE_SDL) && (defined(_WIN32) || defined(_WIN64))
 inline constexpr tempest::platform::PlatformType CurrentPlatform = tempest::platform::WINDOWS;
     #define TEMPEST_PLATFORM_WINDOWS
 #else
-
+inline constexpr tempest::platform::PlatformType CurrentPlatform = tempest::platform::GENERIC;
+    #define TEMPEST_PLATFORM_GENERIC
 #endif

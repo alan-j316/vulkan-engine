@@ -2,17 +2,23 @@ set(TEMPEST_PLATFORM_LIB TempestPlatform${TEMPEST_INTERNAL_TARGET_SUFFIX})
 add_library(
         ${TEMPEST_PLATFORM_LIB}
         OBJECT
+        sdl/Clock.cpp
+        sdl/Memory.cpp
         sdl/TempestWindow.cpp
-        Platform.cpp
+        sdl/Platform.cpp
 )
+# TODO: Add a platform based src file switching
 
 target_sources(${TEMPEST_PLATFORM_LIB} PUBLIC
         FILE_SET HEADERS
         BASE_DIRS ${TEMPEST_ROOT_DIR}/platform
         FILES
+        Clock.h
         Platform.h
-        TempestWindow.h
-        WindowExtent.h
+        Memory.h
+        PlatformDetect.h
+
+        sdl/TempestWindow.h
 )
 
 add_library(Tempest::Internal::Platform ALIAS ${TEMPEST_PLATFORM_LIB})

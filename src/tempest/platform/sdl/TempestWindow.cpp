@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
-#include "../TempestWindow.h"
+#include "TempestWindow.h"
 
 #include "core/Logger.h"
 
@@ -18,7 +18,7 @@
 namespace tempest::platform
 {
     TempestWindow::TempestWindow(const size_t width, const size_t height, std::string windowName)
-        : _window(nullptr), _width(width), _height(height), _name(std::move(windowName))
+        : _window(nullptr), _width(width), _height(height)
     {}
 
     bool TempestWindow::initWindow() noexcept
@@ -29,7 +29,7 @@ namespace tempest::platform
             return false;
         }
 
-        _window = SDL_CreateWindow(_name.c_str(), _width, _height, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+        _window = SDL_CreateWindow(windowName.c_str(), _width, _height, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
 
         if (!_window)
         {

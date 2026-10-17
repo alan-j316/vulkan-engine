@@ -9,12 +9,7 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
-#include "WindowExtent.h"
-
 #include <string>
-
-/// Forward declaration
-struct SDL_Window;
 
 namespace tempest::platform
 {
@@ -34,24 +29,19 @@ namespace tempest::platform
 
         TempestWindow(const TempestWindow& other)            = delete;
         TempestWindow& operator=(const TempestWindow& other) = delete;
-
         TempestWindow(TempestWindow&& other) noexcept;
-
         TempestWindow& operator=(TempestWindow&& other) noexcept;
 
-        [[nodiscard]] SDL_Window* getCoreWindow() const noexcept;
+        [[nodiscard]] void* getBaseWindow() const noexcept;
         [[nodiscard]] constexpr size_t getWidth() const noexcept { return _width; }
         [[nodiscard]] constexpr size_t getHeight() const noexcept { return _height; }
-        [[nodiscard]] constexpr std::string_view getWindowName() const noexcept { return _name; }
-
 
         static char const* const* getRequiredExtensions(uint32_t& count) noexcept;
 
         WindowExtent getWindowExtent() const noexcept;
 
     private:
-        SDL_Window* _window;
+        void* _window;
         size_t _width, _height;
-        std::string _name;
     };
 } // namespace tempest::platform

@@ -19,6 +19,9 @@ namespace tempest::platform
     /// Free an allocated @p block of memory.
     void free(void* block, size_t size);
 
+    /// Reallocate a block of memory.
+    void* realloc(void* block, size_t size);
+
     /// Zero-out a  block of memory.
     void* zeroOut(void* block, size_t size);
 
@@ -27,4 +30,4 @@ namespace tempest::platform
 
     /// Write @p val to the entire @p dst block.
     void* setMem(void* dst, uint32_t val, size_t size);
-}
+} // namespace tempest::platform

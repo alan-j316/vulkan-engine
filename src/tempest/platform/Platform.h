@@ -12,24 +12,26 @@
 #include "Memory.h"
 #include "PlatformDetect.h"
 
+#include <string>
+
+
 namespace tempest::platform
 {
-    /// Defines the internal platform state.
-    /// Must be defined in each platform specialization compilation units.
-    template <PlatformType Platform>
-    struct PlatformState
-    {};
+    /// Forward declares the internal platform state.
+    struct PlatformState;
 
 
     class Platform
     {
     public:
+        bool startup(std::string_view appName, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+
         void shutdown();
-        void start();
+
         void pumpMessages();
 
     private:
-        PlatformState<CurrentPlatform> _state;
+        PlatformState* _state{};
     };
 
 
