@@ -13,3 +13,9 @@
 #include "core/Api.h"
 #include "core/Application.h"
 #include "core/Logger.h"
+#include "core/MemorySubsystem.h"
+
+namespace tempest
+{
+    using namespace tempest::memory;
+}

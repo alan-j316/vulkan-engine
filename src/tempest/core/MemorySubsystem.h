@@ -1,6 +1,6 @@
 #pragma once
 /**
- * @file TempestMemory.h
+ * @file MemorySubsystem.h
  * @author Alan Abraham P Kochumon
  * @date Created on: October 17, 2026
  *
@@ -12,9 +12,11 @@
 
 #include "Api.h"
 
+#include <array>
 #include <cstdint>
+#include <string>
 
-namespace tempest
+namespace tempest::memory
 {
     enum class MemoryTag : uint8_t
     {
@@ -40,21 +42,65 @@ namespace tempest
         MEMORY_TAG_MAX_TAGS
     };
 
-
-    struct MemorySubsystem
+    constexpr std::string_view toString(const MemoryTag tag)
     {
-        TEMPEST_API void initialize();
+        switch (tag)
+        {
+            case MemoryTag::MEMORY_TAG_UNKNOWN:
+                return "Unknown";
+            case MemoryTag::MEMORY_TAG_ARRAY:
+                return "Array";
+            case MemoryTag::MEMORY_TAG_VECTOR:
+                return "Vector";
+            case MemoryTag::MEMORY_TAG_DICT:
+                return "Dict";
+            case MemoryTag::MEMORY_TAG_RINGS_QUEUE:
+                return "Ring Queue";
+            case MemoryTag::MEMORY_TAG_STRING:
+                return "String";
+            case MemoryTag::MEMORY_TAG_BST:
+                return "BST";
+            case MemoryTag::MEMORY_TAG_APPLICATION:
+                return "Application";
+            case MemoryTag::MEMORY_TAG_JOB:
+                return "Job System";
+            case MemoryTag::MEMORY_TAG_TEXTURE:
+                return "Texture";
+            case MemoryTag::MEMORY_TAG_MATERIAL_INSTANCE:
+                return "Material Instance";
+            case MemoryTag::MEMORY_TAG_RENDERER:
+                return "Renderer";
+            case MemoryTag::MEMORY_TAG_GAME:
+                return "Game";
+            case MemoryTag::MEMORY_TAG_TRANSFORM:
+                return "Transform";
+            case MemoryTag::MEMORY_TAG_ENTITY:
+                return "Entity";
+            case MemoryTag::MEMORY_TAG_ENTITY_NODE:
+                return "Entity Node";
+            case MemoryTag::MEMORY_TAG_SCENE:
+                return "Scene";
+            case MemoryTag::MEMORY_TAG_MAX_TAGS:
+                return "Max Tags(Unused)";
+        }
+        return "Error: Recheck Tag";
+    }
 
-        TEMPEST_API void shutdown();
 
-        TEMPEST_API void* alloc(size_t size, MemoryTag tag);
+    TEMPEST_API void init();
 
-        TEMPEST_API void free(void* block, size_t size, MemoryTag tag);
+    TEMPEST_API void shutdown();
 
-        TEMPEST_API void* zeroOut(void* block, size_t size);
+    TEMPEST_API void* alloc(size_t size, MemoryTag tag, size_t alignment = sizeof(void*));
 
-        TEMPEST_API void* memCopy(void* dst, void* src, size_t size);
+    TEMPEST_API void free(void* block, size_t size, MemoryTag tag);
 
-        TEMPEST_API void* memSet(void* dst, uint32_t value, size_t size);
-    };
-} // namespace tempest
+    TEMPEST_API void* zeroOut(void* block, size_t size);
+
+    TEMPEST_API void* memCopy(void* dst, const void* src, size_t size);
+
+    TEMPEST_API void* memSet(void* dst, uint32_t value, size_t size);
+
+    TEMPEST_API std::string getMemUsageStr();
+    ;
+} // namespace tempest::memory

@@ -10,6 +10,7 @@
  */
 
 #include "Game.h"
+#include "MemorySubsystem.h"
 #include "core/Logger.h"
 
 extern tempest::Game* createGame();
@@ -18,7 +19,9 @@ extern bool destroyGame(tempest::Game* game);
 
 int main()
 {
+    tempest::memory::init();
     tempest::Game* game = createGame();
+    game->initialize();
 
     // Application
     tempest::core::Application application;
@@ -36,4 +39,5 @@ int main()
     }
 
     destroyGame(game);
+    tempest::memory::shutdown();
 }

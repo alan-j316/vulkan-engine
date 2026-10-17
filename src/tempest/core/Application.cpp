@@ -37,8 +37,8 @@ namespace tempest::core
         _isRunning   = true;
         _isSuspended = false;
 
-        const auto& config = _game->getConfig();
-        if (!_platform.startup(config.name, config.startPosX, config.startPosY, config.width, config.height))
+        const auto& [startPosX, startPosY, width, height, name] = _game->getConfig();
+        if (!_platform.startup(name, startPosX, startPosY, width, height))
         {
             log::error("There was an error initializing the platform");
             return false;

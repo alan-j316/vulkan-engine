@@ -10,19 +10,18 @@
 
 #include "FPSGame.h"
 
+#include <print> // TODO: Remove
+
 namespace fps
 {
     bool FPSGame::initialize()
     {
         tempest::log::info("Game initialized");
+        tempest::log::info(tempest::getMemUsageStr());
         return true;
     }
 
-    bool FPSGame::update(float deltaTime)
-    {
-        tempest::log::info("Game updating");
-        return true;
-    }
+    bool FPSGame::update(float deltaTime) { return true; }
 
     bool FPSGame::render(float deltaTime) { return true; }
 

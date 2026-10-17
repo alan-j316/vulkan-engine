@@ -4,6 +4,7 @@ add_library(
         OBJECT
         Logger.cpp
         Application.cpp
+        MemorySubsystem.cpp
 )
 add_library(Tempest::Internal::Core ALIAS ${TEMPEST_CORE_LIB})
 
@@ -18,6 +19,7 @@ target_sources(
         Application.h
         Asserts.h
         Logger.h
+        MemorySubsystem.h
 )
 
 target_include_directories(${TEMPEST_CORE_LIB} PUBLIC ${TEMPEST_ROOT_DIR})
