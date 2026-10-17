@@ -22,22 +22,27 @@ namespace tempest::platform
         SDL_Window* window{ nullptr };
     };
 
-    void* _sdlMalloc(const size_t size) { return platform::alloc(size); }
 
-    void* _sdlCalloc(const size_t nmemb, const size_t size)
+    /// CUSTOM MEMORY FUNCTION PASS THROUGH FOR SDL
+    namespace
     {
-        const auto mem = platform::alloc(nmemb * size);
-        return platform::setMem(mem, 0, size);
-    }
+        void* _sdlMalloc(const size_t size) { return platform::alloc(size); }
 
-    void* _sdlRealloc(void* block, const size_t size) { return platform::realloc(block, size); }
+        void* _sdlCalloc(const size_t nmemb, const size_t size)
+        {
+            const auto mem = platform::alloc(nmemb * size);
+            return platform::setMem(mem, 0, size);
+        }
 
-    void _sdlFree(void* block)
-    {
-        // TODO: Look into how size can be changed
-        return platform::free(block, 0);
-    }
+        void* _sdlRealloc(void* block, const size_t size) { return platform::realloc(block, size); }
 
+        void _sdlFree(void* block)
+        {
+            // TODO: Look into how size can be changed
+            return platform::free(block, 0);
+        }
+
+    } // namespace
 
 
 
@@ -45,13 +50,21 @@ namespace tempest::platform
                            const uint32_t height)
     {
         _state = static_cast<PlatformState*>(platform::alloc(sizeof(_state)));
+
+        // TODO: Replace SDL's mem functions with custom functions
+        //
+        // if (!SDL_SetMemoryFunctions(_sdlMalloc, _sdlCalloc, _sdlRealloc, _sdlFree))
+        // {
+        //     log::error("An error occured while switching SDL's memory functions");
+        //     return false;
+        // }
+
         if (!_state)
         {
             log::error("An error occurred while allocating memory for platform state");
             return false;
         }
 
-        // TODO: Add custom allocator to SDL
         if (!SDL_Init(SDL_INIT_VIDEO))
         {
             log::error("There was an error instantiation SDL!");
@@ -77,6 +90,9 @@ namespace tempest::platform
         if (_state && _state->window)
             SDL_DestroyWindow(_state->window);
         SDL_Quit();
+
+        // Free the used state memory
+        platform::free(_state, sizeof(PlatformState));
     }
 
     bool Platform::pumpMessages()
@@ -111,9 +127,11 @@ namespace tempest::platform
                     // TODO: Add input processing
                     return true;
                 default:
-                    return false;
+                    return true;
             }
         }
-        return false;
+
+        platform::free(event, sizeof(SDL_Event));
+        return true;
     }
 } // namespace tempest::platform

@@ -3,8 +3,10 @@ add_library(
         ${TEMPEST_CORE_LIB}
         OBJECT
         Logger.cpp
+        Application.cpp
 )
 add_library(Tempest::Internal::Core ALIAS ${TEMPEST_CORE_LIB})
+
 
 target_sources(
         ${TEMPEST_CORE_LIB} PUBLIC
@@ -12,6 +14,8 @@ target_sources(
         BASE_DIRS ${TEMPEST_ROOT_DIR}/core
         FILES
         Api.h
+        AppConfig.h
+        Application.h
         Asserts.h
         Logger.h
 )

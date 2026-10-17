@@ -10,7 +10,7 @@
  */
 
 #include "core/Api.h"
-#include "platform/Platform.h"
+#include "core/Application.h"
 
 namespace tempest
 {

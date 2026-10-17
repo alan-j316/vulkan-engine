@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
-#include "../../application/engine/utils/FileReader.h"
+#include "Application.h"
 
 #include <Tempest.h>
 #include <cstdlib>
@@ -41,17 +41,12 @@ void custom_terminate_handler()
 int main()
 {
     std::set_terminate(custom_terminate_handler);
-    tempest::log::init();
-    tempest::platform::Platform platform;
-    platform.startup("Tempest", 100, 100, 1280, 720);
-    while (true)
-    {
-        if (platform.pumpMessages())
-            break;
-    }
-    platform.shutdown();
 
 
+    tempest::AppConfig config{ .startPosX = 100, .startPosY = 100, .width = 1280, .height = 720, .name = "Tempest" };
+    tempest::core::Application application;
+    application.create(config);
+    application.run();
     // auto oldHandler = std::set_terminate(custom_terminate_handler);
     // tempest::TempestEngine engine{};
     //
