@@ -18,6 +18,12 @@ struct SDL_Window;
 
 namespace tempest::platform
 {
+    struct WindowExtent
+    {
+        size_t width;
+        size_t height;
+    };
+
     class TempestWindow
     {
     public:

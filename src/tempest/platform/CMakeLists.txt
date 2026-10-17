@@ -3,12 +3,14 @@ add_library(
         ${TEMPEST_PLATFORM_LIB}
         OBJECT
         sdl/TempestWindow.cpp
+        Platform.cpp
 )
 
 target_sources(${TEMPEST_PLATFORM_LIB} PUBLIC
         FILE_SET HEADERS
         BASE_DIRS ${TEMPEST_ROOT_DIR}/platform
         FILES
+        Platform.h
         TempestWindow.h
         WindowExtent.h
 )
