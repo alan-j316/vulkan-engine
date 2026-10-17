@@ -26,7 +26,7 @@ namespace tempest::platform
     void* zeroOut(void* block, size_t size);
 
     /// Copy contents of memory from @p src to @p dst.
-    void* copyMem(void* dst, void* src, size_t size);
+    void* copyMem(void* dst, const void* src, size_t size);
 
     /// Write @p val to the entire @p dst block.
     void* setMem(void* dst, uint32_t val, size_t size);
