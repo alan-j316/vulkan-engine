@@ -26,9 +26,9 @@ namespace tempest::platform
     public:
         bool startup(std::string_view appName, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 
-        void shutdown();
+        void shutdown() const;
 
-        void pumpMessages();
+        bool pumpMessages();
 
     private:
         PlatformState* _state{};

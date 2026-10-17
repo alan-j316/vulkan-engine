@@ -8,6 +8,8 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
+#include "../../application/engine/utils/FileReader.h"
+
 #include <Tempest.h>
 #include <cstdlib>
 #include <print>
@@ -38,18 +40,30 @@ void custom_terminate_handler()
 
 int main()
 {
-    auto oldHandler = std::set_terminate(custom_terminate_handler);
-    tempest::TempestEngine engine{};
-
-    if (!engine.startup())
+    std::set_terminate(custom_terminate_handler);
+    tempest::log::init();
+    tempest::platform::Platform platform;
+    platform.startup("Tempest", 100, 100, 1280, 720);
+    while (true)
     {
-        std::println("There was an error starting the engine");
-        return EXIT_FAILURE;
+        if (platform.pumpMessages())
+            break;
     }
+    platform.shutdown();
 
-    engine.run();
 
-    engine.shutdown();
-    std::set_terminate(oldHandler);
-    return EXIT_SUCCESS;
+    // auto oldHandler = std::set_terminate(custom_terminate_handler);
+    // tempest::TempestEngine engine{};
+    //
+    // if (!engine.startup())
+    // {
+    //     std::println("There was an error starting the engine");
+    //     return EXIT_FAILURE;
+    // }
+    //
+    // engine.run();
+    //
+    // engine.shutdown();
+    // std::set_terminate(oldHandler);
+    // return EXIT_SUCCESS;
 }

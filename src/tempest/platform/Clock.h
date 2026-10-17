@@ -16,4 +16,5 @@ namespace tempest::platform
     /// Sleep the thread for the given @p ms.
     /// @note This can block the main thread.
     void sleep(size_t ms);
+
 } // namespace tempest::platform

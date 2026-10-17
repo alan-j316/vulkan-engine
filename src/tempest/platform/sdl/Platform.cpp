@@ -44,6 +44,13 @@ namespace tempest::platform
     bool Platform::startup(const std::string_view appName, const uint32_t x, const uint32_t y, const uint32_t width,
                            const uint32_t height)
     {
+        _state = static_cast<PlatformState*>(platform::alloc(sizeof(_state)));
+        if (!_state)
+        {
+            log::error("An error occurred while allocating memory for platform state");
+            return false;
+        }
+
         // TODO: Add custom allocator to SDL
         if (!SDL_Init(SDL_INIT_VIDEO))
         {
@@ -65,16 +72,48 @@ namespace tempest::platform
         return true;
     }
 
-    void Platform::shutdown()
+    void Platform::shutdown() const
     {
         if (_state && _state->window)
             SDL_DestroyWindow(_state->window);
         SDL_Quit();
     }
 
-    void Platform::pumpMessages()
+    bool Platform::pumpMessages()
     {
         const auto event = static_cast<SDL_Event*>(platform::alloc(sizeof(SDL_Event)));
-        while (SDL_PollEvent(event)) {}
+        while (SDL_PollEvent(event))
+        {
+            switch (event->type)
+            {
+                case SDL_EVENT_QUIT:
+                    // TODO: Fire closing event
+                    return true;
+                case SDL_EVENT_WINDOW_RESIZED:
+                    // TODO: Handle resizing
+                    return true;
+                case SDL_EVENT_KEY_DOWN:
+                    // TODO: Add input processing
+                    return true;
+                case SDL_EVENT_KEY_UP:
+                    // TODO: Add input processing
+                    return true;
+                case SDL_EVENT_MOUSE_MOTION:
+                    // TODO: Add input processing
+                    return true;
+                case SDL_EVENT_MOUSE_WHEEL:
+                    // TODO: Add input processing
+                    return true;
+                case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                    // TODO: Add input processing
+                    return true;
+                case SDL_EVENT_MOUSE_BUTTON_UP:
+                    // TODO: Add input processing
+                    return true;
+                default:
+                    return false;
+            }
+        }
+        return false;
     }
 } // namespace tempest::platform

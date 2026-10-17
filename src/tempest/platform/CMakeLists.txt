@@ -4,7 +4,6 @@ add_library(
         OBJECT
         sdl/Clock.cpp
         sdl/Memory.cpp
-        sdl/TempestWindow.cpp
         sdl/Platform.cpp
 )
 # TODO: Add a platform based src file switching
@@ -17,8 +16,6 @@ target_sources(${TEMPEST_PLATFORM_LIB} PUBLIC
         Platform.h
         Memory.h
         PlatformDetect.h
-
-        sdl/TempestWindow.h
 )
 
 add_library(Tempest::Internal::Platform ALIAS ${TEMPEST_PLATFORM_LIB})
