@@ -11,6 +11,7 @@
 #include "platform/Platform.h"
 
 #include "core/Logger.h"
+#include "core/MemorySubsystem.h"
 #include "platform/Memory.h"
 
 #include <SDL3/SDL.h>
@@ -49,13 +50,13 @@ namespace tempest::platform
     bool Platform::startup(const std::string_view appName, const uint32_t x, const uint32_t y, const uint32_t width,
                            const uint32_t height)
     {
-        _state = static_cast<PlatformState*>(platform::alloc(sizeof(_state)));
+        _state = static_cast<PlatformState*>(memory::alloc(sizeof(_state), memory::MemoryTag::MEMORY_TAG_APPLICATION));
 
         // TODO: Replace SDL's mem functions with custom functions
         //
         // if (!SDL_SetMemoryFunctions(_sdlMalloc, _sdlCalloc, _sdlRealloc, _sdlFree))
         // {
-        //     log::error("An error occured while switching SDL's memory functions");
+        //     log::error("An error occurred while switching SDL's memory functions");
         //     return false;
         // }
 
@@ -92,19 +93,22 @@ namespace tempest::platform
         SDL_Quit();
 
         // Free the used state memory
-        platform::free(_state, sizeof(PlatformState));
+        memory::free(_state, sizeof(PlatformState), memory::MemoryTag::MEMORY_TAG_APPLICATION);
     }
+
 
     bool Platform::pumpMessages()
     {
-        const auto event = static_cast<SDL_Event*>(platform::alloc(sizeof(SDL_Event)));
-        while (SDL_PollEvent(event))
+        // const auto event =
+        //     static_cast<SDL_Event*>(memory::alloc(sizeof(SDL_Event), memory::MemoryTag::MEMORY_TAG_APPLICATION));
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
         {
-            switch (event->type)
+            switch (event.type)
             {
                 case SDL_EVENT_QUIT:
                     // TODO: Fire closing event
-                    return true;
+                    return false;
                 case SDL_EVENT_WINDOW_RESIZED:
                     // TODO: Handle resizing
                     return true;
@@ -131,7 +135,7 @@ namespace tempest::platform
             }
         }
 
-        platform::free(event, sizeof(SDL_Event));
+        // memory::free(event, sizeof(SDL_Event), memory::MemoryTag::MEMORY_TAG_APPLICATION);
         return true;
     }
 } // namespace tempest::platform

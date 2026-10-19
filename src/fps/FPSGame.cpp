@@ -18,6 +18,7 @@ namespace fps
     {
         tempest::log::info("Game initialized");
         tempest::log::info(tempest::getMemUsageStr());
+        std::println("{}", tempest::getMemUsageStr());
         return true;
     }
 
@@ -25,5 +26,5 @@ namespace fps
 
     bool FPSGame::render(float deltaTime) { return true; }
 
-    void FPSGame::onResize(uint32_t width, uint32_t height) {}
+    void FPSGame::onResize(uint32_t width, uint32_t height) {  }
 } // namespace fps
