@@ -18,7 +18,7 @@
 
 namespace tempest::memory
 {
-    enum class MemoryTag : uint8_t
+    enum class TEMPEST_API MemoryTag : uint8_t
     {
         MEMORY_TAG_UNKNOWN,
         MEMORY_TAG_ARRAY,
@@ -42,7 +42,7 @@ namespace tempest::memory
         MEMORY_TAG_MAX_TAGS
     };
 
-    constexpr std::string_view toString(const MemoryTag tag)
+    constexpr TEMPEST_API std::string_view toString(const MemoryTag tag)
     {
         switch (tag)
         {

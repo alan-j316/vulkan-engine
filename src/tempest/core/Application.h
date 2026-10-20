@@ -20,11 +20,11 @@ namespace tempest
 
     namespace core
     {
-        class Application
+        class TEMPEST_API Application
         {
         public:
-            TEMPEST_API bool create(Game* game) noexcept;
-            TEMPEST_API bool run() noexcept;
+            bool create(Game* game) noexcept;
+            bool run() noexcept;
 
         private:
             bool _isRunning{};

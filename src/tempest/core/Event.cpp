@@ -17,6 +17,6 @@ namespace tempest::core
 {
     struct EventCodeEntry
     {
-        Listener
+        
     };
 }
