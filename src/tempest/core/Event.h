@@ -16,15 +16,30 @@
 
 namespace tempest::core
 {
-
+    // TODO: Rewrite using modern C++
     struct EventContext
     {
-        std::bitset<7> data;
-        // TODO: Update
+        uint64_t u64[2];
+        int64_t i64[2];
+        double f64[2];
+
+        uint32_t u32[4];
+        int32_t i32[4];
+        float f32[4];
+
+        uint16_t u16[8];
+        int16_t i16[8];
+
+        uint8_t u8[16];
+        int8_t i8[16];
     };
 
+    /// Event code type
+    using EventCode = uint16_t;
 
-    enum class EventCode : uint8_t
+
+    /// Internal system event codes. Application codes must start beyond 255.
+    enum class SystemEventCode : uint8_t
     {
         APPLICATION_QUIT      = 0x01,
         KEY_PRESSED           = 0x02,
@@ -38,21 +53,38 @@ namespace tempest::core
     };
 
 
+    namespace event
+    {
+        bool init() noexcept;
+        void shutdown() noexcept;
+    } // namespace event
+
     class Listener
     {
     public:
-        virtual bool onEvent(EventCode code, void* sender, const EventContext& context) = 0;
+        virtual ~Listener() = default;
+
+        /// @brief Handler function for an event.
+        /// @return `true` if event is handled.
+        /// @returnf `false` otherwise.
+        virtual bool onEvent(uint16_t code, void* sender, EventContext context) = 0;
     };
 
+    /// @brief Register a event listener for the given @p code.
+    /// @return `true` if successful.
+    /// @return `false` otherwise.
+    TEMPEST_API bool registerEvent(EventCode code, Listener& listener);
 
-    /// Register to listen to events send to @p code.
-    TEMPEST_API bool registerEvent(EventCode code, Listener* listener);
+    /// @brief Unregister an event.
+    TEMPEST_API bool unregisterEvent(EventCode code, Listener& listener);
 
-    /// Unregister the event listener from the event with the given @p code.
-    TEMPEST_API bool unregisterEvent(EventCode code, Listener* listener);
-
-    /// Fire an event to the listeners of the given code.
-    TEMPEST_API bool fireEvent(EventCode code, void* sender, const EventContext& context);
+    /// @brief Fire an event to all registered listeners for a given code.
+    /// @param code The event code to fire.
+    /// @param sender A pointer to the sender. Can be nullptr.
+    /// @param context The event data.
+    /// @return `true` if handled.
+    /// @return `false` otherwise.
+    TEMPEST_API bool fireEvent(EventCode code, void* sender, EventContext& context);
 
 
 } // namespace tempest::core

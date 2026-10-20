@@ -13,10 +13,24 @@
 
 #include "MemorySubsystem.h"
 
+#include <vector>
+
 namespace tempest::core
 {
-    struct EventCodeEntry
+    using EventCodeEntry = std::vector<Listener>;
+
+    static constexpr auto MAX_EVENT_CODES = std::numeric_limits<EventCode>::max();
+
+    struct EventSystemState
     {
-        
+        EventCodeEntry entries[MAX_EVENT_CODES];
     };
-}
+
+    static bool isInitialized = false;
+    static EventSystemState state;
+
+
+    bool registerEvent(EventCode code, Listener& listener) {}
+    bool unregisterEvent(EventCode code, Listener& listener) {}
+    bool fireEvent(EventCode code, void* sender, EventContext& context) {}
+} // namespace tempest::core
