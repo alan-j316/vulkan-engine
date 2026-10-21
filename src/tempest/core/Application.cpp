@@ -86,7 +86,6 @@ namespace tempest::core
 
         while (_isRunning)
         {
-
             _platform.pumpMessages();
             // if (!_platform.pumpMessages())
             //     _isRunning = false;
@@ -96,7 +95,7 @@ namespace tempest::core
                 // Update clock time
                 _clock.update();
                 const double currentTime    = _clock.elapsedTime;
-                const double deltaTime      = _lastTime - currentTime;
+                const double deltaTime      = currentTime - _lastTime;
                 const double frameStartTime = platform::getAbsoluteTime();
 
                 if (!_game->update(static_cast<float>(deltaTime)))
@@ -121,7 +120,7 @@ namespace tempest::core
                 // Used for synchronization
                 const double remainingTime = TARGET_FRAME_TIME_S - elapsedTime;
                 const auto remainingTimeMs = static_cast<uint64_t>(remainingTime);
-                if (_lockFrameRate && remainingTime > 0)
+                if (_lockFrameRate && remainingTimeMs > 0)
                 {
                     platform::sleep(remainingTimeMs);
                 }
