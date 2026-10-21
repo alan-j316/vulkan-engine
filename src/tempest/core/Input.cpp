@@ -97,6 +97,9 @@ namespace tempest::core
         // Only update the state if position has changed
         if (state.currentMouseState.position != position)
         {
+            // NOTE: Debugging Log
+            log::info(std::format("Mouse position: {}, {}", position.x, position.y));
+
             state.currentMouseState.position = position;
 
             EventContext context{};

@@ -19,10 +19,11 @@ namespace tempest::core
     using MouseButton_t = uint8_t;
     enum class Button : MouseButton_t
     {
-        LEFT,
-        RIGHT,
-        MIDDLE,
-        MAX_BUTTONS
+        // Direct SDL Mapping
+        LEFT   = 1,
+        MIDDLE = 2,
+        RIGHT  = 3,
+        MAX_BUTTONS = 4 // Only 3 button
     };
 
 
@@ -324,6 +325,6 @@ namespace tempest::core
         void processButton(Button button, bool pressed);
         void processMouseMove(MousePosition position);
         void processMouseScroll(int8_t zDelta);
-    } // namespace event
+    } // namespace input
 
 } // namespace tempest::core

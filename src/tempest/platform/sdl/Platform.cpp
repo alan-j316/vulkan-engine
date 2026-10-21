@@ -10,6 +10,7 @@
 
 #include "platform/Platform.h"
 
+#include "core/Input.h"
 #include "core/Logger.h"
 #include "core/MemorySubsystem.h"
 #include "platform/Memory.h"
@@ -113,25 +114,37 @@ namespace tempest::platform
                     // TODO: Handle resizing
                     return true;
                 case SDL_EVENT_KEY_DOWN:
-                    // TODO: Add input processing
+                    core::input::processKey(static_cast<core::Keycode>(event.key.key), true);
                     return true;
                 case SDL_EVENT_KEY_UP:
-                    // TODO: Add input processing
+                    core::input::processKey(static_cast<core::Keycode>(event.key.key), false);
                     return true;
-                case SDL_EVENT_MOUSE_MOTION:
-                    // TODO: Add input processing
+                case SDL_EVENT_MOUSE_MOTION: {
+                    float x, y;
+                    SDL_GetMouseState(&x, &y);
+                    const core::MousePosition pos{ .x = static_cast<uint16_t>(x), .y = static_cast<uint16_t>(y) };
+                    core::input::processMouseMove(pos);
+                }
                     return true;
-                case SDL_EVENT_MOUSE_WHEEL:
-                    // TODO: Add input processing
+                case SDL_EVENT_MOUSE_WHEEL: {
+                    const auto scroll = event.wheel.y;
+                    if (std::abs(scroll) < 1e5)
+                        return false;
+                    core::input::processMouseScroll(scroll > 0 ? 1 : -1);
+                }
                     return true;
-                case SDL_EVENT_MOUSE_BUTTON_DOWN:
-                    // TODO: Add input processing
+                case SDL_EVENT_MOUSE_BUTTON_DOWN: {
+                    const auto button = static_cast<core::Button>(event.button.button);
+                    core::input::processButton(button, true);
+                }
                     return true;
-                case SDL_EVENT_MOUSE_BUTTON_UP:
-                    // TODO: Add input processing
+                case SDL_EVENT_MOUSE_BUTTON_UP: {
+                    const auto button = static_cast<core::Button>(event.button.button);
+                    core::input::processButton(button, false);
+                }
                     return true;
                 default:
-                    return true;
+                    return false;
             }
         }
 

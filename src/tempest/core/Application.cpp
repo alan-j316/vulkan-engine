@@ -66,8 +66,9 @@ namespace tempest::core
     {
         while (_isRunning)
         {
-            if (!_platform.pumpMessages())
-                _isRunning = false;
+            _platform.pumpMessages();
+            // if (!_platform.pumpMessages())
+            //     _isRunning = false;
 
             if (!_isSuspended)
             {
