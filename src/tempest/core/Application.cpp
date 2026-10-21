@@ -76,6 +76,13 @@ namespace tempest::core
 
     bool Application::run() noexcept
     {
+        _clock.start();
+        _clock.update();
+        _lastTime = _clock.elapsedTime;
+
+        double runningTime{};
+        uint64_t frameCount{};
+
         while (_isRunning)
         {
             _platform.pumpMessages();

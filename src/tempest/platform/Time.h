@@ -1,10 +1,10 @@
 #pragma once
 /**
- * @file Clock.h
+ * @file Time.h
  * @author Alan Abraham P Kochumon
  * @date Created on: October 17, 2026
  *
- * @brief Clock API interface.
+ * @brief Time API interface.
  *
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */

@@ -10,6 +10,7 @@
  */
 
 #include "Api.h"
+#include "Clock.h"
 #include "core/EventListeners.h"
 #include "platform/Platform.h"
 
@@ -34,6 +35,7 @@ namespace tempest
             Game* _game{};
             uint32_t _width{}, _height{};
             double _lastTime{};
+            Clock _clock;
 
             ApplicationEventListener _appEventListener;
             KeyEventListener _keyEventListener;
@@ -41,6 +43,9 @@ namespace tempest
             // Friend class
             friend ApplicationEventListener;
             friend KeyEventListener;
+
+            // Static variables
+            static constexpr double TARGET_FRAME_TIME_MS{ 1.0 / 60.0 };
         };
     } // namespace core
 } // namespace tempest

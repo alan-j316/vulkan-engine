@@ -8,6 +8,7 @@ add_library(
         Event.cpp
         Input.cpp
         EventListeners.cpp
+        Clock.cpp
 )
 add_library(Tempest::Internal::Core ALIAS ${TEMPEST_CORE_LIB})
 
@@ -25,6 +26,7 @@ target_sources(
         MemorySubsystem.h
         Event.h
         Input.h
+        Clock.h
         EventListeners.h
 )
 

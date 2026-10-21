@@ -2,7 +2,7 @@ set(TEMPEST_PLATFORM_LIB TempestPlatform${TEMPEST_INTERNAL_TARGET_SUFFIX})
 add_library(
         ${TEMPEST_PLATFORM_LIB}
         OBJECT
-        sdl/Clock.cpp
+        sdl/Time.cpp
         sdl/Memory.cpp
         sdl/Platform.cpp
 )
@@ -12,7 +12,7 @@ target_sources(${TEMPEST_PLATFORM_LIB} PUBLIC
         FILE_SET HEADERS
         BASE_DIRS ${TEMPEST_ROOT_DIR}/platform
         FILES
-        Clock.h
+        Time.h
         Platform.h
         Memory.h
         PlatformDetect.h

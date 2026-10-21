@@ -9,14 +9,15 @@
  */
 
 
-#include "platform/Clock.h"
+#include "platform/Time.h"
 
 #include <SDL3/SDL.h>
 
 
 namespace tempest::platform
 {
-    double getAbsoluteTime() { return SDL_GetTicks() / 1000.0f; }
+    double getAbsoluteTime() { return static_cast<double>(SDL_GetTicks()) / 1000.0; }
 
     void sleep(const size_t ms) { SDL_Delay(static_cast<uint32_t>(ms)); }
+
 } // namespace tempest::platform
