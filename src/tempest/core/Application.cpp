@@ -12,6 +12,7 @@
 
 #include "Game.h"
 #include "core/Logger.h"
+#include "core/Event.h"
 
 
 namespace tempest::core
@@ -32,6 +33,12 @@ namespace tempest::core
         // | Initialize Subsystems |
         // +=======================+
         log::init();
+
+        if (!event::init())
+        {
+            log::error("Event system not initialized. Application cannot continue");
+            return false;
+        }
 
         // Initialize app state
         _isRunning   = true;
@@ -77,6 +84,8 @@ namespace tempest::core
                 }
             }
         }
+
+        event::shutdown();
         _platform.shutdown();
 
         return true;

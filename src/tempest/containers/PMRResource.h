@@ -18,7 +18,7 @@ namespace tempest::container
     class TempestPMR: public std::pmr::memory_resource
     {
     public:
-        ~TempestPMR() noexcept override;
+        ~TempestPMR() noexcept override = default;
 
     private:
         void* do_allocate(const size_t size, const size_t alignment) override

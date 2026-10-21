@@ -73,10 +73,10 @@ namespace tempest::core
     /// @brief Register a event listener for the given @p code.
     /// @return `true` if successful.
     /// @return `false` otherwise.
-    TEMPEST_API bool registerEvent(EventCode code, Listener& listener);
+    TEMPEST_API bool registerEvent(EventCode code, Listener* listener);
 
     /// @brief Unregister an event.
-    TEMPEST_API bool unregisterEvent(EventCode code, Listener& listener);
+    TEMPEST_API bool unregisterEvent(EventCode code, Listener* listener);
 
     /// @brief Fire an event to all registered listeners for a given code.
     /// @param code The event code to fire.

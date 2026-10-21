@@ -12,13 +12,14 @@
 #include "Event.h"
 
 #include "MemorySubsystem.h"
+#include "containers/PMRResource.h"
 #include "containers/Vector.h"
 
 #include <vector>
 
 namespace tempest::core
 {
-    using EventCodeEntry = Vector<Listener>;
+    using EventCodeEntry = Vector<Listener*>;
 
     static constexpr auto MAX_EVENT_CODES = std::numeric_limits<EventCode>::max();
 
@@ -29,9 +30,73 @@ namespace tempest::core
 
     static bool isInitialized = false;
     static EventSystemState state;
+    static container::TempestPMR _allocator;
 
 
-    bool registerEvent(EventCode code, Listener& listener) {}
-    bool unregisterEvent(EventCode code, Listener& listener) {}
-    bool fireEvent(EventCode code, void* sender, EventContext& context) {}
+    bool event::init() noexcept
+    {
+        if (isInitialized)
+        {
+            return false;
+        }
+
+        for (auto& entry : state.entries)
+        {
+            entry = EventCodeEntry{ &_allocator };
+        }
+        isInitialized = true;
+
+        return true;
+    }
+
+
+    void event::shutdown() noexcept
+    {
+        for (auto& entry : state.entries)
+        {
+            entry.clear();
+        }
+    }
+
+
+    bool registerEvent(const EventCode code, Listener* listener)
+    {
+        if (!isInitialized)
+        {
+            return false;
+        }
+        // TODO: Add checks for existing listeners
+
+        state.entries[code].push_back(listener);
+        return true;
+    }
+
+
+    bool unregisterEvent(const EventCode code, Listener* listener)
+    {
+        return std::erase(state.entries[code], listener) != 0;
+    }
+
+
+    bool fireEvent(EventCode code, void* sender, EventContext& context)
+    {
+        if (!isInitialized)
+        {
+            return false;
+        }
+
+
+        for (const auto& listener: state.entries[code])
+        {
+            if (listener->onEvent(code, sender, context))
+            {
+                // If event has been handled then there is no need to propogate it to
+                // other listeners
+                return true;
+            }
+        }
+
+        // No listeners or none of the listeners handled the event
+        return false;
+    }
 } // namespace tempest::core
