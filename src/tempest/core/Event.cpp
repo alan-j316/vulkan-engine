@@ -78,7 +78,7 @@ namespace tempest::core
     }
 
 
-    bool fireEvent(EventCode code, void* sender, EventContext& context)
+    bool fireEvent(const EventCode code, void* sender, const EventContext& context)
     {
         if (!isInitialized)
         {

@@ -19,19 +19,21 @@ namespace tempest::core
     // TODO: Rewrite using modern C++
     struct EventContext
     {
-        uint64_t u64[2];
-        int64_t i64[2];
-        double f64[2];
+        union {
+            uint64_t u64[2];
+            int64_t i64[2];
+            double f64[2];
 
-        uint32_t u32[4];
-        int32_t i32[4];
-        float f32[4];
+            uint32_t u32[4];
+            int32_t i32[4];
+            float f32[4];
 
-        uint16_t u16[8];
-        int16_t i16[8];
+            uint16_t u16[8];
+            int16_t i16[8];
 
-        uint8_t u8[16];
-        int8_t i8[16];
+            uint8_t u8[16];
+            int8_t i8[16];
+        };
     };
 
     /// Event code type
@@ -39,7 +41,7 @@ namespace tempest::core
 
 
     /// Internal system event codes. Application codes must start beyond 255.
-    enum class SystemEventCode : uint8_t
+    enum class SystemEventCode : EventCode
     {
         APPLICATION_QUIT      = 0x01,
         KEY_PRESSED           = 0x02,
@@ -47,7 +49,7 @@ namespace tempest::core
         MOUSE_BUTTON_PRESSED  = 0x04,
         MOUSE_BUTTON_RELEASED = 0x05,
         MOUSE_MOVED           = 0x06,
-        MOUSE_WHEEL_SCROLL    = 0x07,
+        MOUSE_SCROLLED    = 0x07,
         WINDOW_RESIZED        = 0x08,
         MAX_EVENT_CODE        = 0xFF
     };
@@ -84,7 +86,7 @@ namespace tempest::core
     /// @param context The event data.
     /// @return `true` if handled.
     /// @return `false` otherwise.
-    TEMPEST_API bool fireEvent(EventCode code, void* sender, EventContext& context);
+    TEMPEST_API bool fireEvent(EventCode code, void* sender, const EventContext& context);
 
 
 } // namespace tempest::core

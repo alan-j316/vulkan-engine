@@ -11,8 +11,9 @@
 #include "Application.h"
 
 #include "Game.h"
-#include "core/Logger.h"
 #include "core/Event.h"
+#include "core/Input.h"
+#include "core/Logger.h"
 
 
 namespace tempest::core
@@ -39,6 +40,8 @@ namespace tempest::core
             log::error("Event system not initialized. Application cannot continue");
             return false;
         }
+        // Input makes use of event system so that should be initialized first
+        input::init();
 
         // Initialize app state
         _isRunning   = true;
@@ -82,10 +85,14 @@ namespace tempest::core
                     _isRunning = false;
                     break;
                 }
+
+                // NOTE: State copy/update should be done before handling input
+                input::update(0); // TODO: Update delta time.
             }
         }
 
         event::shutdown();
+        input::shutdown();
         _platform.shutdown();
 
         return true;
