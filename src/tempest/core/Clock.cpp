@@ -10,7 +10,8 @@
 
 
 #include "Clock.h"
-#include "platform/Time.h"
+
+#include "platform/ClockTime.h"
 
 
 namespace tempest::core

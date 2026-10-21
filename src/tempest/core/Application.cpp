@@ -15,6 +15,7 @@
 #include "core/EventListeners.h"
 #include "core/Input.h"
 #include "core/Logger.h"
+#include "platform/ClockTime.h"
 
 #include <format>
 
@@ -85,33 +86,55 @@ namespace tempest::core
 
         while (_isRunning)
         {
+
             _platform.pumpMessages();
             // if (!_platform.pumpMessages())
             //     _isRunning = false;
 
             if (!_isSuspended)
             {
-                // TODO: Update with delta time.
-                if (!_game->update(0))
+                // Update clock time
+                _clock.update();
+                const double currentTime    = _clock.elapsedTime;
+                const double deltaTime      = _lastTime - currentTime;
+                const double frameStartTime = platform::getAbsoluteTime();
+
+                if (!_game->update(static_cast<float>(deltaTime)))
                 {
                     log::error("Game update failed!");
                     _isRunning = false;
                     break;
                 }
 
-                if (!_game->render(0))
+                if (!_game->render(static_cast<float>(deltaTime)))
                 {
                     log::error("Game render failed!");
                     _isRunning = false;
                     break;
                 }
 
+                // Frame end time
+                const double frameEndTime = platform::getAbsoluteTime();
+                const double elapsedTime  = frameEndTime - frameStartTime;
+                runningTime += elapsedTime;
+
+                // Used for synchronization
+                const double remainingTime = TARGET_FRAME_TIME_S - elapsedTime;
+                const auto remainingTimeMs = static_cast<uint64_t>(remainingTime);
+                if (_lockFrameRate && remainingTime > 0)
+                {
+                    platform::sleep(remainingTimeMs);
+                }
+
+                frameCount++;
+
                 // NOTE: State copy/update should be done before handling input
-                input::update(0); // TODO: Update delta time.
+                input::update(static_cast<float>(deltaTime));
+                // log::info(std::format("Running Time: {}\tFrame Time: {}", runningTime, _clock.elapsedTime));
             }
         }
 
-
+        // Unregister events
         unregisterEvent(static_cast<EventCode>(SystemEventCode::APPLICATION_QUIT), &_appEventListener);
         unregisterEvent(static_cast<EventCode>(SystemEventCode::KEY_PRESSED), &_keyEventListener);
         unregisterEvent(static_cast<EventCode>(SystemEventCode::KEY_RELEASED), &_keyEventListener);

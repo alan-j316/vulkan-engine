@@ -36,6 +36,7 @@ namespace tempest
             uint32_t _width{}, _height{};
             double _lastTime{};
             Clock _clock;
+            bool _lockFrameRate{ false };
 
             ApplicationEventListener _appEventListener;
             KeyEventListener _keyEventListener;
@@ -45,7 +46,7 @@ namespace tempest
             friend KeyEventListener;
 
             // Static variables
-            static constexpr double TARGET_FRAME_TIME_MS{ 1.0 / 60.0 };
+            static constexpr double TARGET_FRAME_TIME_S{ 1.0 / 60.0 }; ///< Frame time in seconds.
         };
     } // namespace core
 } // namespace tempest
