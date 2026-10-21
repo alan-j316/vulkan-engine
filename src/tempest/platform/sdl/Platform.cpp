@@ -10,6 +10,7 @@
 
 #include "platform/Platform.h"
 
+#include "core/Event.h"
 #include "core/Input.h"
 #include "core/Logger.h"
 #include "core/MemorySubsystem.h"
@@ -100,15 +101,13 @@ namespace tempest::platform
 
     bool Platform::pumpMessages()
     {
-        // const auto event =
-        //     static_cast<SDL_Event*>(memory::alloc(sizeof(SDL_Event), memory::MemoryTag::MEMORY_TAG_APPLICATION));
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
             switch (event.type)
             {
                 case SDL_EVENT_QUIT:
-                    // TODO: Fire closing event
+                    core::fireEvent(static_cast<core::EventCode>(core::SystemEventCode::APPLICATION_QUIT), nullptr, {});
                     return false;
                 case SDL_EVENT_WINDOW_RESIZED:
                     // TODO: Handle resizing
@@ -147,8 +146,6 @@ namespace tempest::platform
                     return false;
             }
         }
-
-        // memory::free(event, sizeof(SDL_Event), memory::MemoryTag::MEMORY_TAG_APPLICATION);
         return true;
     }
 } // namespace tempest::platform

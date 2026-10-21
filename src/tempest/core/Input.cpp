@@ -98,7 +98,7 @@ namespace tempest::core
         if (state.currentMouseState.position != position)
         {
             // NOTE: Debugging Log
-            log::info(std::format("Mouse position: {}, {}", position.x, position.y));
+            // log::info(std::format("Mouse position: {}, {}", position.x, position.y));
 
             state.currentMouseState.position = position;
 

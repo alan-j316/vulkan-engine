@@ -7,6 +7,7 @@ add_library(
         MemorySubsystem.cpp
         Event.cpp
         Input.cpp
+        EventListeners.cpp
 )
 add_library(Tempest::Internal::Core ALIAS ${TEMPEST_CORE_LIB})
 
@@ -24,6 +25,7 @@ target_sources(
         MemorySubsystem.h
         Event.h
         Input.h
+        EventListeners.h
 )
 
 target_include_directories(${TEMPEST_CORE_LIB} PUBLIC ${TEMPEST_ROOT_DIR})

@@ -49,7 +49,7 @@ namespace tempest::core
         MOUSE_BUTTON_PRESSED  = 0x04,
         MOUSE_BUTTON_RELEASED = 0x05,
         MOUSE_MOVED           = 0x06,
-        MOUSE_SCROLLED    = 0x07,
+        MOUSE_SCROLLED        = 0x07,
         WINDOW_RESIZED        = 0x08,
         MAX_EVENT_CODE        = 0xFF
     };
@@ -69,7 +69,7 @@ namespace tempest::core
         /// @brief Handler function for an event.
         /// @return `true` if event is handled.
         /// @returnf `false` otherwise.
-        virtual bool onEvent(uint16_t code, void* sender, EventContext context) = 0;
+        virtual bool onEvent(EventCode code, void* sender, EventContext context) = 0;
     };
 
     /// @brief Register a event listener for the given @p code.

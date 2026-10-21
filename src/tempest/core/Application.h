@@ -10,8 +10,8 @@
  */
 
 #include "Api.h"
+#include "core/EventListeners.h"
 #include "platform/Platform.h"
-
 
 namespace tempest
 {
@@ -23,6 +23,7 @@ namespace tempest
         class TEMPEST_API Application
         {
         public:
+            Application() noexcept;
             bool create(Game* game) noexcept;
             bool run() noexcept;
 
@@ -33,6 +34,13 @@ namespace tempest
             Game* _game{};
             uint32_t _width{}, _height{};
             double _lastTime{};
+
+            ApplicationEventListener _appEventListener;
+            KeyEventListener _keyEventListener;
+
+            // Friend class
+            friend ApplicationEventListener;
+            friend KeyEventListener;
         };
     } // namespace core
 } // namespace tempest

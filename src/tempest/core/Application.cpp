@@ -12,13 +12,19 @@
 
 #include "Game.h"
 #include "core/Event.h"
+#include "core/EventListeners.h"
 #include "core/Input.h"
 #include "core/Logger.h"
+
+#include <format>
 
 
 namespace tempest::core
 {
     static bool _isInitialized = false; // TODO: Update to TMP based singleton
+
+    Application::Application() noexcept: _appEventListener(*this), _keyEventListener(*this) {}
+
 
     bool Application::create(Game* game) noexcept
     {
@@ -29,6 +35,7 @@ namespace tempest::core
         }
 
         _game = game;
+
 
         // +=======================+
         // | Initialize Subsystems |
@@ -53,6 +60,11 @@ namespace tempest::core
             log::error("There was an error initializing the platform");
             return false;
         }
+
+        // Event Listener
+        registerEvent(static_cast<EventCode>(SystemEventCode::APPLICATION_QUIT), &_appEventListener);
+        registerEvent(static_cast<EventCode>(SystemEventCode::KEY_PRESSED), &_keyEventListener);
+        registerEvent(static_cast<EventCode>(SystemEventCode::KEY_RELEASED), &_keyEventListener);
 
         _game->onResize(_width, _height);
 
@@ -91,6 +103,11 @@ namespace tempest::core
                 input::update(0); // TODO: Update delta time.
             }
         }
+
+
+        unregisterEvent(static_cast<EventCode>(SystemEventCode::APPLICATION_QUIT), &_appEventListener);
+        unregisterEvent(static_cast<EventCode>(SystemEventCode::KEY_PRESSED), &_keyEventListener);
+        unregisterEvent(static_cast<EventCode>(SystemEventCode::KEY_RELEASED), &_keyEventListener);
 
         event::shutdown();
         input::shutdown();
