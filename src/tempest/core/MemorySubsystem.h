@@ -22,7 +22,7 @@ namespace tempest::memory
     {
         MEMORY_TAG_UNKNOWN,
         MEMORY_TAG_ARRAY,
-        MEMORY_TAG_VECTOR,
+        MEMORY_TAG_PMR,
         MEMORY_TAG_DICT,
         MEMORY_TAG_RINGS_QUEUE,
         MEMORY_TAG_STRING,
@@ -50,8 +50,8 @@ namespace tempest::memory
                 return "Unknown";
             case MemoryTag::MEMORY_TAG_ARRAY:
                 return "Array";
-            case MemoryTag::MEMORY_TAG_VECTOR:
-                return "Vector";
+            case MemoryTag::MEMORY_TAG_PMR:
+                return "C++ PMR";
             case MemoryTag::MEMORY_TAG_DICT:
                 return "Dict";
             case MemoryTag::MEMORY_TAG_RINGS_QUEUE:

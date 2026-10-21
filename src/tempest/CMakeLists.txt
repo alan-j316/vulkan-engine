@@ -5,6 +5,8 @@ add_library(
         ${ENGINE_NAME}
         $<TARGET_OBJECTS:Tempest::Internal::Core>
         $<TARGET_OBJECTS:Tempest::Internal::Platform>
+        containers/PMRResource.h
+        containers/Vector.h
 )
 add_library(${ENGINE_NAME}::${ENGINE_NAME} ALIAS ${ENGINE_NAME})
 

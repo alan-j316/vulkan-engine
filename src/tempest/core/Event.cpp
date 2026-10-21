@@ -12,12 +12,13 @@
 #include "Event.h"
 
 #include "MemorySubsystem.h"
+#include "containers/Vector.h"
 
 #include <vector>
 
 namespace tempest::core
 {
-    using EventCodeEntry = std::vector<Listener>;
+    using EventCodeEntry = Vector<Listener>;
 
     static constexpr auto MAX_EVENT_CODES = std::numeric_limits<EventCode>::max();
 
