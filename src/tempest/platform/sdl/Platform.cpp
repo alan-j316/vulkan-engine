@@ -9,6 +9,7 @@
  */
 
 #include "platform/Platform.h"
+#include "renderer/vulkan/VulkanPlatform.h"
 
 #include "core/Event.h"
 #include "core/Input.h"

@@ -26,8 +26,8 @@ namespace tempest
         /// Forward Declaration
         struct PlatformState;
 
-        static Vector<const char*> getRequiredExtensions();
+        Vector<const char*> getRequiredExtensions();
 
-        static bool createVulkanSurface(const PlatformState& platformState, renderer::VulkanContext& context);
+        bool createVulkanSurface(const PlatformState& platformState, renderer::VulkanContext& context);
     } // namespace platform
 } // namespace tempest

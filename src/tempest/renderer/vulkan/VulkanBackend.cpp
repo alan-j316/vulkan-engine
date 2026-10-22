@@ -132,7 +132,20 @@ namespace tempest::renderer
         //  DEVICE CREATION
         // -------------------
         // TODO: Move device to class member
-        if (VulkanDevice device; !device.create(context))
+        const PhysicalDeviceRequirements physicalDeviceReq{ .requireGraphicsSupport = true,
+                                                            .requirePresentSupport  = true,
+                                                            .requireComputeSupport  = true,
+                                                            .requireTransferSupport = true,
+                                                            .deviceExtensions =
+                                                                Vector{ VK_KHR_SWAPCHAIN_EXTENSION_NAME },
+                                                            .requireDiscreteGPU   = true,
+                                                            .samplerAnisotropy    = true,
+                                                            .dynamicRendering     = true,
+                                                            .shaderDrawParameters = true,
+                                                            .synchronization2     = true,
+                                                            .extendedDynamicState = true };
+
+        if (VulkanDevice device; !device.create(context, physicalDeviceReq))
         {
             log::error("There was an error creating the vulkan device");
             return false;
