@@ -30,6 +30,7 @@ target_include_directories(${ENGINE_NAME} PRIVATE
 
 add_subdirectory(core)
 add_subdirectory(platform)
+add_subdirectory(renderer)
 
 target_link_libraries(
         ${ENGINE_NAME}
@@ -37,6 +38,7 @@ target_link_libraries(
         ${PROJECT_NAME}-StrictWarnings
         Tempest::Internal::Core
         Tempest::Internal::Platform
+        Tempest::Internal::Renderer
         SDL3::SDL3-static
         std::stb
 )

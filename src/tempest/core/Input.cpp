@@ -59,7 +59,7 @@ namespace tempest::core
         state.previousMouseState = state.currentMouseState;
     }
 
-    void input::processKey(Keycode key, bool pressed)
+    void input::processKey(Keycode key, const bool pressed)
     {
         const auto keyIdx = static_cast<size_t>(key);
         if (state.currentKeyState.keys[keyIdx] != pressed)
@@ -75,7 +75,7 @@ namespace tempest::core
     }
 
 
-    void input::processButton(Button button, bool pressed)
+    void input::processButton(Button button, const bool pressed)
     {
         const auto btnIdx = static_cast<size_t>(button);
         // Only update the state if the state has changed
@@ -92,7 +92,7 @@ namespace tempest::core
     }
 
 
-    void input::processMouseMove(MousePosition position)
+    void input::processMouseMove(const MousePosition position)
     {
         // Only update the state if position has changed
         if (state.currentMouseState.position != position)
@@ -111,7 +111,7 @@ namespace tempest::core
     }
 
 
-    void input::processMouseScroll(int8_t zDelta)
+    void input::processMouseScroll(const int8_t zDelta)
     {
         EventContext context{};
         context.u8[0] = zDelta;

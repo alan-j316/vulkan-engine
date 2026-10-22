@@ -17,8 +17,6 @@ namespace fps
     bool FPSGame::initialize()
     {
         tempest::log::info("Game initialized");
-        tempest::log::info(tempest::getMemUsageStr());
-        std::println("{}", tempest::getMemUsageStr());
         return true;
     }
 

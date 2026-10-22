@@ -18,6 +18,10 @@ namespace tempest
 {
     /// Forward declaration
     class Game;
+    namespace renderer
+    {
+        class RendererFrontend;
+    }
 
     namespace core
     {
@@ -37,6 +41,7 @@ namespace tempest
             double _lastTime{};
             Clock _clock;
             bool _lockFrameRate{ false };
+            renderer::RendererFrontend* _renderer{};
 
             ApplicationEventListener _appEventListener;
             KeyEventListener _keyEventListener;

@@ -11,11 +11,13 @@
 #include "Application.h"
 
 #include "Game.h"
+#include "MemorySubsystem.h"
 #include "core/Event.h"
 #include "core/EventListeners.h"
 #include "core/Input.h"
 #include "core/Logger.h"
 #include "platform/ClockTime.h"
+#include "renderer/RendererFrontend.h"
 
 #include <format>
 
@@ -62,12 +64,24 @@ namespace tempest::core
             return false;
         }
 
+        // TODO: Make renderer selectable
+        if (!_renderer->init(renderer::RendererType::VULKAN, game->getConfig().name, _platform.getState()))
+        {
+            log::error("There was an error initializing the renderer");
+            return false;
+        }
+
+        if (!_game->initialize())
+        {
+            log::error("There was an error initializing the game");
+            return false;
+        }
+        _game->onResize(_width, _height);
+
         // Event Listener
         registerEvent(static_cast<EventCode>(SystemEventCode::APPLICATION_QUIT), &_appEventListener);
         registerEvent(static_cast<EventCode>(SystemEventCode::KEY_PRESSED), &_keyEventListener);
         registerEvent(static_cast<EventCode>(SystemEventCode::KEY_RELEASED), &_keyEventListener);
-
-        _game->onResize(_width, _height);
 
         _isInitialized = true;
 
@@ -77,6 +91,7 @@ namespace tempest::core
 
     bool Application::run() noexcept
     {
+        log::info(memory::getMemUsageStr());
         _clock.start();
         _clock.update();
         _lastTime = _clock.elapsedTime;
@@ -111,6 +126,8 @@ namespace tempest::core
                     _isRunning = false;
                     break;
                 }
+                renderer::RenderPacket packet{ .deltaTime = static_cast<float>(deltaTime) };
+                _renderer->drawFrame(packet);
 
                 // Frame end time
                 const double frameEndTime = platform::getAbsoluteTime();
@@ -140,6 +157,7 @@ namespace tempest::core
 
         event::shutdown();
         input::shutdown();
+        _renderer->shutdown();
         _platform.shutdown();
 
         return true;
