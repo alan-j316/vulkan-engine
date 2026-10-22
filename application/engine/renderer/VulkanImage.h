@@ -17,19 +17,19 @@
 
 namespace tempest::renderer
 {
-    class Image
+    class VulkanImage
     {
     public:
-        Image() noexcept = default;
+        VulkanImage() noexcept = default;
 
         bool create(const RenderDevice& device, uint32_t width, uint32_t height, vk::Format format,
                     vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties,
                     uint32_t mipLevels, vk::SampleCountFlagBits numSamples, vk::ImageAspectFlags aspectFlags) noexcept;
 
-        Image(const Image& other)            = delete;
-        Image& operator=(const Image& other) = delete;
+        VulkanImage(const VulkanImage& other)            = delete;
+        VulkanImage& operator=(const VulkanImage& other) = delete;
 
-        Image(Image&& other) noexcept
+        VulkanImage(VulkanImage&& other) noexcept
             : _image{ std::move(other._image) },
               _imageView{ std::move(other._imageView) },
               _memory{ std::move(other._memory) },
@@ -46,7 +46,7 @@ namespace tempest::renderer
         {}
 
         //// TODO: Update image so that it can attach a texture rather than just moving one in.
-        Image& operator=(Image&& other) noexcept
+        VulkanImage& operator=(VulkanImage&& other) noexcept
         {
             if (this == &other)
                 return *this;
@@ -66,7 +66,7 @@ namespace tempest::renderer
             return *this;
         }
 
-        [[nodiscard]] const vk::raii::Image& getBaseImage() const noexcept { return _image; }
+        [[nodiscard]] const vk::raii::VulkanImage& getBaseImage() const noexcept { return _image; }
         [[nodiscard]] const vk::raii::ImageView& getBaseImageView() const noexcept { return _imageView; }
         [[nodiscard]] const vk::ImageLayout& getImageLayout() const noexcept { return _layout; }
 
@@ -85,7 +85,7 @@ namespace tempest::renderer
         bool createImageView(const RenderDevice& device, vk::ImageAspectFlags aspectFlags) noexcept;
 
     private:
-        vk::raii::Image _image{ nullptr };
+        vk::raii::VulkanImage _image{ nullptr };
         vk::raii::ImageView _imageView{ nullptr };
         vk::raii::DeviceMemory _memory{ nullptr };
         vk::ImageLayout _layout{ vk::ImageLayout::eUndefined };

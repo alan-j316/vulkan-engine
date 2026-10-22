@@ -44,6 +44,23 @@ namespace tempest::renderer
     };
 
 
+    struct VulkanImageCreateInfo
+    {
+        vk::ImageType imageType;
+        uint32_t width;
+        uint32_t height;
+        vk::Format format;
+        vk::ImageUsageFlags usage;
+        vk::MemoryPropertyFlags properties;
+        vk::ImageAspectFlags aspectFlags;
+
+        vk::ImageTiling tiling             = vk::ImageTiling::eOptimal;
+        bool createView                    = true;
+        uint32_t mipLevels                 = 1;
+        vk::SampleCountFlagBits numSamples = vk::SampleCountFlagBits::e1;
+    };
+
+
 
     //----------------------------------------------------------------
     //         CONTEXTS AND VULKAN STRUCTURE ABSTRACTIONS

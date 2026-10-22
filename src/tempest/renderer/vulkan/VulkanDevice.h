@@ -20,6 +20,7 @@ namespace tempest::renderer
         void destroy(const VulkanContext& context);
         static void querySwapChainSupport(const vk::raii::PhysicalDevice& device, const vk::SurfaceKHR& surface,
                                           VulkanSwapChainSupportInfo& info) noexcept;
+        [[nodiscard]] uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) const noexcept;
         bool detectDepthFormat() noexcept;
 
         void setDepthFormat(const vk::Format format) noexcept { _depthFormat = format; }

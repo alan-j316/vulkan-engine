@@ -7,7 +7,7 @@ add_library(
         CommandBuffer.cpp
         RenderPipeline.cpp
         RenderDevice.cpp
-        Image.cpp
+        VulkanImage.cpp
         GraphicsContext.cpp
         Swapchain.cpp
         PresentMode.cpp
@@ -32,7 +32,7 @@ target_sources(TempestRenderer PUBLIC
         RenderDevice.h
         RenderQueue.h
         PipelineConfig.h
-        Image.h
+        VulkanImage.h
         GraphicsContext.h
         Swapchain.h
         PresentMode.h

@@ -59,7 +59,7 @@ namespace tempest::renderer
         SwapChain _swapChain;
         Buffer _vertexBuffer, _indexBuffer;
         std::vector<Buffer> _uniformBuffers;
-        Image _colorImage, _depthImage;
+        VulkanImage _colorImage, _depthImage;
 
         std::string _appName, _engineName;
         uint32_t _appVersion, _engineVersion;

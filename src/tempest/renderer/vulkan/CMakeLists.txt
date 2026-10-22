@@ -5,7 +5,9 @@ add_library(
         VulkanBackend.cpp
         VulkanDevice.cpp
         VulkanSwapChain.cpp
+        VulkanImage.cpp
 )
+
 
 target_sources(${TEMPEST_RENDERER_VULKAN_LIB} PUBLIC
         FILE_SET HEADERS
@@ -18,6 +20,7 @@ target_sources(${TEMPEST_RENDERER_VULKAN_LIB} PUBLIC
         VulkanDevice.h
         VulkanPlatform.h
         VulkanSwapChain.h
+        VulkanImage.h
 )
 
 add_library(Tempest::Internal::Renderer::Vulkan ALIAS ${TEMPEST_RENDERER_VULKAN_LIB})
