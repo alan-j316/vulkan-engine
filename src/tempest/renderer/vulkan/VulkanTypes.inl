@@ -39,6 +39,7 @@ namespace tempest::renderer
         bool shaderDrawParameters;
         bool synchronization2;
         bool extendedDynamicState;
+        bool sampleRateShading;
     };
 
 
@@ -55,6 +56,7 @@ namespace tempest::renderer
         vk::AllocationCallbacks* allocator{};
         vk::DebugUtilsMessengerEXT debugMessenger{};
         vk::raii::SurfaceKHR surface{ nullptr };
+        class VulkanDevice* device{};
     };
 
     static constexpr auto MIN_VULKAN_VERSION = VK_API_VERSION_1_3;

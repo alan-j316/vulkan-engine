@@ -21,6 +21,25 @@ namespace tempest::renderer
         static void querySwapChainSupport(const vk::raii::PhysicalDevice& device, const vk::SurfaceKHR& surface,
                                           VulkanSwapChainSupportInfo& info) noexcept;
 
+
+        [[nodiscard]] constexpr const vk::raii::PhysicalDevice& getPhysicalDevice() const noexcept
+        { return _physicalDevice; }
+        [[nodiscard]] constexpr const vk::raii::Device& getLogicalDevice() const noexcept { return _logicalDevice; }
+
+        [[nodiscard]] constexpr const VulkanSwapChainSupportInfo& getSwapChainSupport() const noexcept
+        { return _swapChainSupport; }
+        [[nodiscard]] constexpr const VulkanQueueFamilyInfo& getQueueInfo() const noexcept { return _queueInfo; }
+
+        [[nodiscard]] constexpr const vk::PhysicalDeviceProperties& getProperties() const noexcept
+        { return _properties; }
+        [[nodiscard]] constexpr const vk::PhysicalDeviceFeatures& getFeatures() const noexcept { return _features; }
+        [[nodiscard]] constexpr const vk::PhysicalDeviceMemoryProperties& getMemoryProperties() const noexcept
+        { return _memory; }
+
+        [[nodiscard]] constexpr vk::raii::Queue& getGraphicsQueue() noexcept { return _graphicsQueue; }
+        [[nodiscard]] constexpr vk::raii::Queue& getPresentQueue() noexcept { return _presentQueue; }
+        [[nodiscard]] constexpr vk::raii::Queue& getTransferQueue() noexcept { return _transferQueue; }
+
     private:
         inline bool pickPhysicalDevice(const VulkanContext& context,
                                        const PhysicalDeviceRequirements& requirements) noexcept;
@@ -33,5 +52,9 @@ namespace tempest::renderer
         vk::PhysicalDeviceProperties _properties{};
         vk::PhysicalDeviceFeatures _features{};
         vk::PhysicalDeviceMemoryProperties _memory{};
+        // TODO: Add compute queue
+        vk::raii::Queue _graphicsQueue{ nullptr }, _presentQueue{ nullptr }, _transferQueue{ nullptr };
+
+    public:
     };
 } // namespace tempest::renderer

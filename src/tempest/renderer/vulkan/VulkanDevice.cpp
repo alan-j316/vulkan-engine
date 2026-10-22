@@ -147,8 +147,6 @@ namespace tempest::renderer
     // }
 
 
-
-
     bool VulkanDevice::create(const VulkanContext& context,
                               const PhysicalDeviceRequirements& physicalDeviceRequirements)
     {
@@ -158,17 +156,113 @@ namespace tempest::renderer
             return false;
         }
 
-        // if (!createLogicalDevice(context))
-        // {
-        //     log::error("An error occurred while picking the physical device.");
-        //     return false;
-        // }
+
+        // +===========================+
+        //         QUEUE INDEX
+        // +===========================+
+
+        // Make sure no additional queues are created for common queue indices
+        bool presentSharesGraphicsQueue  = _queueInfo.graphicsFamilyIndex == _queueInfo.presentFamilyIndex;
+        bool transferSharesGraphicsQueue = _queueInfo.graphicsFamilyIndex == _queueInfo.transferFamilyIndex;
+        size_t indexCount                = 1;
+        if (!presentSharesGraphicsQueue)
+        {
+            ++indexCount;
+        }
+        if (!transferSharesGraphicsQueue)
+        {
+            ++indexCount;
+        }
+
+        Vector<uint32_t> indices(indexCount);
+        uint32_t index   = 0;
+        indices[index++] = _queueInfo.graphicsFamilyIndex;
+        if (!presentSharesGraphicsQueue)
+        {
+            indices[index++] = _queueInfo.presentFamilyIndex;
+        }
+        if (!transferSharesGraphicsQueue)
+        {
+            indices[index++] = _queueInfo.transferFamilyIndex;
+        }
+
+        Vector<vk::DeviceQueueCreateInfo> queueCreateInfos{};
+        for (const auto qIndex : indices)
+        {
+            float priority{ 0 };
+            const auto queueCount = qIndex == _queueInfo.graphicsFamilyIndex ? 2u : 1u;
+            vk::DeviceQueueCreateInfo info{ .queueFamilyIndex = qIndex,
+                                            .queueCount       = queueCount,
+                                            .pQueuePriorities = &priority };
+            queueCreateInfos.emplace_back(info);
+        }
+
+
+
+        // +=================================+
+        //       LOGICAL DEVICE CREATION
+        // +=================================+
+
+        vk::PhysicalDeviceFeatures features;
+        features.samplerAnisotropy = physicalDeviceRequirements.samplerAnisotropy;
+
+        vk::StructureChain<vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceVulkan11Features,
+                           vk::PhysicalDeviceVulkan13Features, vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>
+            featureChain = {
+                { .features = { .sampleRateShading = physicalDeviceRequirements.sampleRateShading,
+                                .samplerAnisotropy =
+                                    physicalDeviceRequirements.samplerAnisotropy } },        // Physical Device Features
+                { .shaderDrawParameters = physicalDeviceRequirements.shaderDrawParameters }, // Vulkan 1.1 features
+                { .synchronization2 = physicalDeviceRequirements.synchronization2,
+                  .dynamicRendering = physicalDeviceRequirements.dynamicRendering },        // Vulkan 1.3 features
+                { .extendedDynamicState = physicalDeviceRequirements.extendedDynamicState } // Dynamic state
+            };
+
+        vk::DeviceCreateInfo deviceCreateInfo{
+            .pNext                   = &featureChain.get<vk::PhysicalDeviceFeatures2>(),
+            .pQueueCreateInfos       = queueCreateInfos.data(),
+            .enabledExtensionCount   = static_cast<uint32_t>(physicalDeviceRequirements.deviceExtensions.size()),
+            .ppEnabledExtensionNames = physicalDeviceRequirements.deviceExtensions.data()
+        };
+
+        _logicalDevice = vk::raii::Device(_physicalDevice, deviceCreateInfo);
+
+        if (_logicalDevice == nullptr)
+        {
+            log::error("An error occurred while picking the physical device.");
+            return false;
+        }
+        else
+        {
+            log::info("Logical Device created!");
+        }
+
+
+
+        // +=================================+
+        //          QUEUE RETRIEVAL
+        // +=================================+
+
+        _graphicsQueue = vk::raii::Queue(_logicalDevice, _queueInfo.graphicsFamilyIndex, 0);
+        _presentQueue  = vk::raii::Queue(_logicalDevice, _queueInfo.presentFamilyIndex, 0);
+        _transferQueue = vk::raii::Queue(_logicalDevice, _queueInfo.transferFamilyIndex, 0);
+
 
         return true;
     }
 
 
-    void VulkanDevice::destroy(const VulkanContext& context) {}
+    void VulkanDevice::destroy(const VulkanContext& context)
+    {
+
+        _graphicsQueue = nullptr;
+        _presentQueue  = nullptr;
+        _transferQueue = nullptr;
+
+        // Clear present mode and formats
+        _swapChainSupport.presentModes.clear();
+        _swapChainSupport.formats.clear();
+    }
 
 
     void VulkanDevice::querySwapChainSupport(const vk::raii::PhysicalDevice& device, const vk::SurfaceKHR& surface,
@@ -410,4 +504,6 @@ namespace tempest::renderer
         // All requirements satisfied.
         return true;
     }
+
+
 } // namespace tempest::renderer

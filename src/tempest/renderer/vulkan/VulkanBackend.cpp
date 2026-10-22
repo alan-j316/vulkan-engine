@@ -143,9 +143,14 @@ namespace tempest::renderer
                                                             .dynamicRendering     = true,
                                                             .shaderDrawParameters = true,
                                                             .synchronization2     = true,
-                                                            .extendedDynamicState = true };
+                                                            .extendedDynamicState = true,
+                                                            .sampleRateShading    = true };
 
-        if (VulkanDevice device; !device.create(context, physicalDeviceReq))
+        // TODO: Look for a way to create a stack based device
+        const auto rawDevMem = memory::alloc(sizeof(VulkanDevice), memory::MemoryTag::MEMORY_TAG_RENDERER);
+        context.device       = new (rawDevMem) VulkanDevice();
+
+        if (!context.device->create(context, physicalDeviceReq))
         {
             log::error("There was an error creating the vulkan device");
             return false;
