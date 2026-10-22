@@ -187,13 +187,13 @@ namespace tempest::renderer
         }
 
         Vector<vk::DeviceQueueCreateInfo> queueCreateInfos{};
-        for (const auto qIndex : indices)
+        for (size_t i = 0; i < indexCount; ++i)
         {
-            float priority{ 0 };
+            const auto qIndex = indices[i];
             const auto queueCount = qIndex == _queueInfo.graphicsFamilyIndex ? 2u : 1u;
             vk::DeviceQueueCreateInfo info{ .queueFamilyIndex = qIndex,
                                             .queueCount       = queueCount,
-                                            .pQueuePriorities = &priority };
+                                            .pQueuePriorities = &_queuePriorities[i] };
             queueCreateInfos.emplace_back(info);
         }
 
@@ -220,6 +220,7 @@ namespace tempest::renderer
 
         vk::DeviceCreateInfo deviceCreateInfo{
             .pNext                   = &featureChain.get<vk::PhysicalDeviceFeatures2>(),
+            .queueCreateInfoCount    = static_cast<uint32_t>(queueCreateInfos.size()),
             .pQueueCreateInfos       = queueCreateInfos.data(),
             .enabledExtensionCount   = static_cast<uint32_t>(physicalDeviceRequirements.deviceExtensions.size()),
             .ppEnabledExtensionNames = physicalDeviceRequirements.deviceExtensions.data()

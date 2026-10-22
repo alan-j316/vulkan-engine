@@ -54,6 +54,7 @@ namespace tempest::renderer
         vk::PhysicalDeviceMemoryProperties _memory{};
         // TODO: Add compute queue
         vk::raii::Queue _graphicsQueue{ nullptr }, _presentQueue{ nullptr }, _transferQueue{ nullptr };
+        float _queuePriorities[3]{ 1.0f, 1.0f, 1.0f };
 
     public:
     };
