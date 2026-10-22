@@ -11,11 +11,8 @@ target_sources(${TEMPEST_RENDERER_VULKAN_LIB} PUBLIC
         FILES
         VulkanBackend.h
 
-#        PRIVATE
-#        FILE_SET HEADERS
-#        BASE_DIRS ${TEMPEST_ROOT_DIR}/renderer/vulkan
-#        FILES
-#        Test.h
+        PRIVATE
+        VulkanTypes.inl
 )
 
 add_library(Tempest::Internal::Renderer::Vulkan ALIAS ${TEMPEST_RENDERER_VULKAN_LIB})

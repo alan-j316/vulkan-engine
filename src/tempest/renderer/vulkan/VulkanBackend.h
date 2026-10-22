@@ -16,7 +16,7 @@ namespace tempest::renderer
     class VulkanBackend: public RendererBackend
     {
     public:
-        bool init(platform::PlatformState* _state, std::string_view applicationName) noexcept override;
+        bool init(platform::PlatformState* state, std::string_view applicationName) noexcept override;
         void shutdown() noexcept override;
         void onResize(uint32_t width, uint32_t height) noexcept override;
         bool beginFrame(float deltaTime) noexcept override;
