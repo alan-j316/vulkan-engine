@@ -18,6 +18,7 @@
 #include "platform/Platform.h"
 #include "renderer/vulkan/VulkanDevice.h"
 #include "renderer/vulkan/VulkanPlatform.h"
+#include "renderer/vulkan/VulkanSwapChain.h"
 
 
 namespace tempest::renderer
@@ -62,7 +63,7 @@ namespace tempest::renderer
         {
             log::info(ext);
         }
-        log::info("\n\n");
+        log::info("\n");
 
         // Check if the extension we require are support by vulkan
         const auto unsupportedPropertiesIt =
@@ -155,6 +156,15 @@ namespace tempest::renderer
             log::error("There was an error creating the vulkan device");
             return false;
         }
+
+        const auto rawSwapChainMem = memory::alloc(sizeof(VulkanSwapChain), memory::MemoryTag::MEMORY_TAG_RENDERER);
+        context.swapChain          = new (rawSwapChainMem) VulkanSwapChain();
+
+        // ---------------------
+        //  SWAP CHAIN CREATION
+        // ---------------------
+        // TODO: Update width and height
+        context.swapChain->create(context, 1280, 720);
 
         log::info("Vulkan Renderer Initialized");
         return context.instance != nullptr;

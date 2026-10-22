@@ -10,13 +10,14 @@
  */
 
 
+#include "VulkanImage.h"
 #include "containers/Vector.h"
 #include "renderer/vulkan/VulkanTypes.inl"
 
 namespace tempest::renderer
 {
     class RenderDevice;
-    class SwapChain
+    class VulkanSwapChain
     {
     public:
         void create(VulkanContext& context, uint32_t width, uint32_t height) noexcept;
@@ -49,6 +50,7 @@ namespace tempest::renderer
         uint8_t _maxFramesInFlight{};
         Vector<vk::Image> _images;
         Vector<vk::raii::ImageView> _imageViews;
+        Vector<VulkanImage> _depthImages;
         vk::raii::SwapchainKHR _swapChainInstance{ nullptr };
         vk::Extent2D _extent{};
         vk::SurfaceFormatKHR _format;

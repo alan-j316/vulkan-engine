@@ -16,15 +16,15 @@
 
 namespace tempest::renderer
 {
-    void SwapChain::create(VulkanContext& context, const uint32_t width, const uint32_t height) noexcept
+    void VulkanSwapChain::create(VulkanContext& context, const uint32_t width, const uint32_t height) noexcept
     { _createVulkanSwapChain(context, width, height); }
 
-    void SwapChain::recreate(VulkanContext& context, const uint32_t width, const uint32_t height) noexcept
+    void VulkanSwapChain::recreate(VulkanContext& context, const uint32_t width, const uint32_t height) noexcept
     { _createVulkanSwapChain(context, width, height, &*_swapChainInstance); }
 
-    void SwapChain::destroy(const VulkanContext& context) noexcept { _cleanupSwapChain(); }
+    void VulkanSwapChain::destroy(const VulkanContext& context) noexcept { _cleanupSwapChain(); }
 
-    uint32_t SwapChain::acquireNextImageIndex(VulkanContext& context, const size_t timeout,
+    uint32_t VulkanSwapChain::acquireNextImageIndex(VulkanContext& context, const size_t timeout,
                                               const vk::Semaphore imageAvailableSemaphore, const vk::Fence fence)
     {
         const auto [result, index] = _swapChainInstance.acquireNextImage(timeout, imageAvailableSemaphore, nullptr);
@@ -41,7 +41,7 @@ namespace tempest::renderer
     }
 
 
-    void SwapChain::presentSwapChain(VulkanContext& context, vk::raii::Queue graphicsQueue,
+    void VulkanSwapChain::presentSwapChain(VulkanContext& context, vk::raii::Queue graphicsQueue,
                                      const vk::raii::Queue& presentQueue, vk::Semaphore renderCompleteSemaphore,
                                      uint32_t imageIndex)
     {
@@ -71,7 +71,7 @@ namespace tempest::renderer
     //        PRIVATE METHODS
     // +===============================
 
-    void SwapChain::_createVulkanSwapChain(VulkanContext& context, uint32_t width, uint32_t height,
+    void VulkanSwapChain::_createVulkanSwapChain(VulkanContext& context, uint32_t width, uint32_t height,
                                            const vk::SwapchainKHR* oldSwapChain) noexcept
     {
         _maxFramesInFlight           = MAX_FRAMES_IN_FLIGHT_DEF;
@@ -146,19 +146,41 @@ namespace tempest::renderer
             context.device->setDepthFormat(vk::Format::eUndefined);
             log::error("There was an error creating the depth format");
         }
+
+        _imageViews.reserve(images.size());
+        for (size_t i = 0; i < images.size(); ++i)
+        {
+            VulkanImageCreateInfo createInfo{ .imageType   = vk::ImageType::e2D,
+                                              .width       = _extent.width,
+                                              .height      = _extent.height,
+                                              .format      = _format.format,
+                                              .usage       = vk::ImageUsageFlagBits::eDepthStencilAttachment,
+                                              .properties  = vk::MemoryPropertyFlagBits::eDeviceLocal, // TODO: Update
+                                              .aspectFlags = vk::ImageAspectFlagBits::eDepth,
+                                              .tiling      = vk::ImageTiling::eOptimal,
+                                              .createView  = true,
+                                              .mipLevels   = 1,
+                                              .numSamples  = vk::SampleCountFlagBits::e1 };
+            VulkanImage depthImage{};
+            depthImage.create(context, createInfo);
+            _imageViews.emplace_back(depthImage);
+        }
+
+        log::info("SwapChain created successfully!");
     }
 
 
-    void SwapChain::_cleanupSwapChain() noexcept
+    void VulkanSwapChain::_cleanupSwapChain() noexcept
     {
         // Rest will be done by vk::raii dtor
         _imageViews.clear();
         _images.clear();
+        _depthImages.clear();
         _swapChainInstance = nullptr;
     }
 
 
-    vk::SurfaceFormatKHR SwapChain::_chooseSurfaceFormat(const VulkanContext& context) const noexcept
+    vk::SurfaceFormatKHR VulkanSwapChain::_chooseSurfaceFormat(const VulkanContext& context) const noexcept
     {
         // Query the surface format
         const auto surfaceFormats = context.device->getPhysicalDevice().getSurfaceFormatsKHR(context.surface);
@@ -172,7 +194,7 @@ namespace tempest::renderer
     }
 
 
-    uint32_t SwapChain::_chooseMinImageCount(const vk::SurfaceCapabilitiesKHR& capabilities) const noexcept
+    uint32_t VulkanSwapChain::_chooseMinImageCount(const vk::SurfaceCapabilitiesKHR& capabilities) const noexcept
     {
         // Choose an appropriate image count in the range between minImageCount < n <= maxImageCount/3
         auto minImageCount = std::max(3u, capabilities.minImageCount); // Choose between min and images max
@@ -183,7 +205,7 @@ namespace tempest::renderer
         return minImageCount;
     }
 
-    vk::Extent2D SwapChain::_chooseSwapChainExtent(const vk::SurfaceCapabilitiesKHR& capabilities) const noexcept
+    vk::Extent2D VulkanSwapChain::_chooseSwapChainExtent(const vk::SurfaceCapabilitiesKHR& capabilities) const noexcept
     {
         // Choose the resolution of the swap chain
         // If the current extend is not the max value for uint32_t(set by some window managers)
@@ -200,7 +222,7 @@ namespace tempest::renderer
         };
     }
 
-    vk::PresentModeKHR SwapChain::_choosePresentationMode(const VulkanContext& context) const noexcept
+    vk::PresentModeKHR VulkanSwapChain::_choosePresentationMode(const VulkanContext& context) const noexcept
     {
         const auto supportedPresentModes = context.device->getSwapChainSupport().presentModes;
         if (std::ranges::find(supportedPresentModes, vk::PresentModeKHR::eMailbox) != supportedPresentModes.end())
@@ -211,7 +233,7 @@ namespace tempest::renderer
     }
 
 
-    vk::raii::ImageView SwapChain::createImageView(const VulkanContext& context, const vk::Image& image,
+    vk::raii::ImageView VulkanSwapChain::createImageView(const VulkanContext& context, const vk::Image& image,
                                                    const vk::ImageAspectFlags aspectFlags,
                                                    const uint32_t mipLevel) const noexcept
     {
