@@ -27,7 +27,7 @@ namespace tempest::core
     struct MouseState
     {
         MousePosition position;
-        uint8_t buttons[static_cast<size_t>(Button::MAX_BUTTONS)];
+        bool buttons[static_cast<size_t>(Button::MAX_BUTTONS)];
     };
 
     struct InputState
