@@ -12,9 +12,10 @@
 
 // Disables Vulkan Constructor generation to support C++20 designated initializers
 #define VULKAN_HPP_NO_CONSTRUCTORS
+#include "containers/Vector.h"
+
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
-#include "containers/Vector.h"
 
 
 namespace tempest::renderer
@@ -44,7 +45,6 @@ namespace tempest::renderer
 
 
 
-
     //----------------------------------------------------------------
     //         CONTEXTS AND VULKAN STRUCTURE ABSTRACTIONS
     //----------------------------------------------------------------
@@ -57,9 +57,13 @@ namespace tempest::renderer
         vk::DebugUtilsMessengerEXT debugMessenger{};
         vk::raii::SurfaceKHR surface{ nullptr };
         class VulkanDevice* device{};
+        class VulkanSwapChain* swapChain{};
+        vk::Extent2D swapChainExtent{};
     };
 
     static constexpr auto MIN_VULKAN_VERSION = VK_API_VERSION_1_3;
+
+    static constexpr auto MAX_FRAMES_IN_FLIGHT_DEF = 2;
 
     static constexpr uint32_t INVALID_VULKAN_QUEUE_FAMILY_INDEX = ~0;
 

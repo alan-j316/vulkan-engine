@@ -189,7 +189,7 @@ namespace tempest::renderer
         Vector<vk::DeviceQueueCreateInfo> queueCreateInfos{};
         for (size_t i = 0; i < indexCount; ++i)
         {
-            const auto qIndex = indices[i];
+            const auto qIndex     = indices[i];
             const auto queueCount = qIndex == _queueInfo.graphicsFamilyIndex ? 2u : 1u;
             vk::DeviceQueueCreateInfo info{ .queueFamilyIndex = qIndex,
                                             .queueCount       = queueCount,
@@ -503,6 +503,31 @@ namespace tempest::renderer
         }
 
         // All requirements satisfied.
+        return true;
+    }
+
+
+    bool VulkanDevice::detectDepthFormat() noexcept
+    {
+        constexpr vk::Format candidateFormats[]{ vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint,
+                                                 vk::Format::eD24UnormS8Uint };
+        constexpr auto flags = vk::FormatFeatureFlagBits::eDepthStencilAttachment;
+
+        for (const auto format : candidateFormats)
+        {
+            const auto properties = _physicalDevice.getFormatProperties(format);
+            // Optimal tiling is given priority
+            if ((properties.optimalTilingFeatures & flags) == flags)
+            {
+                _depthFormat = format;
+                return true;
+            }
+            else if ((properties.linearTilingFeatures & flags) == flags)
+            {
+                _depthFormat = format;
+                return true;
+            }
+        }
         return true;
     }
 

@@ -20,8 +20,12 @@ namespace tempest::renderer
         void destroy(const VulkanContext& context);
         static void querySwapChainSupport(const vk::raii::PhysicalDevice& device, const vk::SurfaceKHR& surface,
                                           VulkanSwapChainSupportInfo& info) noexcept;
+        bool detectDepthFormat() noexcept;
+
+        void setDepthFormat(const vk::Format format) noexcept { _depthFormat = format; }
 
 
+        [[nodiscard]] vk::Format getDepthFormat() const noexcept { return _depthFormat; }
         [[nodiscard]] constexpr const vk::raii::PhysicalDevice& getPhysicalDevice() const noexcept
         { return _physicalDevice; }
         [[nodiscard]] constexpr const vk::raii::Device& getLogicalDevice() const noexcept { return _logicalDevice; }
@@ -55,6 +59,7 @@ namespace tempest::renderer
         // TODO: Add compute queue
         vk::raii::Queue _graphicsQueue{ nullptr }, _presentQueue{ nullptr }, _transferQueue{ nullptr };
         float _queuePriorities[3]{ 1.0f, 1.0f, 1.0f };
+        vk::Format _depthFormat{};
 
     public:
     };
