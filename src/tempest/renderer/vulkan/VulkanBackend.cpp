@@ -12,13 +12,14 @@
 #include "VulkanBackend.h"
 
 #include "VulkanTypes.inl"
+#include "core/Asserts.h"
 #include "core/Logger.h"
+#include "core/MemorySubsystem.h"
 #include "platform/Platform.h"
 
 
 namespace tempest::renderer
 {
-
     static VulkanContext context;
     // TODO: Move to config
     static constexpr auto ENGINE_NAME      = "Tempest";
@@ -31,6 +32,13 @@ namespace tempest::renderer
     static constexpr bool ENABLE_VALIDATION_LAYERS = false;
     static std::vector<const char*> VALIDATION_LAYERS{};
 #endif
+
+    /// Debug Callback
+    static vk::Bool32 debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
+                                    vk::DebugUtilsMessageTypeFlagsEXT type,
+                                    const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
+
+    static void setupDebugMessenger() noexcept;
 
 
     bool VulkanBackend::init(platform::PlatformState* state, std::string_view applicationName) noexcept
@@ -72,8 +80,8 @@ namespace tempest::renderer
         //--------
         // LAYERS
         //--------
-        std::vector<const char*> requiredLayers;
-        if (ENABLE_VALIDATION_LAYERS)
+        Vector<const char*> requiredLayers;
+        if constexpr (ENABLE_VALIDATION_LAYERS)
         {
             requiredLayers.assign(VALIDATION_LAYERS.begin(), VALIDATION_LAYERS.end());
         }
@@ -104,7 +112,8 @@ namespace tempest::renderer
             .ppEnabledExtensionNames = requiredExtensions.data(),
         };
 
-        context.instance = vk::raii::Instance(context.baseContext, instanceCreateInfo);
+        context.instance = vk::raii::Instance(context.baseContext, instanceCreateInfo, context.allocator);
+        setupDebugMessenger();
 
         log::info("Vulkan Renderer initialized");
         return context.instance != nullptr;
@@ -147,6 +156,51 @@ namespace tempest::renderer
         if (ENABLE_VALIDATION_LAYERS)
             extensions.push_back(vk::EXTDebugUtilsExtensionName);
         return extensions;
+    }
+
+
+    vk::Bool32 debugCallback(const vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
+                             const vk::DebugUtilsMessageTypeFlagsEXT type,
+                             const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                             [[maybe_unused]] void* pUserData)
+    {
+        const auto message =
+            std::format("Validation Layer(type: {})\nMessage:\n{}\n", vk::to_string(type), pCallbackData->pMessage);
+        if (severity >= vk::DebugUtilsMessageSeverityFlagBitsEXT::eError)
+        {
+            log::error(message.c_str());
+        }
+        else if (severity >= vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning)
+        {
+            log::warn(message.c_str());
+        }
+        else
+        {
+            log::info(message.c_str());
+        }
+        return vk::False;
+    }
+
+
+    void setupDebugMessenger() noexcept
+    {
+        if constexpr (ENABLE_VALIDATION_LAYERS)
+        {
+            log::info("Vulkan validation layers are enabled!");
+            constexpr vk::DebugUtilsMessageSeverityFlagsEXT severityFlags{
+                vk::DebugUtilsMessageSeverityFlagBitsEXT::eError | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning
+            };
+            constexpr vk::DebugUtilsMessageTypeFlagsEXT messageType{
+                vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation |
+                vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral
+            };
+
+            constexpr vk::DebugUtilsMessengerCreateInfoEXT debugUtilsCreateInfo{ .messageSeverity = severityFlags,
+                                                                                 .messageType     = messageType,
+                                                                                 .pfnUserCallback = &debugCallback };
+            context.debugMessenger =
+                context.instance.createDebugUtilsMessengerEXT(debugUtilsCreateInfo, context.allocator);
+        }
     }
 
 

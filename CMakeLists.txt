@@ -10,7 +10,7 @@ enable_testing()
 #    message(WARNING "Vulkan SDK not found! Make sure you have vulkan installed and put in the system path")
 #endif ()
 ## Add include directories
-include_directories(${Vulkan_INCLUDE_DIRS})
+#include_directories(${Vulkan_INCLUDE_DIRS})
 
 
 add_library(${PROJECT_NAME}-StrictWarnings INTERFACE) # Used for linking Warning flags

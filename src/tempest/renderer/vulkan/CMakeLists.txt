@@ -26,4 +26,5 @@ target_link_libraries(
         ${TEMPEST_RENDERER_VULKAN_LIB} PRIVATE
         SDL3::SDL3-static
         Vulkan::Headers
+        Vulkan::Hpp
 )

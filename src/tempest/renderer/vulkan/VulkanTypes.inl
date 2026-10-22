@@ -12,7 +12,6 @@
 
 // Disables Vulkan Constructor generation to support C++20 designated initializers
 #define VULKAN_HPP_NO_CONSTRUCTORS
-
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
 
@@ -22,9 +21,10 @@ namespace tempest::renderer
 
     struct VulkanContext
     {
-        vk::Instance instance{};
+        vk::raii::Instance instance{ nullptr };
         vk::raii::Context baseContext{};
-        vk::AllocationCallbacks allocator{};
+        vk::AllocationCallbacks* allocator{};
+        vk::DebugUtilsMessengerEXT debugMessenger{};
     };
 
 

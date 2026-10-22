@@ -33,7 +33,10 @@ namespace tempest::memory
         stats.totalAllocations = 0;
     }
 
-    void shutdown() {}
+    void shutdown()
+    {
+        // TODO: Impl
+    }
 
     void* alloc(const size_t size, const MemoryTag tag, const size_t alignment)
     {
@@ -47,6 +50,13 @@ namespace tempest::memory
 
         void* block = platform::alloc(size, alignment);
         platform::zeroOut(block, size);
+
+
+        // log::info(std::format("Allocating {} bytes on tag {}.", size, toString(tag)));
+        // log::info(std::format("New State of allocator(IDX: {}): {}", static_cast<size_t>(tag),
+        //                       stats.taggedAllocation[static_cast<size_t>(tag)]));
+        // log::info(std::format("Total usage: {} bytes", stats.totalAllocations));
+
         return block;
     }
 
@@ -76,7 +86,8 @@ namespace tempest::memory
         constexpr size_t MB = 1024 * 1024;
         constexpr size_t KB = 1024;
 
-        std::string str;
+        std::string str =
+            std::format("{:<20}:{:>10}\n", "Total usage", std::to_string(stats.totalAllocations) + std::string(" B"));
         for (size_t i = 0; i < static_cast<size_t>(MemoryTag::MEMORY_TAG_MAX_TAGS); ++i)
         {
             std::string byteValue;
