@@ -16,6 +16,8 @@
 #include "core/Logger.h"
 #include "core/MemorySubsystem.h"
 #include "platform/Platform.h"
+#include "renderer/vulkan/VulkanDevice.h"
+#include "renderer/vulkan/VulkanPlatform.h"
 
 
 namespace tempest::renderer
@@ -115,7 +117,28 @@ namespace tempest::renderer
         context.instance = vk::raii::Instance(context.baseContext, instanceCreateInfo, context.allocator);
         setupDebugMessenger();
 
-        log::info("Vulkan Renderer initialized");
+
+        // -------------------
+        //  SURFACE CREATION
+        // -------------------
+        if (!platform::createVulkanSurface(*_state, context))
+        {
+            log::error("There was an error creating vulkan surface");
+            return false;
+        }
+
+
+        // -------------------
+        //  DEVICE CREATION
+        // -------------------
+        // TODO: Move device to class member
+        if (VulkanDevice device; !device.create(context))
+        {
+            log::error("There was an error creating the vulkan device");
+            return false;
+        }
+
+        log::info("Vulkan Renderer Initialized");
         return context.instance != nullptr;
     }
 

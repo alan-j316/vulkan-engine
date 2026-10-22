@@ -15,6 +15,7 @@
 #include "core/Logger.h"
 #include "core/MemorySubsystem.h"
 #include "platform/Memory.h"
+#include "renderer/vulkan/VulkanTypes.inl" // TODO: Update by separating the logic into different compilation unit
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
@@ -156,5 +157,17 @@ namespace tempest::platform
         uint32_t extensionsCount;
         const auto ext = SDL_Vulkan_GetInstanceExtensions(&extensionsCount);
         return Vector<const char*>(ext, ext + extensionsCount);
+    }
+
+
+    bool createVulkanSurface(const PlatformState& platformState, renderer::VulkanContext& context)
+    {
+        VkSurfaceKHR surface;
+        if (!SDL_Vulkan_CreateSurface(platformState.window, *context.instance, nullptr, &surface))
+        {
+            return false;
+        }
+        context.surface = vk::raii::SurfaceKHR(context.instance, surface);
+        return context.surface != nullptr;
     }
 } // namespace tempest::platform

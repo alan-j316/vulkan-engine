@@ -3,6 +3,7 @@ add_library(
         ${TEMPEST_RENDERER_VULKAN_LIB}
         OBJECT
         VulkanBackend.cpp
+        VulkanDevice.cpp
 )
 
 target_sources(${TEMPEST_RENDERER_VULKAN_LIB} PUBLIC
@@ -13,6 +14,8 @@ target_sources(${TEMPEST_RENDERER_VULKAN_LIB} PUBLIC
 
         PRIVATE
         VulkanTypes.inl
+        VulkanDevice.h
+        VulkanPlatform.h
 )
 
 add_library(Tempest::Internal::Renderer::Vulkan ALIAS ${TEMPEST_RENDERER_VULKAN_LIB})

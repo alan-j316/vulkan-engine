@@ -25,6 +25,7 @@ namespace tempest::renderer
         vk::raii::Context baseContext{};
         vk::AllocationCallbacks* allocator{};
         vk::DebugUtilsMessengerEXT debugMessenger{};
+        vk::raii::SurfaceKHR surface{ nullptr };
     };
 
 

@@ -17,27 +17,32 @@
 #include <vector>
 
 
-namespace tempest::platform
+namespace tempest
 {
-    /// Forward declares the internal platform state.
-    struct PlatformState;
-
-
-    class Platform
+    /// Forward declarations
+    namespace renderer
     {
-    public:
-        bool startup(std::string_view appName, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
-        void shutdown() const;
-        bool pumpMessages();
+        struct VulkanContext;
+    }
 
-        constexpr PlatformState* getState() const noexcept { return _state; };
-
-    private:
-        PlatformState* _state{};
-    };
+    namespace platform
+    {
+        struct PlatformState;
 
 
-    Vector<const char*> getRequiredExtensions();
 
+        class Platform
+        {
+        public:
+            bool startup(std::string_view appName, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+            void shutdown() const;
+            bool pumpMessages();
 
-} // namespace tempest::platform
+            constexpr PlatformState* getState() const noexcept { return _state; };
+
+        private:
+            PlatformState* _state{};
+        };
+
+    } // namespace platform
+} // namespace tempest
