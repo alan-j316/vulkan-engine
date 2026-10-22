@@ -1,7 +1,7 @@
 set(TEMPEST_RENDERER_LIB TempestRenderer${TEMPEST_INTERNAL_TARGET_SUFFIX})
 add_library(
         ${TEMPEST_RENDERER_LIB}
-        OBJECT
+        STATIC
         RendererFrontend.cpp
 )
 

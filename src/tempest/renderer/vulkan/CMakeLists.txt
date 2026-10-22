@@ -2,14 +2,14 @@ set(TEMPEST_RENDERER_VULKAN_LIB TempestRendererVulkan${TEMPEST_INTERNAL_TARGET_S
 add_library(
         ${TEMPEST_RENDERER_VULKAN_LIB}
         OBJECT
-        Test.cpp
+        VulkanBackend.cpp
 )
 
 target_sources(${TEMPEST_RENDERER_VULKAN_LIB} PUBLIC
         FILE_SET HEADERS
         BASE_DIRS ${TEMPEST_ROOT_DIR}/renderer/vulkan
         FILES
-        Test.h
+        VulkanBackend.h
 
 #        PRIVATE
 #        FILE_SET HEADERS

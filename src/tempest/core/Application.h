@@ -13,6 +13,7 @@
 #include "Clock.h"
 #include "core/EventListeners.h"
 #include "platform/Platform.h"
+#include "renderer/RendererFrontend.h"
 
 namespace tempest
 {
@@ -41,7 +42,7 @@ namespace tempest
             double _lastTime{};
             Clock _clock;
             bool _lockFrameRate{ false };
-            renderer::RendererFrontend* _renderer{};
+            renderer::RendererFrontend _renderer{};
 
             ApplicationEventListener _appEventListener;
             KeyEventListener _keyEventListener;

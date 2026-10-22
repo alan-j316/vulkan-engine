@@ -65,7 +65,7 @@ namespace tempest::core
         }
 
         // TODO: Make renderer selectable
-        if (!_renderer->init(renderer::RendererType::VULKAN, game->getConfig().name, _platform.getState()))
+        if (!_renderer.init(renderer::RendererType::VULKAN, game->getConfig().name, _platform.getState()))
         {
             log::error("There was an error initializing the renderer");
             return false;
@@ -127,7 +127,7 @@ namespace tempest::core
                     break;
                 }
                 renderer::RenderPacket packet{ .deltaTime = static_cast<float>(deltaTime) };
-                _renderer->drawFrame(packet);
+                _renderer.drawFrame(packet);
 
                 // Frame end time
                 const double frameEndTime = platform::getAbsoluteTime();
@@ -157,7 +157,7 @@ namespace tempest::core
 
         event::shutdown();
         input::shutdown();
-        _renderer->shutdown();
+        _renderer.shutdown();
         _platform.shutdown();
 
         return true;

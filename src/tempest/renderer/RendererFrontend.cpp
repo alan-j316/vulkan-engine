@@ -13,6 +13,7 @@
 #include "core/Logger.h"
 #include "core/MemorySubsystem.h"
 #include "renderer/RendererBackend.h"
+#include "renderer/vulkan/VulkanBackend.h"
 
 namespace tempest::renderer
 {
@@ -23,8 +24,8 @@ namespace tempest::renderer
         if (type == RendererType::VULKAN)
         {
             log::info("Vulkan Renderer Active!");
-            // const auto rawMem = memory::alloc(sizeof(RendererBackend), memory::MemoryTag::MEMORY_TAG_RENDERER);
-            // _rendererBackend = new (rawMem) ();
+            const auto rawMem = memory::alloc(sizeof(VulkanBackend), memory::MemoryTag::MEMORY_TAG_RENDERER);
+            _rendererBackend = new (rawMem) VulkanBackend();
         }
         else
         {
@@ -41,6 +42,7 @@ namespace tempest::renderer
         return true;
     }
 
+
     void RendererFrontend::shutdown() noexcept
     {
         // Shutdown the renderer
@@ -50,14 +52,18 @@ namespace tempest::renderer
         auto memSize = sizeof(RendererBackend);
         if (_activeBackend == RendererType::VULKAN)
         {
-            // TODO: Uncomment
-            // memSize = sizeof(VulkanBackend);
+            memSize = sizeof(VulkanBackend);
         }
         memory::free(_rendererBackend, memSize, memory::MemoryTag::MEMORY_TAG_RENDERER);
         _rendererBackend = nullptr;
     }
 
-    void RendererFrontend::onResize(uint32_t width, uint32_t height) noexcept {}
+
+    void RendererFrontend::onResize(uint32_t width, uint32_t height) noexcept
+    {
+        // TODO: Impl
+    }
+
 
     bool RendererFrontend::drawFrame(const RenderPacket& packet) const noexcept
     {
