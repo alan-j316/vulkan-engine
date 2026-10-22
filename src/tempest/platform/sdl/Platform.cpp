@@ -17,6 +17,7 @@
 #include "platform/Memory.h"
 
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_vulkan.h>
 
 namespace tempest::platform
 {
@@ -147,5 +148,13 @@ namespace tempest::platform
             }
         }
         return true;
+    }
+
+
+    Vector<const char*> getRequiredExtensions()
+    {
+        uint32_t extensionsCount;
+        const auto ext = SDL_Vulkan_GetInstanceExtensions(&extensionsCount);
+        return Vector<const char*>(ext, ext + extensionsCount);
     }
 } // namespace tempest::platform

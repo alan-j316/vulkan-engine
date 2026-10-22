@@ -18,6 +18,7 @@ namespace tempest::platform
         MACOS,
         GENERIC // SDL Implementation
     };
+
 } // namespace tempest::platform
 
 

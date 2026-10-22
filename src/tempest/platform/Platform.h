@@ -11,8 +11,10 @@
 
 #include "Memory.h"
 #include "PlatformDetect.h"
+#include "containers/Vector.h"
 
 #include <string>
+#include <vector>
 
 
 namespace tempest::platform
@@ -33,6 +35,9 @@ namespace tempest::platform
     private:
         PlatformState* _state{};
     };
+
+
+    Vector<const char*> getRequiredExtensions();
 
 
 } // namespace tempest::platform

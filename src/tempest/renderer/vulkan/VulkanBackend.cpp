@@ -13,13 +13,25 @@
 
 #include "VulkanTypes.inl"
 #include "core/Logger.h"
+#include "platform/Platform.h"
+
 
 namespace tempest::renderer
 {
+
     static VulkanContext context;
+    // TODO: Move to config
     static constexpr auto ENGINE_NAME      = "Tempest";
     static constexpr size_t APP_VERSION    = 1;
     static constexpr size_t ENGINE_VERSION = 1;
+#ifndef NDEBUG
+    static constexpr bool ENABLE_VALIDATION_LAYERS = true;
+    static std::vector<const char*> VALIDATION_LAYERS{ "VK_LAYER_KHRONOS_validation" };
+#else
+    static constexpr bool ENABLE_VALIDATION_LAYERS = false;
+    static std::vector<const char*> VALIDATION_LAYERS{};
+#endif
+
 
     bool VulkanBackend::init(platform::PlatformState* state, std::string_view applicationName) noexcept
     {
@@ -33,21 +45,27 @@ namespace tempest::renderer
         //------------
         // EXTENSIONS
         //------------
-        // const auto requiredExtensions  = getRequiredExtensions();
-        // const auto extensionProperties = context.baseContext.enumerateInstanceExtensionProperties();
+        const auto requiredExtensions  = getRequiredExtensions();
+        const auto extensionProperties = context.baseContext.enumerateInstanceExtensionProperties();
+        log::info("\nRequired Vulkan Extensions");
+        for (const auto ext : requiredExtensions)
+        {
+            log::info(ext);
+        }
+        log::info("\n\n");
 
         // Check if the extension we require are support by vulkan
-        // const auto unsupportedPropertiesIt =
-        //     std::ranges::find_if(requiredExtensions, [&extensionProperties](const auto& requiredExtension) {
-        //         return std::ranges::none_of(extensionProperties, [requiredExtension](const auto& extensionProperty) {
-        //             return strcmp(extensionProperty.extensionName, requiredExtension) == 0;
-        //         });
-        //     });
-        // if (unsupportedPropertiesIt != requiredExtensions.end())
-        // {
-        //     log::error("Required extension(s) not supported!");
-        //     return false;
-        // }
+        const auto unsupportedPropertiesIt =
+            std::ranges::find_if(requiredExtensions, [&extensionProperties](const auto& requiredExtension) {
+                return std::ranges::none_of(extensionProperties, [requiredExtension](const auto& extensionProperty) {
+                    return strcmp(extensionProperty.extensionName, requiredExtension) == 0;
+                });
+            });
+        if (unsupportedPropertiesIt != requiredExtensions.end())
+        {
+            log::error("Required extension(s) not supported!");
+            return false;
+        }
 
 
 
@@ -55,10 +73,10 @@ namespace tempest::renderer
         // LAYERS
         //--------
         std::vector<const char*> requiredLayers;
-        // if (_enableValidationLayers)
-        // {
-        //     requiredLayers.assign(_validationLayers.begin(), _validationLayers.end());
-        // }
+        if (ENABLE_VALIDATION_LAYERS)
+        {
+            requiredLayers.assign(VALIDATION_LAYERS.begin(), VALIDATION_LAYERS.end());
+        }
         // Enumerate through each layer and determine if the layers we need are supported
         const auto supportedLayers = context.baseContext.enumerateInstanceLayerProperties();
         const auto unsupportedLayers =
@@ -82,10 +100,8 @@ namespace tempest::renderer
             .pApplicationInfo        = &applicationInfo,
             .enabledLayerCount       = static_cast<uint32_t>(requiredLayers.size()),
             .ppEnabledLayerNames     = requiredLayers.data(),
-            .enabledExtensionCount   = 0,
-            .ppEnabledExtensionNames = nullptr
-            // .enabledExtensionCount   = static_cast<uint32_t>(requiredExtensions.size()),
-            // .ppEnabledExtensionNames = requiredExtensions.data(),
+            .enabledExtensionCount   = static_cast<uint32_t>(requiredExtensions.size()),
+            .ppEnabledExtensionNames = requiredExtensions.data(),
         };
 
         context.instance = vk::raii::Instance(context.baseContext, instanceCreateInfo);
@@ -93,6 +109,7 @@ namespace tempest::renderer
         log::info("Vulkan Renderer initialized");
         return context.instance != nullptr;
     }
+
 
     void VulkanBackend::shutdown() noexcept
     {
@@ -117,6 +134,19 @@ namespace tempest::renderer
     {
         // TODO: Impl
         return true;
+    }
+
+    /// +==================================+
+    ///           PRIVATE METHODS
+    /// +==================================+
+
+    Vector<const char*> VulkanBackend::getRequiredExtensions() const noexcept
+    {
+        auto extensions = platform::getRequiredExtensions();
+        // Setup up the debug callback extension
+        if (ENABLE_VALIDATION_LAYERS)
+            extensions.push_back(vk::EXTDebugUtilsExtensionName);
+        return extensions;
     }
 
 

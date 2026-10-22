@@ -9,7 +9,11 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
+#include "containers/Vector.h"
 #include "renderer/RendererBackend.h"
+
+#include <vector>
+
 
 namespace tempest::renderer
 {
@@ -21,5 +25,8 @@ namespace tempest::renderer
         void onResize(uint32_t width, uint32_t height) noexcept override;
         bool beginFrame(float deltaTime) noexcept override;
         bool endFrame(float deltaTime) noexcept override;
+
+    private:
+        Vector<const char*> getRequiredExtensions() const noexcept;
     };
 } // namespace tempest::renderer
