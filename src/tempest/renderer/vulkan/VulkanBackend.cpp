@@ -83,7 +83,7 @@ namespace tempest::renderer
         //--------
         // LAYERS
         //--------
-        Vector<const char*> requiredLayers;
+        Vector<const char*> requiredLayers = makeVector<const char*>();
         if constexpr (ENABLE_VALIDATION_LAYERS)
         {
             requiredLayers.assign(VALIDATION_LAYERS.begin(), VALIDATION_LAYERS.end());

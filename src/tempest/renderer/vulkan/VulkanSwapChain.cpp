@@ -121,7 +121,7 @@ namespace tempest::renderer
 
         _swapChainInstance = vk::raii::SwapchainKHR(context.device->getLogicalDevice(), swapChainCreateInfo);
         const auto images  = _swapChainInstance.getImages();
-        _images            = { images.begin(), images.end() };
+        _images.assign(images.begin(), images.end());
 
         _imageIndex = 0;
 

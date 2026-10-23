@@ -42,7 +42,7 @@ namespace tempest::core
 
         for (auto& entry : state.entries)
         {
-            entry = EventCodeEntry{ &_allocator };
+            entry = makeVector<Listener*>();
         }
         isInitialized = true;
 

@@ -174,7 +174,8 @@ namespace tempest::renderer
             ++indexCount;
         }
 
-        Vector<uint32_t> indices(indexCount);
+        auto indices = makeVector<uint32_t>();
+        indices.resize(indexCount);
         uint32_t index   = 0;
         indices[index++] = _queueInfo.graphicsFamilyIndex;
         if (!presentSharesGraphicsQueue)
@@ -186,7 +187,7 @@ namespace tempest::renderer
             indices[index++] = _queueInfo.transferFamilyIndex;
         }
 
-        Vector<vk::DeviceQueueCreateInfo> queueCreateInfos{};
+        auto queueCreateInfos = makeVector<vk::DeviceQueueCreateInfo>();
         for (size_t i = 0; i < indexCount; ++i)
         {
             const auto qIndex     = indices[i];
@@ -273,14 +274,14 @@ namespace tempest::renderer
         const auto presentModes   = device.getSurfacePresentModesKHR(surface);
         info.capabilities         = device.getSurfaceCapabilitiesKHR(surface);
         // NOTE: We are copying the data from normal vector to pmr vector
-        info.formats      = Vector<vk::SurfaceFormatKHR>{ surfaceFormats.begin(), surfaceFormats.end() };
-        info.presentModes = Vector<vk::PresentModeKHR>{ presentModes.begin(), presentModes.end() };
+        info.formats.assign(surfaceFormats.begin(), surfaceFormats.end());
+        info.presentModes.assign(presentModes.begin(), presentModes.end());
     }
 
 
 
     uint32_t VulkanDevice::findMemoryType(const uint32_t typeFilter,
-                                      const vk::MemoryPropertyFlags properties) const noexcept
+                                          const vk::MemoryPropertyFlags properties) const noexcept
     {
         const vk::PhysicalDeviceMemoryProperties memProperties = _physicalDevice.getMemoryProperties();
 

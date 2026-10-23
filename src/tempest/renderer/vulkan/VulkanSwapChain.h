@@ -20,6 +20,11 @@ namespace tempest::renderer
     class VulkanSwapChain
     {
     public:
+        constexpr VulkanSwapChain() noexcept
+            : _images(makeVector<vk::Image>()),
+              _imageViews(makeVector<vk::raii::ImageView>()),
+              _depthImages(makeVector<VulkanImage>())
+        {}
         void create(VulkanContext& context, uint32_t width, uint32_t height) noexcept;
         void recreate(VulkanContext& context, uint32_t width, uint32_t height) noexcept;
         void destroy(const VulkanContext& context) noexcept;

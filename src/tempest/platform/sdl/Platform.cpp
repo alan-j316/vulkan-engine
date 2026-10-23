@@ -157,6 +157,7 @@ namespace tempest::platform
     {
         uint32_t extensionsCount;
         const auto ext = SDL_Vulkan_GetInstanceExtensions(&extensionsCount);
+        // TODO: Refactor to PMR
         return Vector<const char*>(ext, ext + extensionsCount);
     }
 
