@@ -25,7 +25,7 @@ namespace tempest::renderer
     void VulkanSwapChain::destroy(const VulkanContext& context) noexcept { _cleanupSwapChain(); }
 
     uint32_t VulkanSwapChain::acquireNextImageIndex(VulkanContext& context, const size_t timeout,
-                                              const vk::Semaphore imageAvailableSemaphore, const vk::Fence fence)
+                                                    const vk::Semaphore imageAvailableSemaphore, const vk::Fence fence)
     {
         const auto [result, index] = _swapChainInstance.acquireNextImage(timeout, imageAvailableSemaphore, nullptr);
         if (result == vk::Result::eErrorOutOfDateKHR)
@@ -42,8 +42,8 @@ namespace tempest::renderer
 
 
     void VulkanSwapChain::presentSwapChain(VulkanContext& context, vk::raii::Queue graphicsQueue,
-                                     const vk::raii::Queue& presentQueue, vk::Semaphore renderCompleteSemaphore,
-                                     uint32_t imageIndex)
+                                           const vk::raii::Queue& presentQueue, vk::Semaphore renderCompleteSemaphore,
+                                           uint32_t imageIndex)
     {
         const vk::PresentInfoKHR presentInfo{
             .waitSemaphoreCount = 1,
@@ -72,7 +72,7 @@ namespace tempest::renderer
     // +===============================
 
     void VulkanSwapChain::_createVulkanSwapChain(VulkanContext& context, uint32_t width, uint32_t height,
-                                           const vk::SwapchainKHR* oldSwapChain) noexcept
+                                                 const vk::SwapchainKHR* oldSwapChain) noexcept
     {
         _maxFramesInFlight           = MAX_FRAMES_IN_FLIGHT_DEF;
         _extent                      = { .width = width, .height = height };
@@ -163,7 +163,7 @@ namespace tempest::renderer
                                               .numSamples  = vk::SampleCountFlagBits::e1 };
             VulkanImage depthImage{};
             depthImage.create(context, createInfo);
-            _imageViews.emplace_back(depthImage);
+            _depthImages.push_back(std::move(depthImage));
         }
 
         log::info("SwapChain created successfully!");
@@ -234,8 +234,8 @@ namespace tempest::renderer
 
 
     vk::raii::ImageView VulkanSwapChain::createImageView(const VulkanContext& context, const vk::Image& image,
-                                                   const vk::ImageAspectFlags aspectFlags,
-                                                   const uint32_t mipLevel) const noexcept
+                                                         const vk::ImageAspectFlags aspectFlags,
+                                                         const uint32_t mipLevel) const noexcept
     {
         const vk::ImageViewCreateInfo viewInfo{ .image            = image,
                                                 .viewType         = vk::ImageViewType::e2D,
