@@ -66,6 +66,8 @@ namespace tempest::renderer
     //         CONTEXTS AND VULKAN STRUCTURE ABSTRACTIONS
     //----------------------------------------------------------------
 
+    using CommandBufferHandle = uint32_t;
+
     struct VulkanContext
     {
         vk::raii::Instance instance{ nullptr };
@@ -73,9 +75,11 @@ namespace tempest::renderer
         vk::AllocationCallbacks* allocator{};
         vk::DebugUtilsMessengerEXT debugMessenger{};
         vk::raii::SurfaceKHR surface{ nullptr };
+        vk::Extent2D swapChainExtent{};
         class VulkanDevice* device{};
         class VulkanSwapChain* swapChain{};
-        vk::Extent2D swapChainExtent{};
+        class VulkanCommandPool* graphicsCommandPool{};
+        Vector<CommandBufferHandle> graphicsCommandBuffers{ makeVector<CommandBufferHandle>() };
     };
 
     static constexpr auto MIN_VULKAN_VERSION = VK_API_VERSION_1_3;

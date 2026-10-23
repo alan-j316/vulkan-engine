@@ -16,12 +16,14 @@
 
 namespace tempest::renderer
 {
-    using CommandBufferHandle = uint32_t;
     class VulkanCommandPool
     {
     public:
         /// Create a command pool. Must be called before allocating a command buffer.
         bool createCommandPool(const VulkanContext& context, uint32_t queueFamilyIndex) noexcept;
+
+        /// Destroy the command pool
+        void destroy() noexcept;
 
         /// Allocate a new command buffer from the command pool.
         CommandBufferHandle allocate(const VulkanContext& context, bool isPrimary);

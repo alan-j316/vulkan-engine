@@ -33,6 +33,7 @@ namespace tempest::renderer
         void presentSwapChain(VulkanContext& context, vk::raii::Queue graphicsQueue,
                               const vk::raii::Queue& presentQueue, vk::Semaphore renderCompleteSemaphore,
                               uint32_t imageIndex);
+        [[nodiscard]] uint32_t getImageCount() const noexcept { return _images.size(); }
 
 
     private:

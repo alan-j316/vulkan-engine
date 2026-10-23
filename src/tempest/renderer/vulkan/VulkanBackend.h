@@ -28,5 +28,6 @@ namespace tempest::renderer
 
     private:
         Vector<const char*> getRequiredExtensions() const noexcept;
+        void createGraphicsCommandPoolAndAllocateBuffers() const noexcept;
     };
 } // namespace tempest::renderer

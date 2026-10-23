@@ -11,6 +11,7 @@
 
 #include "VulkanBackend.h"
 
+#include "VulkanCommandPool.h"
 #include "VulkanTypes.inl"
 #include "core/Asserts.h"
 #include "core/Logger.h"
@@ -166,6 +167,8 @@ namespace tempest::renderer
         // TODO: Update width and height
         context.swapChain->create(context, 1280, 720);
 
+        createGraphicsCommandPoolAndAllocateBuffers();
+
         log::info("Vulkan Renderer Initialized");
         return context.instance != nullptr;
     }
@@ -174,6 +177,10 @@ namespace tempest::renderer
     void VulkanBackend::shutdown() noexcept
     {
         // TODO: Impl
+        context.graphicsCommandPool->destroy();
+        context.swapChain->destroy(context);
+        context.device->destroy(context);
+        // NOTE: RAII will do rest of the cleanup
     }
 
 
@@ -207,6 +214,20 @@ namespace tempest::renderer
         if (ENABLE_VALIDATION_LAYERS)
             extensions.push_back(vk::EXTDebugUtilsExtensionName);
         return extensions;
+    }
+
+    void VulkanBackend::createGraphicsCommandPoolAndAllocateBuffers() const noexcept
+    {
+        const auto rawMem           = memory::alloc(sizeof(VulkanCommandPool), memory::MemoryTag::MEMORY_TAG_RENDERER);
+        context.graphicsCommandPool = new (rawMem) VulkanCommandPool();
+        context.graphicsCommandPool->createCommandPool(context, context.device->getQueueInfo().graphicsFamilyIndex);
+        log::info("Command pool for Graphics Family created!");
+        /// Create a command buffer for each swapchain image.
+        for (size_t i = 0; i < context.swapChain->getImageCount(); ++i)
+        {
+            context.graphicsCommandBuffers.push_back(context.graphicsCommandPool->allocate(context, true));
+        }
+        log::info("Command buffers allocated for Graphics Family!");
     }
 
 

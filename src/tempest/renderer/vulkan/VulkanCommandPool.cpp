@@ -34,6 +34,14 @@ namespace tempest::renderer
         return _commandPool != nullptr;
     }
 
+    void VulkanCommandPool::destroy() noexcept
+    {
+        _commandBuffers.clear();
+        _freeHandles.clear();
+        _states.clear();
+        _commandPool = nullptr;
+    }
+
 
     CommandBufferHandle VulkanCommandPool::allocate(const VulkanContext& context, bool isPrimary)
     {
@@ -64,7 +72,8 @@ namespace tempest::renderer
         else
         {
             const auto handle = _commandBuffers.size();
-            _states[handle]   = CommandBufferState::UNALLOCATED;
+            TEMPEST_ASSERT(_commandBuffers.size() == _states.size(), "Command buffer and states out-of-sync");
+            _states.push_back(CommandBufferState::UNALLOCATED);
             _commandBuffers.push_back(
                 std::move(vk::raii::CommandBuffers(context.device->getLogicalDevice(), allocateInfo)[0]));
             return handle;
