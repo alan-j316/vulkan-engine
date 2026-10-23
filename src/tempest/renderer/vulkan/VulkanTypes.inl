@@ -95,9 +95,12 @@ namespace tempest::renderer
 
     struct VulkanSwapChainSupportInfo
     {
+
         vk::SurfaceCapabilitiesKHR capabilities; ///< Features and capabilities of surface.
-        Vector<vk::SurfaceFormatKHR> formats;    ///< Image formats used in rendering.
-        Vector<vk::PresentModeKHR> presentModes; ///< Supported present mode(Mailbox, Fifo, Immediate etc.)
+        Vector<vk::SurfaceFormatKHR> formats =
+            tempest::makeVector<vk::SurfaceFormatKHR>(); ///< Image formats used in rendering.
+        Vector<vk::PresentModeKHR> presentModes =
+            makeVector<vk::PresentModeKHR>(); ///< Supported present mode(Mailbox, Fifo, Immediate etc.)
     };
 
 } // namespace tempest::renderer

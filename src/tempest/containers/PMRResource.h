@@ -9,7 +9,7 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
-#include "MemorySubsystem.h"
+#include "core/MemorySubsystem.h"
 
 #include <memory_resource>
 
@@ -32,7 +32,8 @@ namespace tempest::container
 
         [[nodiscard]] bool do_is_equal(const memory_resource& other) const noexcept override
         {
-            return *this == other;
+            return this == &other;
+            // return *this == other;
         }
     };
 } // namespace tempest::container
