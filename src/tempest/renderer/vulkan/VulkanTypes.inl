@@ -66,7 +66,11 @@ namespace tempest::renderer
     //         CONTEXTS AND VULKAN STRUCTURE ABSTRACTIONS
     //----------------------------------------------------------------
 
+    /// Type aliases
     using CommandBufferHandle = uint32_t;
+
+    // Forward declarations
+    class VulkanFence;
 
     struct VulkanContext
     {
@@ -80,6 +84,11 @@ namespace tempest::renderer
         class VulkanSwapChain* swapChain{};
         class VulkanCommandPool* graphicsCommandPool{};
         Vector<CommandBufferHandle> graphicsCommandBuffers{ makeVector<CommandBufferHandle>() };
+        // Synchronization primitives
+        Vector<vk::raii::Semaphore> imageAvailableSemaphores{ makeVector<vk::raii::Semaphore>() };
+        Vector<vk::raii::Semaphore> queueCompleteSemaphore{ makeVector<vk::raii::Semaphore>() };
+        Vector<VulkanFence> inFlightFences{ };
+        Vector<VulkanFence> imagesInFlight{ };
     };
 
     static constexpr auto MIN_VULKAN_VERSION = VK_API_VERSION_1_3;

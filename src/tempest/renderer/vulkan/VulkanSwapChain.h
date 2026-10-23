@@ -34,6 +34,7 @@ namespace tempest::renderer
                               const vk::raii::Queue& presentQueue, vk::Semaphore renderCompleteSemaphore,
                               uint32_t imageIndex);
         [[nodiscard]] uint32_t getImageCount() const noexcept { return _images.size(); }
+        [[nodiscard]] uint8_t getMaxFramesInFlight() const noexcept { return _maxFramesInFlight; }
 
 
     private:

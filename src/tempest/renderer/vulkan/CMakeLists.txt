@@ -7,6 +7,7 @@ add_library(
         VulkanSwapChain.cpp
         VulkanImage.cpp
         VulkanCommandPool.cpp
+        VulkanFence.cpp
 )
 
 
@@ -23,6 +24,7 @@ target_sources(${TEMPEST_RENDERER_VULKAN_LIB} PUBLIC
         VulkanSwapChain.h
         VulkanImage.h
         VulkanCommandPool.h
+        VulkanFence.h
 )
 
 add_library(Tempest::Internal::Renderer::Vulkan ALIAS ${TEMPEST_RENDERER_VULKAN_LIB})

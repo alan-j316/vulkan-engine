@@ -12,12 +12,14 @@
 #include "VulkanBackend.h"
 
 #include "VulkanCommandPool.h"
+#include "VulkanFence.h"
 #include "VulkanTypes.inl"
 #include "core/Asserts.h"
 #include "core/Logger.h"
 #include "core/MemorySubsystem.h"
 #include "platform/Platform.h"
 #include "renderer/vulkan/VulkanDevice.h"
+#include "renderer/vulkan/VulkanFence.h"
 #include "renderer/vulkan/VulkanPlatform.h"
 #include "renderer/vulkan/VulkanSwapChain.h"
 
@@ -167,7 +169,31 @@ namespace tempest::renderer
         // TODO: Update width and height
         context.swapChain->create(context, 1280, 720);
 
+
+        // -------------------------
+        //  COMMAND POOL AND BUFFERS
+        // -------------------------
         createGraphicsCommandPoolAndAllocateBuffers();
+
+
+        // ------------------------
+        //  SYNCHRONIZATION OBJECTS
+        // ------------------------
+        context.inFlightFences = makeVector<VulkanFence>();
+        context.inFlightFences.resize(context.swapChain->getMaxFramesInFlight());
+
+        for (size_t i = 0; i < context.swapChain->getMaxFramesInFlight(); ++i)
+        {
+            vk::SemaphoreCreateInfo semaphoreCreateInfo{};
+            context.imageAvailableSemaphores.emplace_back(context.device->getLogicalDevice(), semaphoreCreateInfo,
+                                                          context.allocator);
+            context.queueCompleteSemaphore.emplace_back(context.device->getLogicalDevice(), semaphoreCreateInfo,
+                                                        context.allocator);
+
+            VulkanFence fence{};
+            fence.create(context, true);
+            context.inFlightFences[i] = std::move(fence);
+        }
 
         log::info("Vulkan Renderer Initialized");
         return context.instance != nullptr;
@@ -177,9 +203,17 @@ namespace tempest::renderer
     void VulkanBackend::shutdown() noexcept
     {
         // TODO: Impl
-        context.graphicsCommandPool->destroy();
+        // Wait for idle before shutting down sync primitives
+        context.device->getLogicalDevice().waitIdle();
+
+        // Destroy sync primitives
+        context.imageAvailableSemaphores.clear();
+        context.queueCompleteSemaphore.clear();
+        context.inFlightFences.clear();
         context.swapChain->destroy(context);
-        context.device->destroy(context);
+        //
+        // context.graphicsCommandPool->destroy();
+        // context.device->destroy(context);
         // NOTE: RAII will do rest of the cleanup
     }
 
@@ -202,6 +236,8 @@ namespace tempest::renderer
         // TODO: Impl
         return true;
     }
+
+
 
     /// +==================================+
     ///           PRIVATE METHODS
