@@ -11,7 +11,7 @@
 #include "Buffer.h"
 
 #include "../utils/Logger.h"
-#include "CommandBuffer.h"
+#include "VulkanCommandBuffer.h"
 
 
 namespace tempest::renderer
@@ -48,7 +48,7 @@ namespace tempest::renderer
 
     void Buffer::copyTo(const Buffer& destination, const size_t size, RenderQueue& queue) const noexcept
     {
-        const CommandBuffer copyCommandBuffer{ _device, queue, 1 };
+        const VulkanCommandBuffer copyCommandBuffer{ _device, queue, 1 };
         copyCommandBuffer.beginSingleTimeRecording();
         copyCommandBuffer.getBaseCommandBuffers()[0].copyBuffer(_buffer, destination._buffer,
                                                                 vk::BufferCopy(0, 0, size));

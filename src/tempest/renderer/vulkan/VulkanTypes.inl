@@ -103,4 +103,14 @@ namespace tempest::renderer
             makeVector<vk::PresentModeKHR>(); ///< Supported present mode(Mailbox, Fifo, Immediate etc.)
     };
 
+    enum class CommandBufferState : uint8_t
+    {
+        READY,           ///< Command buffer is ready for recording.
+        RECORDING,       ///< Command buffer is being recorded.
+        RECORDING_ENDED, ///< Command buffer recording has ended.
+        SUBMITTED,       ///< Command buffer has been submitted.
+        FREED,           ///< Command buffer was freed.
+        UNALLOCATED,     ///< Initial command buffer state
+    };
+
 } // namespace tempest::renderer
