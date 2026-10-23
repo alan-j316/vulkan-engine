@@ -26,12 +26,11 @@ tempest::Game* createGame()
 }
 
 
-extern bool destroyGame(tempest::Game* game)
+bool destroyGame(tempest::Game* game)
 {
     if (!game)
         return false;
     game->~Game();
     tempest::free(game, sizeof(fps::FPSGame), tempest::MemoryTag::MEMORY_TAG_GAME);
-
     return true;
 }

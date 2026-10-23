@@ -260,6 +260,8 @@ namespace tempest::renderer
         _graphicsQueue = nullptr;
         _presentQueue  = nullptr;
         _transferQueue = nullptr;
+        _logicalDevice  = nullptr;
+        _physicalDevice = nullptr;
 
         // Clear present mode and formats
         _swapChainSupport.presentModes.clear();

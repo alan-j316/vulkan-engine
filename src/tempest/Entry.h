@@ -38,6 +38,10 @@ int main()
         return 2;
     }
 
-    destroyGame(game);
+    if (destroyGame(game))
+    {
+        tempest::log::info("Game destroyed successfully!");
+    }
     tempest::memory::shutdown();
+    tempest::log::info("Memory system successfully shutdown!");
 }

@@ -211,9 +211,11 @@ namespace tempest::renderer
         context.queueCompleteSemaphore.clear();
         context.inFlightFences.clear();
         context.swapChain->destroy(context);
-        //
-        // context.graphicsCommandPool->destroy();
-        // context.device->destroy(context);
+
+        context.graphicsCommandPool->destroy();
+        context.device->destroy(context);
+        context.surface  = nullptr;
+        context.instance = nullptr;
         // NOTE: RAII will do rest of the cleanup
     }
 
