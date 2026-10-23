@@ -153,7 +153,7 @@ namespace tempest::renderer
             VulkanImageCreateInfo createInfo{ .imageType   = vk::ImageType::e2D,
                                               .width       = _extent.width,
                                               .height      = _extent.height,
-                                              .format      = _format.format,
+                                              .format      = context.device->getDepthFormat(),
                                               .usage       = vk::ImageUsageFlagBits::eDepthStencilAttachment,
                                               .properties  = vk::MemoryPropertyFlagBits::eDeviceLocal, // TODO: Update
                                               .aspectFlags = vk::ImageAspectFlagBits::eDepth,

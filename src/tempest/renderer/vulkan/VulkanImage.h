@@ -45,7 +45,7 @@ namespace tempest::renderer
         vk::raii::Image _image{ nullptr };
         vk::raii::ImageView _imageView{ nullptr };
         vk::raii::DeviceMemory _memory{ nullptr };
-        uint32_t _mipLevels{ 0 };
+        uint32_t _mipLevels{ 1 };
         uint32_t _width{ 0 }, _height{ 0 };
         // vk::ImageLayout _layout{ vk::ImageLayout::eUndefined };
         // vk::Format _format{};
