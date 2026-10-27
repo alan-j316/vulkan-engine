@@ -16,9 +16,7 @@
 
 namespace tempest::renderer
 {
-
-
-    bool VulkanCommandPool::createCommandPool(const VulkanContext& context, const uint32_t queueFamilyIndex) noexcept
+    bool VulkanCommandPool::createCommandPool(const VulkanDevice& device, const uint32_t queueFamilyIndex) noexcept
     {
         // For allocation command buffer we need a command pool first
         const vk::CommandPoolCreateInfo commandPoolCreateInfo{
@@ -30,9 +28,10 @@ namespace tempest::renderer
 
         // Command buffers execute by submitting them to ONE of the device queues, like graphics or presentation,
         // and each queue type require a different command buffer
-        _commandPool = vk::raii::CommandPool(context.device->getLogicalDevice(), commandPoolCreateInfo);
+        _commandPool = vk::raii::CommandPool(device.getLogicalDevice(), commandPoolCreateInfo);
         return _commandPool != nullptr;
     }
+
 
     void VulkanCommandPool::destroy() noexcept
     {
@@ -43,9 +42,8 @@ namespace tempest::renderer
     }
 
 
-    CommandBufferHandle VulkanCommandPool::allocate(const VulkanContext& context, bool isPrimary)
+    CommandBufferHandle VulkanCommandPool::allocate(const VulkanDevice& device, const bool isPrimary)
     {
-        // TODO: Create command pool
         TEMPEST_ASSERT(
             _commandPool != nullptr,
             "[CommandBuffer Allocate]: Command Pool not created! Call createCommandPool(...) to create a command "
@@ -64,9 +62,8 @@ namespace tempest::renderer
         {
             const auto handle = _freeHandles.size() - 1;
             _freeHandles.pop_back();
-            _states[handle] = CommandBufferState::UNALLOCATED;
-            _commandBuffers[handle] =
-                std::move(vk::raii::CommandBuffers(context.device->getLogicalDevice(), allocateInfo)[0]);
+            _states[handle]         = CommandBufferState::UNALLOCATED;
+            _commandBuffers[handle] = std::move(vk::raii::CommandBuffers(device.getLogicalDevice(), allocateInfo)[0]);
             return handle;
         }
         else
@@ -74,14 +71,13 @@ namespace tempest::renderer
             const auto handle = _commandBuffers.size();
             TEMPEST_ASSERT(_commandBuffers.size() == _states.size(), "Command buffer and states out-of-sync");
             _states.push_back(CommandBufferState::UNALLOCATED);
-            _commandBuffers.push_back(
-                std::move(vk::raii::CommandBuffers(context.device->getLogicalDevice(), allocateInfo)[0]));
+            _commandBuffers.push_back(std::move(vk::raii::CommandBuffers(device.getLogicalDevice(), allocateInfo)[0]));
             return handle;
         }
     }
 
 
-    void VulkanCommandPool::free(const VulkanContext& context, const CommandBufferHandle handle)
+    void VulkanCommandPool::free(const CommandBufferHandle handle)
     {
         _freeHandles.push_back(handle);
         _states[handle] = CommandBufferState::FREED;
@@ -129,32 +125,32 @@ namespace tempest::renderer
         _commandBuffers[handle].reset();
     }
 
-    CommandBufferHandle VulkanCommandPool::allocateAndStartSingleTimeRecording(const VulkanContext& context) noexcept
+
+    CommandBufferHandle VulkanCommandPool::allocateAndStartSingleTimeRecording(const VulkanDevice& device) noexcept
     {
-        const auto handle = allocate(context, true);
+        const auto handle = allocate(device, true);
         startRecording(handle, true, false);
         return handle;
     }
 
 
-    void VulkanCommandPool::endSingleTimeRecordingAndSubmit(const VulkanContext& context,
-                                                            const CommandBufferHandle handle,
+    void VulkanCommandPool::endSingleTimeRecordingAndSubmit(const CommandBufferHandle handle,
                                                             const vk::raii::Queue& queue) noexcept
     {
         endRecording(handle);
 
         // Submit to the queue
-        vk::SubmitInfo submitInfo{
+        const vk::SubmitInfo submitInfo{
             .commandBufferCount = 1,
             .pCommandBuffers    = &*_commandBuffers[handle],
         };
 
         queue.submit(submitInfo);
         // Since we are not use a fence we need to wait for the submission to end
-        queue.waitIdle();
+        queue.waitIdle(); // TODO: Add fence
 
         // Free the command buffer
-        free(context, handle);
+        free(handle);
     }
 
 } // namespace tempest::renderer

@@ -20,16 +20,16 @@ namespace tempest::renderer
     {
     public:
         /// Create a command pool. Must be called before allocating a command buffer.
-        bool createCommandPool(const VulkanContext& context, uint32_t queueFamilyIndex) noexcept;
+        bool createCommandPool(const VulkanDevice& device, uint32_t queueFamilyIndex) noexcept;
 
         /// Destroy the command pool
         void destroy() noexcept;
 
         /// Allocate a new command buffer from the command pool.
-        CommandBufferHandle allocate(const VulkanContext& context, bool isPrimary);
+        CommandBufferHandle allocate(const VulkanDevice& device, bool isPrimary);
 
         /// Free the command buffer from the command pool.
-        void free(const VulkanContext& context, CommandBufferHandle handle);
+        void free(CommandBufferHandle handle);
 
         /// Start recording to the command buffer.
         void startRecording(CommandBufferHandle handle, bool isSingleUse, bool isSimultaneousUse) noexcept;
@@ -44,11 +44,10 @@ namespace tempest::renderer
         void reset(CommandBufferHandle handle) noexcept;
 
         /// Allocate a single time command buffer and start recording.
-        CommandBufferHandle allocateAndStartSingleTimeRecording(const VulkanContext& context) noexcept;
+        CommandBufferHandle allocateAndStartSingleTimeRecording(const VulkanDevice& device) noexcept;
 
         /// Ends Single Time Command Buffer Recording.
-        void endSingleTimeRecordingAndSubmit(const VulkanContext& context, CommandBufferHandle handle,
-                                             const vk::raii::Queue& queue) noexcept;
+        void endSingleTimeRecordingAndSubmit(CommandBufferHandle handle, const vk::raii::Queue& queue) noexcept;
 
         [[nodiscard]] vk::raii::CommandBuffer& getBaseCommandBuffer(const CommandBufferHandle handle) noexcept
         {

@@ -448,9 +448,9 @@ namespace tempest::renderer
                                                   context.inFlightFences[context.frameIndex].getBaseFence());
 
         // Present swapchain
-        context.swapChain->presentSwapChain(context, context.device->getGraphicsQueue(),
-                                            context.device->getPresentQueue(),
-                                            context.queueCompleteSemaphore[context.frameIndex], context.swapChainImageIndex);
+        context.swapChain->presentSwapChain(
+            context, context.device->getGraphicsQueue(), context.device->getPresentQueue(),
+            context.queueCompleteSemaphore[context.frameIndex], context.swapChainImageIndex);
 
         context.frameIndex = (context.frameIndex + 1) % context.swapChain->getMaxFramesInFlight();
 
@@ -478,12 +478,13 @@ namespace tempest::renderer
     {
         const auto rawMem           = memory::alloc(sizeof(VulkanCommandPool), memory::MemoryTag::MEMORY_TAG_RENDERER);
         context.graphicsCommandPool = new (rawMem) VulkanCommandPool();
-        context.graphicsCommandPool->createCommandPool(context, context.device->getQueueInfo().graphicsFamilyIndex);
+        context.graphicsCommandPool->createCommandPool(*context.device,
+                                                       context.device->getQueueInfo().graphicsFamilyIndex);
         log::info("Command pool for Graphics Family created!");
         /// Create a command buffer for each swapchain image.
         for (size_t i = 0; i < context.swapChain->getImageCount(); ++i)
         {
-            context.graphicsCommandBuffers.push_back(context.graphicsCommandPool->allocate(context, true));
+            context.graphicsCommandBuffers.push_back(context.graphicsCommandPool->allocate(*context.device, true));
         }
         log::info("Command buffers allocated for Graphics Family!");
     }
