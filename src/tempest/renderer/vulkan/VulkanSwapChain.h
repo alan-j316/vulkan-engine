@@ -27,7 +27,7 @@ namespace tempest::renderer
         {}
         void create(VulkanContext& context, uint32_t width, uint32_t height) noexcept;
         void recreate(VulkanContext& context, uint32_t width, uint32_t height) noexcept;
-        void destroy(const VulkanContext& context) noexcept;
+        void destroy() noexcept;
         uint32_t acquireNextImageIndex(VulkanContext& context, size_t timeout, vk::Semaphore imageAvailableSemaphore,
                                        vk::Fence fence);
         void presentSwapChain(VulkanContext& context, vk::raii::Queue graphicsQueue,
@@ -43,12 +43,13 @@ namespace tempest::renderer
         void _createVulkanSwapChain(VulkanContext& context, uint32_t width, uint32_t height,
                                     const vk::SwapchainKHR* oldSwapChain = nullptr) noexcept;
         void _cleanupSwapChain() noexcept;
-        [[nodiscard]] vk::SurfaceFormatKHR _chooseSurfaceFormat(const VulkanContext& context) const noexcept;
-        [[nodiscard]] vk::PresentModeKHR _choosePresentationMode(const VulkanContext& context) const noexcept;
+        [[nodiscard]] vk::SurfaceFormatKHR _chooseSurfaceFormat(const VulkanDevice& device,
+                                                                const vk::raii::SurfaceKHR& surface) const noexcept;
+        [[nodiscard]] vk::PresentModeKHR _choosePresentationMode(const VulkanDevice& device) const noexcept;
         [[nodiscard]] vk::Extent2D _chooseSwapChainExtent(
             const vk::SurfaceCapabilitiesKHR& capabilities) const noexcept;
         [[nodiscard]] uint32_t _chooseMinImageCount(const vk::SurfaceCapabilitiesKHR& capabilities) const noexcept;
-        [[nodiscard]] vk::raii::ImageView createImageView(const VulkanContext& context, const vk::Image& image,
+        [[nodiscard]] vk::raii::ImageView createImageView(const VulkanDevice& device, const vk::Image& image,
                                                           vk::ImageAspectFlags aspectFlags,
                                                           uint32_t mipLevel) const noexcept;
 

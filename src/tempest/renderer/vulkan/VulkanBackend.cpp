@@ -209,7 +209,7 @@ namespace tempest::renderer
         context.imageAvailableSemaphores.clear();
         context.queueCompleteSemaphore.clear();
         context.inFlightFences.clear();
-        context.swapChain->destroy(context);
+        context.swapChain->destroy();
 
         context.graphicsCommandPool->destroy();
         context.device->destroy();
