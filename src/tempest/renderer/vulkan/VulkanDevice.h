@@ -17,7 +17,7 @@ namespace tempest::renderer
     {
     public:
         bool create(const VulkanContext& context, const PhysicalDeviceRequirements& physicalDeviceRequirements);
-        void destroy(const VulkanContext& context);
+        void destroy();
         static void querySwapChainSupport(const vk::raii::PhysicalDevice& device, const vk::SurfaceKHR& surface,
                                           VulkanSwapChainSupportInfo& info) noexcept;
         [[nodiscard]] uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) const noexcept;

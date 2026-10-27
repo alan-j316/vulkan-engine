@@ -212,7 +212,7 @@ namespace tempest::renderer
         context.swapChain->destroy(context);
 
         context.graphicsCommandPool->destroy();
-        context.device->destroy(context);
+        context.device->destroy();
         context.surface  = nullptr;
         context.instance = nullptr;
         log::info("Vulkan Backend successfully shutdown!");
