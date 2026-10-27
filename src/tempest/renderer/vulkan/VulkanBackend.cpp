@@ -358,14 +358,17 @@ namespace tempest::renderer
         VulkanImage::transitionImageLayout(context.swapChain->getImages()[context.swapChainImageIndex],
                                            transitionConfig,
                                            context.graphicsCommandPool->getBaseCommandBuffer(bufferHandle));
-
-        const float flash = std::abs(std::sin(_frameNumber / 120.0f));
-        const vk::ClearColorValue clearColor{ .float32 = { { 0.0f, 0.0f, flash, 1.0f } } };
-        vk::ImageSubresourceRange subRes{ .aspectMask     = vk::ImageAspectFlagBits::eColor,
-                                          .baseMipLevel   = 0,
-                                          .levelCount     = 1,
-                                          .baseArrayLayer = 0,
-                                          .layerCount     = 1 };
+        std::srand(std::time(nullptr));
+        const auto r = rand() / static_cast<float>(RAND_MAX);
+        const auto g = rand() / static_cast<float>(RAND_MAX);
+        const auto b = rand() / static_cast<float>(RAND_MAX);
+        // const float flash = std::abs(std::sin(_frameNumber / 120.0f));
+        const vk::ClearColorValue clearColor{ .float32 = { { r, g, b, 1.0f } } };
+        // vk::ImageSubresourceRange subRes{ .aspectMask     = vk::ImageAspectFlagBits::eColor,
+        //                                   .baseMipLevel   = 0,
+        //                                   .levelCount     = 1,
+        //                                   .baseArrayLayer = 0,
+        //                                   .layerCount     = 1 };
         const vk::RenderingAttachmentInfo attachmentInfo{
             .imageView        = context.swapChain->getImageViews()[context.swapChainImageIndex],
             .imageLayout      = vk::ImageLayout::eGeneral, // TODO: Update to colorattachmentoptiaml
@@ -430,8 +433,10 @@ namespace tempest::renderer
         context.graphicsCommandPool->submit(bufferHandle);
 
         // Submit the queue
+        vk::PipelineStageFlags waitDstFlag{ vk::PipelineStageFlagBits::eColorAttachmentOutput };
         const vk::SubmitInfo submitInfo{ .waitSemaphoreCount = 1,
                                          .pWaitSemaphores    = &*context.imageAvailableSemaphores[context.frameIndex],
+                                         .pWaitDstStageMask  = &waitDstFlag,
                                          .commandBufferCount = 1,
                                          .pCommandBuffers =
                                              &*context.graphicsCommandPool->getBaseCommandBuffer(bufferHandle),
@@ -442,11 +447,10 @@ namespace tempest::renderer
         context.device->getGraphicsQueue().submit(submitInfo,
                                                   context.inFlightFences[context.frameIndex].getBaseFence());
 
-        // Submit the graphics queue
-
+        // Present swapchain
         context.swapChain->presentSwapChain(context, context.device->getGraphicsQueue(),
                                             context.device->getPresentQueue(),
-                                            context.queueCompleteSemaphore[context.frameIndex], context.frameIndex);
+                                            context.queueCompleteSemaphore[context.frameIndex], context.swapChainImageIndex);
 
         context.frameIndex = (context.frameIndex + 1) % context.swapChain->getMaxFramesInFlight();
 
