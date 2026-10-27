@@ -13,13 +13,11 @@
 
 namespace tempest::renderer
 {
-    /// Forward Declaration
-    struct VulkanContext;
-
     class VulkanDevice
     {
     public:
-        bool create(const VulkanContext& context, const PhysicalDeviceRequirements& physicalDeviceRequirements);
+        bool create(const vk::raii::Instance& instance, const vk::raii::SurfaceKHR& surface,
+                    const PhysicalDeviceRequirements& physicalDeviceRequirements);
         void destroy();
         static void querySwapChainSupport(const vk::raii::PhysicalDevice& device, const vk::SurfaceKHR& surface,
                                           VulkanSwapChainSupportInfo& info) noexcept;
@@ -49,8 +47,8 @@ namespace tempest::renderer
         [[nodiscard]] constexpr vk::raii::Queue& getTransferQueue() noexcept { return _transferQueue; }
 
     private:
-        inline bool pickPhysicalDevice(const VulkanContext& context,
-                                       const PhysicalDeviceRequirements& requirements) noexcept;
+        bool pickPhysicalDevice(const vk::raii::Instance& instance, const vk::raii::SurfaceKHR& surface,
+                                const PhysicalDeviceRequirements& requirements) noexcept;
 
     private:
         vk::raii::PhysicalDevice _physicalDevice{ nullptr };

@@ -9,8 +9,8 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
+#include "renderer/vulkan/VulkanDevice.h"
 #include "renderer/vulkan/VulkanTypes.inl"
-
 
 namespace tempest::renderer
 {

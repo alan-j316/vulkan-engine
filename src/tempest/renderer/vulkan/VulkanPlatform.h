@@ -11,23 +11,19 @@
 
 #include "containers/Vector.h"
 
-namespace tempest
+/// Forward Declaration
+namespace vk::raii
 {
-    namespace renderer
-    {
-        /// Forward Declaration
-        struct VulkanContext;
+    class Instance;
+    class SurfaceKHR;
+} // namespace vk::raii
 
-    } // namespace renderer
+namespace tempest::platform
+{
+    /// Forward Declaration
+    struct PlatformState;
 
+    Vector<const char*> getRequiredExtensions();
 
-    namespace platform
-    {
-        /// Forward Declaration
-        struct PlatformState;
-
-        Vector<const char*> getRequiredExtensions();
-
-        bool createVulkanSurface(const PlatformState& platformState, renderer::VulkanContext& context);
-    } // namespace platform
-} // namespace tempest
+    vk::raii::SurfaceKHR createVulkanSurface(const PlatformState& platformState, const vk::raii::Instance& instance);
+} // namespace tempest::platform

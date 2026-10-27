@@ -9,13 +9,13 @@
  */
 
 #include "platform/Platform.h"
-#include "renderer/vulkan/VulkanPlatform.h"
 
 #include "core/Event.h"
 #include "core/Input.h"
 #include "core/Logger.h"
 #include "core/MemorySubsystem.h"
 #include "platform/Memory.h"
+#include "renderer/vulkan/VulkanPlatform.h"
 #include "renderer/vulkan/VulkanTypes.inl" // TODO: Update by separating the logic into different compilation unit
 
 #include <SDL3/SDL.h>
@@ -162,14 +162,14 @@ namespace tempest::platform
     }
 
 
-    bool createVulkanSurface(const PlatformState& platformState, renderer::VulkanContext& context)
+    vk::raii::SurfaceKHR createVulkanSurface(const PlatformState& platformState, const vk::raii::Instance& instance)
     {
         VkSurfaceKHR surface;
-        if (!SDL_Vulkan_CreateSurface(platformState.window, *context.instance, nullptr, &surface))
+        if (!SDL_Vulkan_CreateSurface(platformState.window, *instance, nullptr, &surface))
         {
-            return false;
+            return nullptr;
         }
-        context.surface = vk::raii::SurfaceKHR(context.instance, surface);
-        return context.surface != nullptr;
+        return vk::raii::SurfaceKHR(instance, surface);
+        // return context.surface != nullptr;
     }
 } // namespace tempest::platform

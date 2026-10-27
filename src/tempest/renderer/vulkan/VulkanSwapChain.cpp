@@ -16,27 +16,28 @@
 
 namespace tempest::renderer
 {
-    void VulkanSwapChain::create(VulkanContext& context, const uint32_t width, const uint32_t height) noexcept
-    { _createVulkanSwapChain(context, width, height); }
+    void VulkanSwapChain::create(VulkanDevice& device, const vk::raii::SurfaceKHR& surface, const uint32_t width, const uint32_t height) noexcept
+    { _createVulkanSwapChain(device, surface, width, height); }
 
-    void VulkanSwapChain::recreate(VulkanContext& context, const uint32_t width, const uint32_t height) noexcept
+
+    void VulkanSwapChain::recreate(VulkanDevice& device, const vk::raii::SurfaceKHR& surface, const uint32_t width, const uint32_t height) noexcept
     {
         const auto oldSwapChain = &*_swapChainInstance;
         destroy();
-        _createVulkanSwapChain(context, width, height, oldSwapChain);
+        _createVulkanSwapChain(device, surface, width, height, oldSwapChain);
     }
 
 
     void VulkanSwapChain::destroy() noexcept { _cleanupSwapChain(); }
 
 
-    uint32_t VulkanSwapChain::acquireNextImageIndex(VulkanContext& context, const size_t timeout,
+    uint32_t VulkanSwapChain::acquireNextImageIndex(VulkanDevice& device, const vk::raii::SurfaceKHR& surface, const size_t timeout,
                                                     const vk::Semaphore imageAvailableSemaphore, const vk::Fence fence)
     {
         const auto [result, index] = _swapChainInstance.acquireNextImage(timeout, imageAvailableSemaphore, fence);
         if (result == vk::Result::eErrorOutOfDateKHR)
         {
-            recreate(context, _extent.width, _extent.height);
+            recreate(device, surface, _extent.width, _extent.height);
         }
         if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
         {
@@ -47,7 +48,7 @@ namespace tempest::renderer
     }
 
 
-    void VulkanSwapChain::presentSwapChain(VulkanContext& context, vk::raii::Queue graphicsQueue,
+    void VulkanSwapChain::presentSwapChain(VulkanDevice& device, const vk::raii::SurfaceKHR& surface, vk::raii::Queue graphicsQueue,
                                            const vk::raii::Queue& presentQueue, vk::Semaphore renderCompleteSemaphore,
                                            uint32_t imageIndex)
     {
@@ -66,7 +67,7 @@ namespace tempest::renderer
         }
         else if (vk::Result::eErrorOutOfDateKHR == result || vk::Result::eSuboptimalKHR == result)
         {
-            recreate(context, _extent.width, _extent.height);
+            recreate(device, surface, _extent.width, _extent.height);
         }
     }
 
@@ -77,23 +78,23 @@ namespace tempest::renderer
     //        PRIVATE METHODS
     // +===============================
 
-    void VulkanSwapChain::_createVulkanSwapChain(VulkanContext& context, uint32_t width, uint32_t height,
+    void VulkanSwapChain::_createVulkanSwapChain(VulkanDevice& device, const vk::raii::SurfaceKHR& surface, const uint32_t width, const uint32_t height,
                                                  const vk::SwapchainKHR* oldSwapChain) noexcept
     {
         _maxFramesInFlight           = MAX_FRAMES_IN_FLIGHT_DEF;
         _extent                      = { .width = width, .height = height };
-        context.swapChainExtent      = _extent;
-        const auto capabilities      = context.device->getSwapChainSupport().capabilities;
+        // context.swapChainExtent      = _extent;
+        const auto capabilities      = device.getSwapChainSupport().capabilities;
         _extent                      = _chooseSwapChainExtent(capabilities);
-        const auto& vkSurface        = context.surface;
+        const auto& vkSurface        = surface;
         const uint32_t minImageCount = _chooseMinImageCount(capabilities);
 
-        _format                          = _chooseSurfaceFormat(*context.device, context.surface);
-        const auto availablePresentModes = context.device->getPhysicalDevice().getSurfacePresentModesKHR(vkSurface);
+        _format                          = _chooseSurfaceFormat(device, surface);
+        const auto availablePresentModes = device.getPhysicalDevice().getSurfacePresentModesKHR(vkSurface);
 
         // If the present and graphics family are not the same then we need to make the sharing mode to
         // concurrent and allow the images to be shared
-        const auto& queueInfo      = context.device->getQueueInfo();
+        const auto& queueInfo      = device.getQueueInfo();
         const bool differentFamily = queueInfo.graphicsFamilyIndex != queueInfo.presentFamilyIndex;
         const auto sharingMode     = differentFamily ? vk::SharingMode::eConcurrent : vk::SharingMode::eExclusive;
         const uint32_t queueFamilyIndices[]{ queueInfo.graphicsFamilyIndex, queueInfo.presentFamilyIndex };
@@ -119,14 +120,14 @@ namespace tempest::renderer
             .preTransform = capabilities.currentTransform,
             // Whether to use alpha channel for blending with other windows, almost always false
             .compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque,
-            .presentMode    = _choosePresentationMode(*context.device),
+            .presentMode    = _choosePresentationMode(device),
             .clipped        = true, // Clip obscured pixels
             // For swap chain recreation
             .oldSwapchain = oldSwapChain == nullptr ? nullptr : *oldSwapChain
 
         };
 
-        _swapChainInstance = vk::raii::SwapchainKHR(context.device->getLogicalDevice(), swapChainCreateInfo);
+        _swapChainInstance = vk::raii::SwapchainKHR(device.getLogicalDevice(), swapChainCreateInfo);
         const auto images  = _swapChainInstance.getImages();
         _images.assign(images.begin(), images.end());
 
@@ -140,7 +141,7 @@ namespace tempest::renderer
         _imageViews.reserve(images.size());
         for (const auto& image : images)
         {
-            _imageViews.emplace_back(createImageView(dev, image, vk::ImageAspectFlagBits::eColor, 1));
+            _imageViews.emplace_back(createImageView(device, image, vk::ImageAspectFlagBits::eColor, 1));
         }
 
 
@@ -148,9 +149,9 @@ namespace tempest::renderer
         //         DEPTH RESOURCES
         // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
 
-        if (!context.device->detectDepthFormat())
+        if (!device.detectDepthFormat())
         {
-            context.device->setDepthFormat(vk::Format::eUndefined);
+            device.setDepthFormat(vk::Format::eUndefined);
             log::error("There was an error creating the depth format");
         }
 
@@ -160,7 +161,7 @@ namespace tempest::renderer
             VulkanImageCreateInfo createInfo{ .imageType   = vk::ImageType::e2D,
                                               .width       = _extent.width,
                                               .height      = _extent.height,
-                                              .format      = context.device->getDepthFormat(),
+                                              .format      = device.getDepthFormat(),
                                               .usage       = vk::ImageUsageFlagBits::eDepthStencilAttachment,
                                               .properties  = vk::MemoryPropertyFlagBits::eDeviceLocal, // TODO: Update
                                               .aspectFlags = vk::ImageAspectFlagBits::eDepth,
@@ -169,7 +170,7 @@ namespace tempest::renderer
                                               .mipLevels   = 1,
                                               .numSamples  = vk::SampleCountFlagBits::e1 };
             VulkanImage depthImage{};
-            depthImage.create(*context.device, createInfo);
+            depthImage.create(device, createInfo);
             _depthImages.push_back(std::move(depthImage));
         }
 

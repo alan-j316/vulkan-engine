@@ -32,10 +32,10 @@ namespace tempest::renderer
 
         vk::raii::Instance instance{ nullptr };
         vk::raii::Context baseContext{};
-        vk::AllocationCallbacks* allocator{};
+        vk::AllocationCallbacks* allocator = nullptr; // TODO: Update with custom allocator
         vk::DebugUtilsMessengerEXT debugMessenger{};
         vk::raii::SurfaceKHR surface{ nullptr };
-        vk::Extent2D swapChainExtent{};
+        vk::Extent2D swapChainExtent{ .width = 1280, .height = 720 }; // TODO: Update
         VulkanDevice device{};
         VulkanSwapChain swapChain{};
         VulkanCommandPool graphicsCommandPool{};
@@ -43,8 +43,8 @@ namespace tempest::renderer
         // Synchronization primitives
         Vector<vk::raii::Semaphore> imageAvailableSemaphores{ makeVector<vk::raii::Semaphore>() };
         Vector<vk::raii::Semaphore> queueCompleteSemaphore{ makeVector<vk::raii::Semaphore>() };
-        Vector<VulkanFence> inFlightFences{};
-        Vector<VulkanFence> imagesInFlight{};
+        Vector<vk::raii::Fence> inFlightFences{};
+        // Vector<VulkanFence> imagesInFlight{};
     };
 
 
@@ -68,6 +68,9 @@ namespace tempest::renderer
 
     bool VulkanBackend::init(platform::PlatformState* state, std::string_view applicationName) noexcept
     {
+        const auto rawCtxMemory = memory::alloc(sizeof(VulkanContext), memory::MemoryTag::MEMORY_TAG_RENDERER);
+        _ctx                    = new (rawCtxMemory) VulkanContext();
+
         _state = state;
         const vk::ApplicationInfo applicationInfo{ .pApplicationName   = applicationName.data(),
                                                    .applicationVersion = VK_MAKE_VERSION(APP_VERSION, 0, 0),
@@ -144,7 +147,8 @@ namespace tempest::renderer
         // -------------------
         //  SURFACE CREATION
         // -------------------
-        if (!platform::createVulkanSurface(*_state, *_ctx))
+        _ctx->surface = platform::createVulkanSurface(*_state, _ctx->instance);
+        if (_ctx->surface == nullptr)
         {
             log::error("There was an error creating vulkan surface");
             return false;
@@ -169,24 +173,18 @@ namespace tempest::renderer
                                                             .extendedDynamicState = true,
                                                             .sampleRateShading    = true };
 
-        // TODO: Look for a way to create a stack based device
-        // const auto rawDevMem = memory::alloc(sizeof(VulkanDevice), memory::MemoryTag::MEMORY_TAG_RENDERER);
-        // _ctx->device         = new (rawDevMem) VulkanDevice();
 
-        if (!_ctx->device.create(*_ctx, physicalDeviceReq))
+        if (!_ctx->device.create(_ctx->instance, _ctx->surface, physicalDeviceReq))
         {
             log::error("There was an error creating the vulkan device");
             return false;
         }
 
-        // const auto rawSwapChainMem = memory::alloc(sizeof(VulkanSwapChain), memory::MemoryTag::MEMORY_TAG_RENDERER);
-        // _ctx->swapChain            = new (rawSwapChainMem) VulkanSwapChain();
-
         // ---------------------
         //  SWAP CHAIN CREATION
         // ---------------------
         // TODO: Update width and height
-        _ctx->swapChain.create(*_ctx, 1280, 720);
+        _ctx->swapChain.create(_ctx->device, _ctx->surface, 1280, 720);
 
 
         // -------------------------
@@ -198,8 +196,8 @@ namespace tempest::renderer
         // ------------------------
         //  SYNCHRONIZATION OBJECTS
         // ------------------------
-        _ctx->inFlightFences = makeVector<VulkanFence>();
-        _ctx->inFlightFences.resize(_ctx->swapChain.getMaxFramesInFlight());
+        _ctx->inFlightFences = makeVector<vk::raii::Fence>();
+        _ctx->inFlightFences.reserve(_ctx->swapChain.getMaxFramesInFlight());
 
         for (size_t i = 0; i < _ctx->swapChain.getMaxFramesInFlight(); ++i)
         {
@@ -209,9 +207,8 @@ namespace tempest::renderer
             _ctx->queueCompleteSemaphore.emplace_back(_ctx->device.getLogicalDevice(), semaphoreCreateInfo,
                                                       _ctx->allocator);
 
-            VulkanFence fence{};
-            fence.create(*_ctx, true);
-            _ctx->inFlightFences[i] = std::move(fence);
+            constexpr vk::FenceCreateInfo fenceCreateInfo{ .flags = vk::FenceCreateFlagBits::eSignaled };
+            _ctx->inFlightFences.emplace_back(_ctx->device.getLogicalDevice(), fenceCreateInfo, _ctx->allocator);
         }
 
         log::info("Vulkan Renderer Initialized");
@@ -234,12 +231,16 @@ namespace tempest::renderer
         _ctx->device.destroy();
         _ctx->surface  = nullptr;
         _ctx->instance = nullptr;
-        log::info("Vulkan Backend successfully shutdown!");
+        // Free the renderer
+        memory::free(_ctx, sizeof(VulkanContext), memory::MemoryTag::MEMORY_TAG_RENDERER);
         // NOTE: RAII will do rest of the cleanup
+
+
+        log::info("Vulkan Backend successfully shutdown!");
     }
 
     void VulkanBackend::onResize(const uint32_t width, const uint32_t height) noexcept
-    { _ctx->swapChain.recreate(*_ctx, width, height); }
+    { _ctx->swapChain.recreate(_ctx->device, _ctx->surface, width, height); }
 
     //
     // void VulkanBackend::recordCommandBuffer(const uint32_t imageIndex) const noexcept
@@ -338,17 +339,18 @@ namespace tempest::renderer
         // TODO: Handle swapchain recreation
         auto& device = _ctx->device.getLogicalDevice();
         // Wait for previous frame to be finished
-        if (!_ctx->inFlightFences[_ctx->frameIndex].wait(*_ctx, UINT64_MAX))
+        if (vk::Result::eSuccess !=
+            device.waitForFences(*_ctx->inFlightFences[_ctx->frameIndex], vk::True, std::numeric_limits<size_t>::max()))
         {
             log::error("An error occurred while waiting for previous frame to finish");
             return false;
         }
         // Reset the fence
-        _ctx->inFlightFences[_ctx->frameIndex].reset(*_ctx);
+        _ctx->inFlightFences[_ctx->frameIndex].clear();
         device.waitIdle(); // TODO: Replace with fence sync
         // Acquire the next image index
         _ctx->swapChainImageIndex = _ctx->swapChain.acquireNextImageIndex(
-            *_ctx, UINT64_MAX, _ctx->imageAvailableSemaphores[_ctx->frameIndex], nullptr);
+            _ctx->device, _ctx->surface, UINT64_MAX, _ctx->imageAvailableSemaphores[_ctx->frameIndex], nullptr);
 
 
 
@@ -461,11 +463,12 @@ namespace tempest::renderer
                                          .pSignalSemaphores    = &*_ctx->queueCompleteSemaphore[_ctx->frameIndex] };
 
         // TODO: Refactor
-        _ctx->device.getGraphicsQueue().submit(submitInfo, _ctx->inFlightFences[_ctx->frameIndex].getBaseFence());
+        _ctx->device.getGraphicsQueue().submit(submitInfo, _ctx->inFlightFences[_ctx->frameIndex]);
 
-        // Present swapchain
-        _ctx->swapChain.presentSwapChain(*_ctx, _ctx->device.getGraphicsQueue(), _ctx->device.getPresentQueue(),
-                                         _ctx->queueCompleteSemaphore[_ctx->frameIndex], _ctx->swapChainImageIndex);
+        // Present swap chain
+        _ctx->swapChain.presentSwapChain(_ctx->device, _ctx->surface, _ctx->device.getGraphicsQueue(),
+                                         _ctx->device.getPresentQueue(), _ctx->queueCompleteSemaphore[_ctx->frameIndex],
+                                         _ctx->swapChainImageIndex);
 
         _ctx->frameIndex = (_ctx->frameIndex + 1) % _ctx->swapChain.getMaxFramesInFlight();
 

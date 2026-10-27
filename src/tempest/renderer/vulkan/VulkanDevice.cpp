@@ -66,10 +66,10 @@ namespace tempest::renderer
     // }
 
 
-    bool VulkanDevice::create(const VulkanContext& context,
+    bool VulkanDevice::create(const vk::raii::Instance& instance, const vk::raii::SurfaceKHR& surface,
                               const PhysicalDeviceRequirements& physicalDeviceRequirements)
     {
-        if (!pickPhysicalDevice(context, physicalDeviceRequirements))
+        if (!pickPhysicalDevice(instance, surface, physicalDeviceRequirements))
         {
             log::error("An error occurred while picking the physical device.");
             return false;
@@ -220,7 +220,7 @@ namespace tempest::renderer
 
 
 
-    bool VulkanDevice::pickPhysicalDevice(const VulkanContext& context,
+    bool VulkanDevice::pickPhysicalDevice(const vk::raii::Instance& instance, const vk::raii::SurfaceKHR& surface,
                                           const PhysicalDeviceRequirements& requirements) noexcept
     {
 
@@ -228,7 +228,7 @@ namespace tempest::renderer
 
         /// Properties represent the details about the device like name, vulkan version support etc.
         /// Features represent the feature-set supported by the device like certain shader support
-        const auto physicalDevices = vk::raii::PhysicalDevices(context.instance);
+        const auto physicalDevices = vk::raii::PhysicalDevices(instance);
 
         if (physicalDevices.empty())
         {
@@ -246,7 +246,7 @@ namespace tempest::renderer
             if (properties.apiVersion < MIN_VULKAN_VERSION)
                 continue;
 
-            if (physicalDeviceMeetsRequirements(pd, context.surface, requirements, _queueInfo, _swapChainSupport))
+            if (physicalDeviceMeetsRequirements(pd, surface, requirements, _queueInfo, _swapChainSupport))
             {
                 // Pick the device and print its details
                 _physicalDevice = pd;
@@ -276,7 +276,7 @@ namespace tempest::renderer
                 }
             }
         }
-        log::info("--------- END PHYSICAL DEVICE SELECTION ---------\n");
+        log::info("--------- END PHYSICAL DEVICE SELECTION ---------");
 
         if (_physicalDevice == nullptr)
         {
@@ -470,7 +470,7 @@ namespace tempest::renderer
                 return true;
             }
         }
-        return true;
+        return false;
     }
 
 

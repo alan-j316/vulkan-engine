@@ -25,12 +25,14 @@ namespace tempest::renderer
               _imageViews(makeVector<vk::raii::ImageView>()),
               _depthImages(makeVector<VulkanImage>())
         {}
-        void create(VulkanContext& context, uint32_t width, uint32_t height) noexcept;
-        void recreate(VulkanContext& context, uint32_t width, uint32_t height) noexcept;
+        void create(VulkanDevice& device, const vk::raii::SurfaceKHR& surface, uint32_t width,
+                    uint32_t height) noexcept;
+        void recreate(VulkanDevice& device, const vk::raii::SurfaceKHR& surface, uint32_t width,
+                      uint32_t height) noexcept;
         void destroy() noexcept;
-        uint32_t acquireNextImageIndex(VulkanContext& context, size_t timeout, vk::Semaphore imageAvailableSemaphore,
-                                       vk::Fence fence);
-        void presentSwapChain(VulkanContext& context, vk::raii::Queue graphicsQueue,
+        uint32_t acquireNextImageIndex(VulkanDevice& device, const vk::raii::SurfaceKHR& surface, size_t timeout,
+                                       vk::Semaphore imageAvailableSemaphore, vk::Fence fence);
+        void presentSwapChain(VulkanDevice& device, const vk::raii::SurfaceKHR& surface, vk::raii::Queue graphicsQueue,
                               const vk::raii::Queue& presentQueue, vk::Semaphore renderCompleteSemaphore,
                               uint32_t imageIndex);
         [[nodiscard]] uint32_t getImageCount() const noexcept { return _images.size(); }
@@ -40,8 +42,8 @@ namespace tempest::renderer
 
 
     private:
-        void _createVulkanSwapChain(VulkanContext& context, uint32_t width, uint32_t height,
-                                    const vk::SwapchainKHR* oldSwapChain = nullptr) noexcept;
+        void _createVulkanSwapChain(VulkanDevice& device, const vk::raii::SurfaceKHR& surface, uint32_t width,
+                                    uint32_t height, const vk::SwapchainKHR* oldSwapChain = nullptr) noexcept;
         void _cleanupSwapChain() noexcept;
         [[nodiscard]] vk::SurfaceFormatKHR _chooseSurfaceFormat(const VulkanDevice& device,
                                                                 const vk::raii::SurfaceKHR& surface) const noexcept;
