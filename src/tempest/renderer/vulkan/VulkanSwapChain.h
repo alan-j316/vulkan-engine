@@ -35,6 +35,8 @@ namespace tempest::renderer
                               uint32_t imageIndex);
         [[nodiscard]] uint32_t getImageCount() const noexcept { return _images.size(); }
         [[nodiscard]] uint8_t getMaxFramesInFlight() const noexcept { return _maxFramesInFlight; }
+        [[nodiscard]] Vector<vk::raii::ImageView>& getImageViews() noexcept { return _imageViews; }
+        [[nodiscard]] Vector<vk::Image>& getImages() noexcept { return _images; }
 
 
     private:
@@ -49,9 +51,6 @@ namespace tempest::renderer
         [[nodiscard]] vk::raii::ImageView createImageView(const VulkanContext& context, const vk::Image& image,
                                                           vk::ImageAspectFlags aspectFlags,
                                                           uint32_t mipLevel) const noexcept;
-        //
-        // void createImageViews() noexcept;
-        // [[nodiscard]] vk::SurfaceCapabilitiesKHR querySurfaceCapabilities() const noexcept;
 
     private:
         uint8_t _maxFramesInFlight{};

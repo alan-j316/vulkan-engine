@@ -26,8 +26,11 @@ namespace tempest::renderer
         [[nodiscard]] const vk::raii::ImageView& getBaseImageView() const noexcept { return _imageView; }
         // [[nodiscard]] const vk::ImageLayout& getImageLayout() const noexcept { return _layout; }
 
-        // void transitionImageLayout(vk::ImageLayout newLayout, const CommandBuffer& commandBuffer,
-        //                            size_t commandBufferIndex = 0) const noexcept;
+        void transitionImageLayout(vk::ImageLayout newLayout, const vk::raii::CommandBuffer& commandBuffer,
+                                   vk::ImageAspectFlagBits aspectFlags, uint32_t mipLevels = 1,
+                                   uint32_t layerCount = 1) noexcept;
+        static void transitionImageLayout(const vk::Image& image, const VulkanLayoutTransitionConfig& config,
+                                          const vk::raii::CommandBuffer& commandBuffer) noexcept;
         //
         // /// Copy data from a staging buffer to this image.
         // void copyFromBuffer(const Buffer& buffer, const CommandBuffer& commandBuffer,
@@ -47,7 +50,7 @@ namespace tempest::renderer
         vk::raii::DeviceMemory _memory{ nullptr };
         uint32_t _mipLevels{ 1 };
         uint32_t _width{ 0 }, _height{ 0 };
-        // vk::ImageLayout _layout{ vk::ImageLayout::eUndefined };
+        vk::ImageLayout _layout{ vk::ImageLayout::eUndefined };
         // vk::Format _format{};
         // vk::ImageTiling _tiling{};
         // vk::ImageUsageFlags _usageFlags{};

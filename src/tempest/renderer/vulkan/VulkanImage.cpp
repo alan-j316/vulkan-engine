@@ -10,6 +10,7 @@
 
 #include "VulkanImage.h"
 
+#include "VulkanCommandPool.h"
 #include "VulkanDevice.h"
 #include "core/Logger.h"
 #include "core/MemorySubsystem.h"
@@ -207,6 +208,103 @@ namespace tempest::renderer
     //
     // bool Image::createImage(const RenderDevice& device) noexcept {}
 
+
+
+    void VulkanImage::transitionImageLayout(const vk::ImageLayout newLayout,
+                                            const vk::raii::CommandBuffer& commandBuffer,
+                                            const vk::ImageAspectFlagBits aspectFlags, const uint32_t mipLevels,
+                                            const uint32_t layerCount) noexcept
+    {
+        const VulkanLayoutTransitionConfig config{ .oldLayout  = _layout,
+                                                   .newLayout  = newLayout,
+                                                   .aspectFlag = aspectFlags,
+                                                   .mipLevels  = mipLevels,
+                                                   .layerCount = layerCount };
+        transitionImageLayout(_image, config, commandBuffer);
+        _layout = newLayout;
+    }
+
+
+    void VulkanImage::transitionImageLayout(const vk::Image& image, const VulkanLayoutTransitionConfig& config,
+                                            const vk::raii::CommandBuffer& commandBuffer) noexcept
+    {
+        // To transition an image layout, we need to create a pipeline barrier
+        // This can be used for transitioning queue families when vk::SharingMode::eExclusive is used.
+        // vk::ImageMemoryBarrier2 barrier{ .oldLayout           = config.oldLayout,
+        //                                  .newLayout           = config.newLayout,
+        //                                  .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
+        //                                  .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
+        //                                  .image               = image,
+        //                                  // Specify the affect part of the image
+        //                                  .subresourceRange = { .aspectMask = config.aspectFlag,
+        //                                                        .levelCount = config.mipLevels,
+        //                                                        .layerCount = config.layerCount } };
+        //
+        // // SrcStage -> PipelineBarrier -> DstStage
+        // // vk::PipelineStageFlags sourceStage, destinationStage;
+        // // We need to handle two transitions Undefined -> TransferOpt and TransferOpt -> ShaderOpt
+        // // When transitioning from Undefined to ShaderOptimal
+        // // we are going through TopOfPipe -> Transfer -> FragmentShader
+        // // Moreover, transfer is a pseudo stage with compute and graphics pipeline.
+        // // TODO: Make this more generic.
+        // if (config.oldLayout == vk::ImageLayout::eUndefined && config.newLayout ==
+        // vk::ImageLayout::eTransferDstOptimal)
+        // {
+        //     barrier.srcAccessMask = {};
+        //     barrier.dstAccessMask = {};
+        //
+        //     barrier.srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe;
+        //     barrier.dstStageMask = vk::PipelineStageFlagBits2::eTransfer;
+        // }
+        // else if (config.oldLayout == vk::ImageLayout::eTransferDstOptimal &&
+        //          config.newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
+        // {
+        //     barrier.srcAccessMask = vk::AccessFlagBits2::eTransferWrite;
+        //     barrier.dstAccessMask = vk::AccessFlagBits2::eShaderRead;
+        //
+        //
+        //     barrier.srcStageMask = vk::PipelineStageFlagBits2::eTransfer;
+        //     barrier.dstStageMask = vk::PipelineStageFlagBits2::eFragmentShader;
+        // }
+        // else
+        // {
+        //     barrier.srcAccessMask = vk::AccessFlagBits2::eMemoryWrite;
+        //     barrier.dstAccessMask = vk::AccessFlagBits2::eMemoryWrite | vk::AccessFlagBits2::eMemoryRead;
+        //
+        //     barrier.srcStageMask = vk::PipelineStageFlagBits2::eAllCommands;
+        //     barrier.dstStageMask = vk::PipelineStageFlagBits2::eAllCommands;
+        //     log::warn("Unsupported layout transition; using a suboptimal fallback transition.");
+        // }
+        //
+        // const vk::DependencyInfo dependencyInfo{
+        //     .imageMemoryBarrierCount = 1,
+        //     .pImageMemoryBarriers    = &barrier,
+        // };
+        // commandBuffer.pipelineBarrier2(dependencyInfo);
+        // commandBuffer.pipelineBarrier(sourceStage, destinationStage, {}, {}, nullptr, barrier);
+
+
+        vk::ImageMemoryBarrier2 barrier{ .srcStageMask        = config.srcStageMask,
+                                         .srcAccessMask       = config.srcAccessMask,
+                                         .dstStageMask        = config.dstStageMask,
+                                         .dstAccessMask       = config.dstAccessMask,
+                                         .oldLayout           = config.oldLayout,
+                                         .newLayout           = config.newLayout,
+                                         .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
+                                         .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
+                                         .image               = image,
+                                         .subresourceRange    = { .aspectMask     = config.aspectFlag,
+                                                                  .baseMipLevel   = 0,
+                                                                  .levelCount     = config.mipLevels,
+                                                                  .baseArrayLayer = 0,
+                                                                  .layerCount     = config.layerCount } };
+
+        const vk::DependencyInfo dependencyInfo{ .dependencyFlags         = {},
+                                                 .imageMemoryBarrierCount = 1,
+                                                 .pImageMemoryBarriers    = &barrier };
+
+        commandBuffer.pipelineBarrier2(dependencyInfo);
+    }
 
     bool VulkanImage::createImageView(const VulkanContext& context, const vk::Format format,
                                       const vk::ImageAspectFlags aspectFlags) noexcept

@@ -20,7 +20,11 @@ namespace tempest::renderer
     { _createVulkanSwapChain(context, width, height); }
 
     void VulkanSwapChain::recreate(VulkanContext& context, const uint32_t width, const uint32_t height) noexcept
-    { _createVulkanSwapChain(context, width, height, &*_swapChainInstance); }
+    {
+        const auto oldSwapChain = &*_swapChainInstance;
+        destroy(context);
+        _createVulkanSwapChain(context, width, height, oldSwapChain);
+    }
 
     void VulkanSwapChain::destroy(const VulkanContext& context) noexcept { _cleanupSwapChain(); }
 
@@ -102,6 +106,7 @@ namespace tempest::renderer
             .imageExtent      = _extent,
             .imageArrayLayers = 1, // Always 1 unless for stereoscopic 3D
             // The image usage, for intermediate ops use ::eTransferDst
+            // TODO: Remove TransferDst
             .imageUsage = vk::ImageUsageFlagBits::eColorAttachment,
             // Ownership must be exclusively transferred to other queue
             // eConcurrent: Shared by multiple queue without exclusive ownership transfer

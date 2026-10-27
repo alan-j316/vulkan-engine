@@ -36,13 +36,15 @@ namespace tempest::renderer
         /// Create a @ref VulkanFence.
         /// @param context The vulkan renderer context.
         /// @param createSignaled A bool indicating whether a fence should start its lifetime as signaled.
-        void create(const VulkanContext& context, bool createSignaled);
+        void create(const VulkanContext& context, bool createSignaled = false);
 
         void destroy(const VulkanContext& context) noexcept;
 
         bool wait(const VulkanContext& context, size_t timeout) noexcept;
 
         void reset(const VulkanContext& context) noexcept;
+
+        inline vk::raii::Fence& getBaseFence() noexcept { return _fence; }
 
     private:
         bool _isSignaled{};

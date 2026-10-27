@@ -202,7 +202,6 @@ namespace tempest::renderer
 
     void VulkanBackend::shutdown() noexcept
     {
-        // TODO: Impl
         // Wait for idle before shutting down sync primitives
         context.device->getLogicalDevice().waitIdle();
 
@@ -216,18 +215,186 @@ namespace tempest::renderer
         context.device->destroy(context);
         context.surface  = nullptr;
         context.instance = nullptr;
+        log::info("Vulkan Backend successfully shutdown!");
         // NOTE: RAII will do rest of the cleanup
     }
 
+    void VulkanBackend::onResize(const uint32_t width, const uint32_t height) noexcept
+    { context.swapChain->recreate(context, width, height); }
 
-    void VulkanBackend::onResize(uint32_t width, uint32_t height) noexcept
-    {
-        // TODO: Impl
-    }
-
+    //
+    // void VulkanBackend::recordCommandBuffer(const uint32_t imageIndex) const noexcept
+    // {
+    //     auto commandBufferHandles = context.graphicsCommandBuffers;
+    //
+    //     context.graphicsCommandPool->startRecording(commandBufferHandles[context.frameIndex], false, false);
+    //
+    //     // Transition swap chain image to ImageLayout::eColorAttachmentOptimal
+    //     transitionImageLayout(swapChainImages[imageIndex], vk::ImageLayout::eUndefined,
+    //                           vk::ImageLayout::eColorAttachmentOptimal, {}, // no need to wait for previous operation
+    //                           vk::AccessFlagBits2::eColorAttachmentWrite,
+    //                           vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+    //                           vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::ImageAspectFlagBits::eColor);
+    //     // Transition depth image to depth attachment optimal layout
+    //     // We need a single barrier for depth attachment writes(we don't care after rendering).
+    //     transitionImageLayout(
+    //         *depthImage, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthAttachmentOptimal,
+    //         vk::AccessFlagBits2::eDepthStencilAttachmentWrite, vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+    //         vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
+    //         vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
+    //         vk::ImageAspectFlagBits::eDepth);
+    //
+    //     // Transition the multisampled image
+    //     // transitionImageLayout(*colorImage, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
+    //     //                       vk::AccessFlagBits2::eColorAttachmentWrite,
+    //     vk::AccessFlagBits2::eColorAttachmentWrite,
+    //     //                       vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+    //     //                       vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+    //     vk::ImageAspectFlagBits::eColor);
+    //
+    //     constexpr vk::ClearColorValue clearColor{ 0.0f, 0.0f, 0.0f, 1.0f };
+    //     // constexpr vk::ClearDepthStencilValue clearDepth{ .depth = 1.0f, .stencil = 0 };
+    //
+    //     // Dynamic rendering doesn't require a RenderPass but we need to specify the attachment info
+    //     vk::RenderingAttachmentInfo attachmentInfo{
+    //         .imageView          = colorImageView,
+    //         .imageLayout        = vk::ImageLayout::eColorAttachmentOptimal,
+    //         .resolveMode        = vk::ResolveModeFlagBits::eAverage,
+    //         .resolveImageView   = context.swapChain->getImageViews[imageIndex],
+    //         .resolveImageLayout = vk::ImageLayout::eColorAttachmentOptimal,
+    //         .loadOp             = vk::AttachmentLoadOp::eClear,  // What to do to the attachment before rendering
+    //         .storeOp            = vk::AttachmentStoreOp::eStore, // What to do to the attachment after rendering
+    //         .clearValue         = clearColor
+    //     };
+    //     //
+    //     // vk::RenderingAttachmentInfo depthAttachmentInfo{ .imageView   = depthImageView,
+    //     //                                                  .imageLayout = vk::ImageLayout::eDepthAttachmentOptimal,
+    //     //                                                  .loadOp      = vk::AttachmentLoadOp::eClear,
+    //     //                                                  .storeOp     = vk::AttachmentStoreOp::eDontCare,
+    //     //                                                  .clearValue  = clearDepth };
+    //
+    //     // Create the rendering info
+    //     const vk::RenderingInfo renderingInfo{ .renderArea           = { .offset = { .x = 0, .y = 0 },
+    //                                                                      .extent = context.swapChainExtent },
+    //                                            .layerCount           = 1,
+    //                                            .colorAttachmentCount = 1,
+    //                                            .pColorAttachments    = &attachmentInfo,
+    //                                            .pDepthAttachment     = nullptr };
+    //     // .pDepthAttachment     = &depthAttachmentInfo };
+    //
+    //     // Begin Rendering
+    //     // commandBuffers[frameIndex].beginRendering(renderingInfo);
+    //     // commandBuffers[frameIndex].bindPipeline(vk::PipelineBindPoint::eGraphics, *graphicsPipeline);
+    //     // // Bind the vertex buffer
+    //     // commandBuffers[frameIndex].bindVertexBuffers(0, *vertexBuffer, { 0 });
+    //     // commandBuffers[frameIndex].bindIndexBuffer(*indexBuffer, 0,
+    //     //                                            vk::IndexTypeValue<decltype(indices)::value_type>::value);
+    //     // Set dynamic states
+    //     // NOTE: The negative height is due to the fact the glm has an inverted y axis in the projection matrix.
+    //     commandBuffers[frameIndex].setViewport(0,
+    //                                            vk::Viewport(0.0f, static_cast<float>(swapChainExtent.height),
+    //                                                         static_cast<float>(swapChainExtent.width),
+    //                                                         -static_cast<float>(swapChainExtent.height),
+    //                                                         0.0f, 1.0f));
+    //     commandBuffers[frameIndex].setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), swapChainExtent));
+    //
+    //     // Bind the descriptor set for uniforms
+    //     // commandBuffers[frameIndex].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0,
+    //     //                                               *descriptorSets[frameIndex], nullptr);
+    //     // Draw
+    //     // commandBuffers[frameIndex].drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+    //     // End rendering
+    //     commandBuffers[frameIndex].endRendering();
+    //
+    //     // Transition image layout for presentation
+    //     transitionImageLayout(swapChainImages[imageIndex], vk::ImageLayout::eColorAttachmentOptimal,
+    //                           vk::ImageLayout::ePresentSrcKHR, vk::AccessFlagBits2::eColorAttachmentWrite, {},
+    //                           vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+    //                           vk::PipelineStageFlagBits2::eBottomOfPipe, vk::ImageAspectFlagBits::eColor);
+    //     commandBuffers[frameIndex].end();
+    // }
 
     bool VulkanBackend::beginFrame(float deltaTime) noexcept
     {
+        // TODO: Handle swapchain recreation
+        auto& device = context.device->getLogicalDevice();
+        // Wait for previous frame to be finished
+        if (!context.inFlightFences[context.frameIndex].wait(context, UINT64_MAX))
+        {
+            log::error("An error occurred while waiting for previous frame to finish");
+            return false;
+        }
+        // Reset the fence
+        context.inFlightFences[context.frameIndex].reset(context);
+        device.waitIdle(); // TODO: Replace with fence sync
+        // Acquire the next image index
+        context.swapChainImageIndex = context.swapChain->acquireNextImageIndex(
+            context, UINT64_MAX, context.imageAvailableSemaphores[context.frameIndex], nullptr);
+
+
+
+        // ------------------------------
+        //     COMMAND BUFFER RECORDING
+        // ------------------------------
+        // Get the command buffer handle, reset and begin recording.
+        const auto bufferHandle = context.graphicsCommandBuffers[context.frameIndex];
+        context.graphicsCommandPool->reset(bufferHandle);
+        // NOTE: We are resetting the command buffer and re-recording it every frame.
+        context.graphicsCommandPool->startRecording(bufferHandle, true, false);
+
+        // log::warn("Unsupported layout transition; using a suboptimal fallback transition.");
+        // TODO: Update transition flags
+        constexpr VulkanLayoutTransitionConfig transitionConfig{
+            .srcAccessMask = vk::AccessFlagBits2::eMemoryWrite,
+            .srcStageMask  = vk::PipelineStageFlagBits2::eAllCommands,
+            .dstAccessMask = vk::AccessFlagBits2::eMemoryWrite | vk::AccessFlagBits2::eMemoryRead,
+            .dstStageMask  = vk::PipelineStageFlagBits2::eAllCommands,
+            .oldLayout     = vk::ImageLayout::eUndefined,
+            .newLayout     = vk::ImageLayout::eGeneral,
+            .aspectFlag    = vk::ImageAspectFlagBits::eColor,
+            .mipLevels     = 1,
+            .layerCount    = 1
+        };
+        VulkanImage::transitionImageLayout(context.swapChain->getImages()[context.swapChainImageIndex],
+                                           transitionConfig,
+                                           context.graphicsCommandPool->getBaseCommandBuffer(bufferHandle));
+
+        const float flash = std::abs(std::sin(_frameNumber / 120.0f));
+        const vk::ClearColorValue clearColor{ .float32 = { { 0.0f, 0.0f, flash, 1.0f } } };
+        vk::ImageSubresourceRange subRes{ .aspectMask     = vk::ImageAspectFlagBits::eColor,
+                                          .baseMipLevel   = 0,
+                                          .levelCount     = 1,
+                                          .baseArrayLayer = 0,
+                                          .layerCount     = 1 };
+        const vk::RenderingAttachmentInfo attachmentInfo{
+            .imageView        = context.swapChain->getImageViews()[context.swapChainImageIndex],
+            .imageLayout      = vk::ImageLayout::eGeneral, // TODO: Update to colorattachmentoptiaml
+            .resolveMode      = vk::ResolveModeFlagBits::eNone,
+            .resolveImageView = nullptr,
+            .loadOp           = vk::AttachmentLoadOp::eClear,
+            .storeOp          = vk::AttachmentStoreOp::eStore,
+            .clearValue       = clearColor
+        };
+
+        const vk::RenderingInfo renderInfo{
+            .renderArea           = { .offset = { .x = 0, .y = 0 }, .extent = context.swapChainExtent },
+            .layerCount           = 1,
+            .colorAttachmentCount = 1,
+            .pColorAttachments    = &attachmentInfo,
+            .pDepthAttachment     = nullptr // TODO:
+        };
+
+        context.graphicsCommandPool->getBaseCommandBuffer(bufferHandle).beginRendering(renderInfo);
+
+        // Set dynamic states
+        context.graphicsCommandPool->getBaseCommandBuffer(bufferHandle)
+            .setViewport(0,
+                         vk::Viewport(0.0f, static_cast<float>(context.swapChainExtent.height),
+                                      static_cast<float>(context.swapChainExtent.width),
+                                      -static_cast<float>(context.swapChainExtent.height), 0.0f, 1.0f));
+        context.graphicsCommandPool->getBaseCommandBuffer(bufferHandle)
+            .setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), context.swapChainExtent));
+
         // TODO: Impl
         return true;
     }
@@ -235,6 +402,55 @@ namespace tempest::renderer
 
     bool VulkanBackend::endFrame(float deltaTime) noexcept
     {
+        const auto bufferHandle = context.graphicsCommandBuffers[context.frameIndex];
+
+
+        // End the rendering
+        context.graphicsCommandPool->getBaseCommandBuffer(bufferHandle).endRendering();
+
+        // Transition the image back
+        // TODO: Update transition flags
+        constexpr VulkanLayoutTransitionConfig transitionConfig{
+            .srcAccessMask = vk::AccessFlagBits2::eMemoryWrite,
+            .srcStageMask  = vk::PipelineStageFlagBits2::eAllCommands,
+            .dstAccessMask = vk::AccessFlagBits2::eMemoryWrite | vk::AccessFlagBits2::eMemoryRead,
+            .dstStageMask  = vk::PipelineStageFlagBits2::eAllCommands,
+            .oldLayout     = vk::ImageLayout::eGeneral,
+            .newLayout     = vk::ImageLayout::ePresentSrcKHR,
+            .aspectFlag    = vk::ImageAspectFlagBits::eColor,
+            .mipLevels     = 1,
+            .layerCount    = 1
+        };
+        VulkanImage::transitionImageLayout(context.swapChain->getImages()[context.swapChainImageIndex],
+                                           transitionConfig,
+                                           context.graphicsCommandPool->getBaseCommandBuffer(bufferHandle));
+
+        // End recording
+        context.graphicsCommandPool->endRecording(bufferHandle);
+        context.graphicsCommandPool->submit(bufferHandle);
+
+        // Submit the queue
+        const vk::SubmitInfo submitInfo{ .waitSemaphoreCount = 1,
+                                         .pWaitSemaphores    = &*context.imageAvailableSemaphores[context.frameIndex],
+                                         .commandBufferCount = 1,
+                                         .pCommandBuffers =
+                                             &*context.graphicsCommandPool->getBaseCommandBuffer(bufferHandle),
+                                         .signalSemaphoreCount = 1,
+                                         .pSignalSemaphores    = &*context.queueCompleteSemaphore[context.frameIndex] };
+
+        // TODO: Refactor
+        context.device->getGraphicsQueue().submit(submitInfo,
+                                                  context.inFlightFences[context.frameIndex].getBaseFence());
+
+        // Submit the graphics queue
+
+        context.swapChain->presentSwapChain(context, context.device->getGraphicsQueue(),
+                                            context.device->getPresentQueue(),
+                                            context.queueCompleteSemaphore[context.frameIndex], context.frameIndex);
+
+        context.frameIndex = (context.frameIndex + 1) % context.swapChain->getMaxFramesInFlight();
+
+
         // TODO: Impl
         return true;
     }

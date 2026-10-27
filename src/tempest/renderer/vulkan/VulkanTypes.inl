@@ -60,6 +60,21 @@ namespace tempest::renderer
         vk::SampleCountFlagBits numSamples = vk::SampleCountFlagBits::e1;
     };
 
+    struct VulkanLayoutTransitionConfig
+    {
+        vk::AccessFlags2 srcAccessMask;
+        vk::PipelineStageFlags2 srcStageMask;
+        vk::AccessFlags2 dstAccessMask;
+        vk::PipelineStageFlags2 dstStageMask;
+
+        vk::ImageLayout oldLayout;
+        vk::ImageLayout newLayout;
+        vk::ImageAspectFlagBits aspectFlag;
+        uint32_t mipLevels{ 1 };
+        uint32_t layerCount{ 1 };
+    };
+
+
 
 
     //----------------------------------------------------------------
@@ -74,6 +89,8 @@ namespace tempest::renderer
 
     struct VulkanContext
     {
+        size_t frameIndex{ 0 }, swapChainImageIndex{ 0 };
+
         vk::raii::Instance instance{ nullptr };
         vk::raii::Context baseContext{};
         vk::AllocationCallbacks* allocator{};
@@ -87,8 +104,8 @@ namespace tempest::renderer
         // Synchronization primitives
         Vector<vk::raii::Semaphore> imageAvailableSemaphores{ makeVector<vk::raii::Semaphore>() };
         Vector<vk::raii::Semaphore> queueCompleteSemaphore{ makeVector<vk::raii::Semaphore>() };
-        Vector<VulkanFence> inFlightFences{ };
-        Vector<VulkanFence> imagesInFlight{ };
+        Vector<VulkanFence> inFlightFences{};
+        Vector<VulkanFence> imagesInFlight{};
     };
 
     static constexpr auto MIN_VULKAN_VERSION = VK_API_VERSION_1_3;
