@@ -19,16 +19,15 @@ namespace tempest::renderer
     public:
         VulkanImage() noexcept = default;
 
-        bool create(const VulkanContext& context, const VulkanImageCreateInfo& createInfo) noexcept;
+        bool create(const VulkanDevice& device, const VulkanImageCreateInfo& createInfo) noexcept;
         bool destroy() noexcept;
 
         [[nodiscard]] const vk::raii::Image& getBaseImage() const noexcept { return _image; }
         [[nodiscard]] const vk::raii::ImageView& getBaseImageView() const noexcept { return _imageView; }
         // [[nodiscard]] const vk::ImageLayout& getImageLayout() const noexcept { return _layout; }
 
-        void transitionImageLayout(vk::ImageLayout newLayout, const vk::raii::CommandBuffer& commandBuffer,
-                                   vk::ImageAspectFlagBits aspectFlags, uint32_t mipLevels = 1,
-                                   uint32_t layerCount = 1) noexcept;
+        void transitionImageLayout(vk::ImageLayout newLayout, const VulkanLayoutTransitionConfig& config,
+                                   const vk::raii::CommandBuffer& commandBuffer) noexcept;
         static void transitionImageLayout(const vk::Image& image, const VulkanLayoutTransitionConfig& config,
                                           const vk::raii::CommandBuffer& commandBuffer) noexcept;
         //
@@ -40,8 +39,7 @@ namespace tempest::renderer
         //                      size_t commandBufferIndex = 0) const noexcept;
 
     private:
-        bool createImageView(const VulkanContext& context, vk::Format format,
-                             vk::ImageAspectFlags aspectFlags) noexcept;
+        bool createImageView(const VulkanDevice& device, vk::Format format, vk::ImageAspectFlags aspectFlags) noexcept;
         // bool createImage(const RenderDevice& device) noexcept;
 
     private:

@@ -167,7 +167,7 @@ namespace tempest::renderer
                                               .mipLevels   = 1,
                                               .numSamples  = vk::SampleCountFlagBits::e1 };
             VulkanImage depthImage{};
-            depthImage.create(context, createInfo);
+            depthImage.create(*context.device, createInfo);
             _depthImages.push_back(std::move(depthImage));
         }
 
