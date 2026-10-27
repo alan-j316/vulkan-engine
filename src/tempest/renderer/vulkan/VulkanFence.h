@@ -13,6 +13,9 @@
 
 namespace tempest::renderer
 {
+    // Forward Declaration
+    struct VulkanContext;
+    
     class VulkanFence
     {
     public:

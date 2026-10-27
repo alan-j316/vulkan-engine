@@ -87,26 +87,7 @@ namespace tempest::renderer
     // Forward declarations
     class VulkanFence;
 
-    struct VulkanContext
-    {
-        size_t frameIndex{ 0 }, swapChainImageIndex{ 0 };
 
-        vk::raii::Instance instance{ nullptr };
-        vk::raii::Context baseContext{};
-        vk::AllocationCallbacks* allocator{};
-        vk::DebugUtilsMessengerEXT debugMessenger{};
-        vk::raii::SurfaceKHR surface{ nullptr };
-        vk::Extent2D swapChainExtent{};
-        class VulkanDevice* device{};
-        class VulkanSwapChain* swapChain{};
-        class VulkanCommandPool* graphicsCommandPool{};
-        Vector<CommandBufferHandle> graphicsCommandBuffers{ makeVector<CommandBufferHandle>() };
-        // Synchronization primitives
-        Vector<vk::raii::Semaphore> imageAvailableSemaphores{ makeVector<vk::raii::Semaphore>() };
-        Vector<vk::raii::Semaphore> queueCompleteSemaphore{ makeVector<vk::raii::Semaphore>() };
-        Vector<VulkanFence> inFlightFences{};
-        Vector<VulkanFence> imagesInFlight{};
-    };
 
     static constexpr auto MIN_VULKAN_VERSION = VK_API_VERSION_1_3;
 

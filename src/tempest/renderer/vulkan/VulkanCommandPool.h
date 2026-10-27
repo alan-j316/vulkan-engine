@@ -16,6 +16,9 @@
 
 namespace tempest::renderer
 {
+    /// Forward Declaration
+    struct VulkanDevice;
+
     class VulkanCommandPool
     {
     public:

@@ -26,7 +26,28 @@
 
 namespace tempest::renderer
 {
-    static VulkanContext context;
+    struct VulkanContext
+    {
+        size_t frameIndex{ 0 }, swapChainImageIndex{ 0 };
+
+        vk::raii::Instance instance{ nullptr };
+        vk::raii::Context baseContext{};
+        vk::AllocationCallbacks* allocator{};
+        vk::DebugUtilsMessengerEXT debugMessenger{};
+        vk::raii::SurfaceKHR surface{ nullptr };
+        vk::Extent2D swapChainExtent{};
+        VulkanDevice device{};
+        VulkanSwapChain swapChain{};
+        VulkanCommandPool graphicsCommandPool{};
+        Vector<CommandBufferHandle> graphicsCommandBuffers{ makeVector<CommandBufferHandle>() };
+        // Synchronization primitives
+        Vector<vk::raii::Semaphore> imageAvailableSemaphores{ makeVector<vk::raii::Semaphore>() };
+        Vector<vk::raii::Semaphore> queueCompleteSemaphore{ makeVector<vk::raii::Semaphore>() };
+        Vector<VulkanFence> inFlightFences{};
+        Vector<VulkanFence> imagesInFlight{};
+    };
+
+
     // TODO: Move to config
     static constexpr auto ENGINE_NAME      = "Tempest";
     static constexpr size_t APP_VERSION    = 1;
@@ -44,8 +65,6 @@ namespace tempest::renderer
                                     vk::DebugUtilsMessageTypeFlagsEXT type,
                                     const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
 
-    static void setupDebugMessenger() noexcept;
-
 
     bool VulkanBackend::init(platform::PlatformState* state, std::string_view applicationName) noexcept
     {
@@ -60,7 +79,7 @@ namespace tempest::renderer
         // EXTENSIONS
         //------------
         const auto requiredExtensions  = getRequiredExtensions();
-        const auto extensionProperties = context.baseContext.enumerateInstanceExtensionProperties();
+        const auto extensionProperties = _ctx->baseContext.enumerateInstanceExtensionProperties();
         log::info("\nRequired Vulkan Extensions");
         for (const auto ext : requiredExtensions)
         {
@@ -92,7 +111,7 @@ namespace tempest::renderer
             requiredLayers.assign(VALIDATION_LAYERS.begin(), VALIDATION_LAYERS.end());
         }
         // Enumerate through each layer and determine if the layers we need are supported
-        const auto supportedLayers = context.baseContext.enumerateInstanceLayerProperties();
+        const auto supportedLayers = _ctx->baseContext.enumerateInstanceLayerProperties();
         const auto unsupportedLayers =
             std::ranges::find_if(requiredLayers, [&supportedLayers](const auto& requiredLayer) {
                 return std::ranges::none_of(supportedLayers, [requiredLayer](const auto& layerProperty) {
@@ -118,14 +137,14 @@ namespace tempest::renderer
             .ppEnabledExtensionNames = requiredExtensions.data(),
         };
 
-        context.instance = vk::raii::Instance(context.baseContext, instanceCreateInfo, context.allocator);
+        _ctx->instance = vk::raii::Instance(_ctx->baseContext, instanceCreateInfo, _ctx->allocator);
         setupDebugMessenger();
 
 
         // -------------------
         //  SURFACE CREATION
         // -------------------
-        if (!platform::createVulkanSurface(*_state, context))
+        if (!platform::createVulkanSurface(*_state, *_ctx))
         {
             log::error("There was an error creating vulkan surface");
             return false;
@@ -151,23 +170,23 @@ namespace tempest::renderer
                                                             .sampleRateShading    = true };
 
         // TODO: Look for a way to create a stack based device
-        const auto rawDevMem = memory::alloc(sizeof(VulkanDevice), memory::MemoryTag::MEMORY_TAG_RENDERER);
-        context.device       = new (rawDevMem) VulkanDevice();
+        // const auto rawDevMem = memory::alloc(sizeof(VulkanDevice), memory::MemoryTag::MEMORY_TAG_RENDERER);
+        // _ctx->device         = new (rawDevMem) VulkanDevice();
 
-        if (!context.device->create(context, physicalDeviceReq))
+        if (!_ctx->device.create(*_ctx, physicalDeviceReq))
         {
             log::error("There was an error creating the vulkan device");
             return false;
         }
 
-        const auto rawSwapChainMem = memory::alloc(sizeof(VulkanSwapChain), memory::MemoryTag::MEMORY_TAG_RENDERER);
-        context.swapChain          = new (rawSwapChainMem) VulkanSwapChain();
+        // const auto rawSwapChainMem = memory::alloc(sizeof(VulkanSwapChain), memory::MemoryTag::MEMORY_TAG_RENDERER);
+        // _ctx->swapChain            = new (rawSwapChainMem) VulkanSwapChain();
 
         // ---------------------
         //  SWAP CHAIN CREATION
         // ---------------------
         // TODO: Update width and height
-        context.swapChain->create(context, 1280, 720);
+        _ctx->swapChain.create(*_ctx, 1280, 720);
 
 
         // -------------------------
@@ -179,55 +198,55 @@ namespace tempest::renderer
         // ------------------------
         //  SYNCHRONIZATION OBJECTS
         // ------------------------
-        context.inFlightFences = makeVector<VulkanFence>();
-        context.inFlightFences.resize(context.swapChain->getMaxFramesInFlight());
+        _ctx->inFlightFences = makeVector<VulkanFence>();
+        _ctx->inFlightFences.resize(_ctx->swapChain.getMaxFramesInFlight());
 
-        for (size_t i = 0; i < context.swapChain->getMaxFramesInFlight(); ++i)
+        for (size_t i = 0; i < _ctx->swapChain.getMaxFramesInFlight(); ++i)
         {
             vk::SemaphoreCreateInfo semaphoreCreateInfo{};
-            context.imageAvailableSemaphores.emplace_back(context.device->getLogicalDevice(), semaphoreCreateInfo,
-                                                          context.allocator);
-            context.queueCompleteSemaphore.emplace_back(context.device->getLogicalDevice(), semaphoreCreateInfo,
-                                                        context.allocator);
+            _ctx->imageAvailableSemaphores.emplace_back(_ctx->device.getLogicalDevice(), semaphoreCreateInfo,
+                                                        _ctx->allocator);
+            _ctx->queueCompleteSemaphore.emplace_back(_ctx->device.getLogicalDevice(), semaphoreCreateInfo,
+                                                      _ctx->allocator);
 
             VulkanFence fence{};
-            fence.create(context, true);
-            context.inFlightFences[i] = std::move(fence);
+            fence.create(*_ctx, true);
+            _ctx->inFlightFences[i] = std::move(fence);
         }
 
         log::info("Vulkan Renderer Initialized");
-        return context.instance != nullptr;
+        return _ctx->instance != nullptr;
     }
 
 
     void VulkanBackend::shutdown() noexcept
     {
         // Wait for idle before shutting down sync primitives
-        context.device->getLogicalDevice().waitIdle();
+        _ctx->device.getLogicalDevice().waitIdle();
 
         // Destroy sync primitives
-        context.imageAvailableSemaphores.clear();
-        context.queueCompleteSemaphore.clear();
-        context.inFlightFences.clear();
-        context.swapChain->destroy();
+        _ctx->imageAvailableSemaphores.clear();
+        _ctx->queueCompleteSemaphore.clear();
+        _ctx->inFlightFences.clear();
+        _ctx->swapChain.destroy();
 
-        context.graphicsCommandPool->destroy();
-        context.device->destroy();
-        context.surface  = nullptr;
-        context.instance = nullptr;
+        _ctx->graphicsCommandPool.destroy();
+        _ctx->device.destroy();
+        _ctx->surface  = nullptr;
+        _ctx->instance = nullptr;
         log::info("Vulkan Backend successfully shutdown!");
         // NOTE: RAII will do rest of the cleanup
     }
 
     void VulkanBackend::onResize(const uint32_t width, const uint32_t height) noexcept
-    { context.swapChain->recreate(context, width, height); }
+    { _ctx->swapChain.recreate(*_ctx, width, height); }
 
     //
     // void VulkanBackend::recordCommandBuffer(const uint32_t imageIndex) const noexcept
     // {
-    //     auto commandBufferHandles = context.graphicsCommandBuffers;
+    //     auto commandBufferHandles = _ctx->graphicsCommandBuffers;
     //
-    //     context.graphicsCommandPool->startRecording(commandBufferHandles[context.frameIndex], false, false);
+    //     _ctx->graphicsCommandPool->startRecording(commandBufferHandles[_ctx->frameIndex], false, false);
     //
     //     // Transition swap chain image to ImageLayout::eColorAttachmentOptimal
     //     transitionImageLayout(swapChainImages[imageIndex], vk::ImageLayout::eUndefined,
@@ -260,7 +279,7 @@ namespace tempest::renderer
     //         .imageView          = colorImageView,
     //         .imageLayout        = vk::ImageLayout::eColorAttachmentOptimal,
     //         .resolveMode        = vk::ResolveModeFlagBits::eAverage,
-    //         .resolveImageView   = context.swapChain->getImageViews[imageIndex],
+    //         .resolveImageView   = _ctx->swapChain->getImageViews[imageIndex],
     //         .resolveImageLayout = vk::ImageLayout::eColorAttachmentOptimal,
     //         .loadOp             = vk::AttachmentLoadOp::eClear,  // What to do to the attachment before rendering
     //         .storeOp            = vk::AttachmentStoreOp::eStore, // What to do to the attachment after rendering
@@ -275,7 +294,7 @@ namespace tempest::renderer
     //
     //     // Create the rendering info
     //     const vk::RenderingInfo renderingInfo{ .renderArea           = { .offset = { .x = 0, .y = 0 },
-    //                                                                      .extent = context.swapChainExtent },
+    //                                                                      .extent = _ctx->swapChainExtent },
     //                                            .layerCount           = 1,
     //                                            .colorAttachmentCount = 1,
     //                                            .pColorAttachments    = &attachmentInfo,
@@ -317,19 +336,19 @@ namespace tempest::renderer
     bool VulkanBackend::beginFrame(float deltaTime) noexcept
     {
         // TODO: Handle swapchain recreation
-        auto& device = context.device->getLogicalDevice();
+        auto& device = _ctx->device.getLogicalDevice();
         // Wait for previous frame to be finished
-        if (!context.inFlightFences[context.frameIndex].wait(context, UINT64_MAX))
+        if (!_ctx->inFlightFences[_ctx->frameIndex].wait(*_ctx, UINT64_MAX))
         {
             log::error("An error occurred while waiting for previous frame to finish");
             return false;
         }
         // Reset the fence
-        context.inFlightFences[context.frameIndex].reset(context);
+        _ctx->inFlightFences[_ctx->frameIndex].reset(*_ctx);
         device.waitIdle(); // TODO: Replace with fence sync
         // Acquire the next image index
-        context.swapChainImageIndex = context.swapChain->acquireNextImageIndex(
-            context, UINT64_MAX, context.imageAvailableSemaphores[context.frameIndex], nullptr);
+        _ctx->swapChainImageIndex = _ctx->swapChain.acquireNextImageIndex(
+            *_ctx, UINT64_MAX, _ctx->imageAvailableSemaphores[_ctx->frameIndex], nullptr);
 
 
 
@@ -337,10 +356,10 @@ namespace tempest::renderer
         //     COMMAND BUFFER RECORDING
         // ------------------------------
         // Get the command buffer handle, reset and begin recording.
-        const auto bufferHandle = context.graphicsCommandBuffers[context.frameIndex];
-        context.graphicsCommandPool->reset(bufferHandle);
+        const auto bufferHandle = _ctx->graphicsCommandBuffers[_ctx->frameIndex];
+        _ctx->graphicsCommandPool.reset(bufferHandle);
         // NOTE: We are resetting the command buffer and re-recording it every frame.
-        context.graphicsCommandPool->startRecording(bufferHandle, true, false);
+        _ctx->graphicsCommandPool.startRecording(bufferHandle, true, false);
 
         // log::warn("Unsupported layout transition; using a suboptimal fallback transition.");
         // TODO: Update transition flags
@@ -355,9 +374,8 @@ namespace tempest::renderer
             .mipLevels     = 1,
             .layerCount    = 1
         };
-        VulkanImage::transitionImageLayout(context.swapChain->getImages()[context.swapChainImageIndex],
-                                           transitionConfig,
-                                           context.graphicsCommandPool->getBaseCommandBuffer(bufferHandle));
+        VulkanImage::transitionImageLayout(_ctx->swapChain.getImages()[_ctx->swapChainImageIndex], transitionConfig,
+                                           _ctx->graphicsCommandPool.getBaseCommandBuffer(bufferHandle));
         std::srand(std::time(nullptr));
         const auto r = rand() / static_cast<float>(RAND_MAX);
         const auto g = rand() / static_cast<float>(RAND_MAX);
@@ -370,7 +388,7 @@ namespace tempest::renderer
         //                                   .baseArrayLayer = 0,
         //                                   .layerCount     = 1 };
         const vk::RenderingAttachmentInfo attachmentInfo{
-            .imageView        = context.swapChain->getImageViews()[context.swapChainImageIndex],
+            .imageView        = _ctx->swapChain.getImageViews()[_ctx->swapChainImageIndex],
             .imageLayout      = vk::ImageLayout::eGeneral, // TODO: Update to colorattachmentoptiaml
             .resolveMode      = vk::ResolveModeFlagBits::eNone,
             .resolveImageView = nullptr,
@@ -380,23 +398,23 @@ namespace tempest::renderer
         };
 
         const vk::RenderingInfo renderInfo{
-            .renderArea           = { .offset = { .x = 0, .y = 0 }, .extent = context.swapChainExtent },
+            .renderArea           = { .offset = { .x = 0, .y = 0 }, .extent = _ctx->swapChainExtent },
             .layerCount           = 1,
             .colorAttachmentCount = 1,
             .pColorAttachments    = &attachmentInfo,
             .pDepthAttachment     = nullptr // TODO:
         };
 
-        context.graphicsCommandPool->getBaseCommandBuffer(bufferHandle).beginRendering(renderInfo);
+        _ctx->graphicsCommandPool.getBaseCommandBuffer(bufferHandle).beginRendering(renderInfo);
 
         // Set dynamic states
-        context.graphicsCommandPool->getBaseCommandBuffer(bufferHandle)
+        _ctx->graphicsCommandPool.getBaseCommandBuffer(bufferHandle)
             .setViewport(0,
-                         vk::Viewport(0.0f, static_cast<float>(context.swapChainExtent.height),
-                                      static_cast<float>(context.swapChainExtent.width),
-                                      -static_cast<float>(context.swapChainExtent.height), 0.0f, 1.0f));
-        context.graphicsCommandPool->getBaseCommandBuffer(bufferHandle)
-            .setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), context.swapChainExtent));
+                         vk::Viewport(0.0f, static_cast<float>(_ctx->swapChainExtent.height),
+                                      static_cast<float>(_ctx->swapChainExtent.width),
+                                      -static_cast<float>(_ctx->swapChainExtent.height), 0.0f, 1.0f));
+        _ctx->graphicsCommandPool.getBaseCommandBuffer(bufferHandle)
+            .setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), _ctx->swapChainExtent));
 
         // TODO: Impl
         return true;
@@ -405,11 +423,11 @@ namespace tempest::renderer
 
     bool VulkanBackend::endFrame(float deltaTime) noexcept
     {
-        const auto bufferHandle = context.graphicsCommandBuffers[context.frameIndex];
+        const auto bufferHandle = _ctx->graphicsCommandBuffers[_ctx->frameIndex];
 
 
         // End the rendering
-        context.graphicsCommandPool->getBaseCommandBuffer(bufferHandle).endRendering();
+        _ctx->graphicsCommandPool.getBaseCommandBuffer(bufferHandle).endRendering();
 
         // Transition the image back
         // TODO: Update transition flags
@@ -424,35 +442,32 @@ namespace tempest::renderer
             .mipLevels     = 1,
             .layerCount    = 1
         };
-        VulkanImage::transitionImageLayout(context.swapChain->getImages()[context.swapChainImageIndex],
-                                           transitionConfig,
-                                           context.graphicsCommandPool->getBaseCommandBuffer(bufferHandle));
+        VulkanImage::transitionImageLayout(_ctx->swapChain.getImages()[_ctx->swapChainImageIndex], transitionConfig,
+                                           _ctx->graphicsCommandPool.getBaseCommandBuffer(bufferHandle));
 
         // End recording
-        context.graphicsCommandPool->endRecording(bufferHandle);
-        context.graphicsCommandPool->submit(bufferHandle);
+        _ctx->graphicsCommandPool.endRecording(bufferHandle);
+        _ctx->graphicsCommandPool.submit(bufferHandle);
 
         // Submit the queue
         vk::PipelineStageFlags waitDstFlag{ vk::PipelineStageFlagBits::eColorAttachmentOutput };
         const vk::SubmitInfo submitInfo{ .waitSemaphoreCount = 1,
-                                         .pWaitSemaphores    = &*context.imageAvailableSemaphores[context.frameIndex],
+                                         .pWaitSemaphores    = &*_ctx->imageAvailableSemaphores[_ctx->frameIndex],
                                          .pWaitDstStageMask  = &waitDstFlag,
                                          .commandBufferCount = 1,
                                          .pCommandBuffers =
-                                             &*context.graphicsCommandPool->getBaseCommandBuffer(bufferHandle),
+                                             &*_ctx->graphicsCommandPool.getBaseCommandBuffer(bufferHandle),
                                          .signalSemaphoreCount = 1,
-                                         .pSignalSemaphores    = &*context.queueCompleteSemaphore[context.frameIndex] };
+                                         .pSignalSemaphores    = &*_ctx->queueCompleteSemaphore[_ctx->frameIndex] };
 
         // TODO: Refactor
-        context.device->getGraphicsQueue().submit(submitInfo,
-                                                  context.inFlightFences[context.frameIndex].getBaseFence());
+        _ctx->device.getGraphicsQueue().submit(submitInfo, _ctx->inFlightFences[_ctx->frameIndex].getBaseFence());
 
         // Present swapchain
-        context.swapChain->presentSwapChain(
-            context, context.device->getGraphicsQueue(), context.device->getPresentQueue(),
-            context.queueCompleteSemaphore[context.frameIndex], context.swapChainImageIndex);
+        _ctx->swapChain.presentSwapChain(*_ctx, _ctx->device.getGraphicsQueue(), _ctx->device.getPresentQueue(),
+                                         _ctx->queueCompleteSemaphore[_ctx->frameIndex], _ctx->swapChainImageIndex);
 
-        context.frameIndex = (context.frameIndex + 1) % context.swapChain->getMaxFramesInFlight();
+        _ctx->frameIndex = (_ctx->frameIndex + 1) % _ctx->swapChain.getMaxFramesInFlight();
 
 
         // TODO: Impl
@@ -476,15 +491,14 @@ namespace tempest::renderer
 
     void VulkanBackend::createGraphicsCommandPoolAndAllocateBuffers() const noexcept
     {
-        const auto rawMem           = memory::alloc(sizeof(VulkanCommandPool), memory::MemoryTag::MEMORY_TAG_RENDERER);
-        context.graphicsCommandPool = new (rawMem) VulkanCommandPool();
-        context.graphicsCommandPool->createCommandPool(*context.device,
-                                                       context.device->getQueueInfo().graphicsFamilyIndex);
+        // const auto rawMem         = memory::alloc(sizeof(VulkanCommandPool), memory::MemoryTag::MEMORY_TAG_RENDERER);
+        // _ctx->graphicsCommandPool = new (rawMem) VulkanCommandPool();
+        _ctx->graphicsCommandPool.createCommandPool(_ctx->device, _ctx->device.getQueueInfo().graphicsFamilyIndex);
         log::info("Command pool for Graphics Family created!");
         /// Create a command buffer for each swapchain image.
-        for (size_t i = 0; i < context.swapChain->getImageCount(); ++i)
+        for (size_t i = 0; i < _ctx->swapChain.getImageCount(); ++i)
         {
-            context.graphicsCommandBuffers.push_back(context.graphicsCommandPool->allocate(*context.device, true));
+            _ctx->graphicsCommandBuffers.push_back(_ctx->graphicsCommandPool.allocate(_ctx->device, true));
         }
         log::info("Command buffers allocated for Graphics Family!");
     }
@@ -513,7 +527,7 @@ namespace tempest::renderer
     }
 
 
-    void setupDebugMessenger() noexcept
+    void VulkanBackend::setupDebugMessenger() const noexcept
     {
         if constexpr (ENABLE_VALIDATION_LAYERS)
         {
@@ -529,8 +543,7 @@ namespace tempest::renderer
             constexpr vk::DebugUtilsMessengerCreateInfoEXT debugUtilsCreateInfo{ .messageSeverity = severityFlags,
                                                                                  .messageType     = messageType,
                                                                                  .pfnUserCallback = &debugCallback };
-            context.debugMessenger =
-                context.instance.createDebugUtilsMessengerEXT(debugUtilsCreateInfo, context.allocator);
+            _ctx->debugMessenger = _ctx->instance.createDebugUtilsMessengerEXT(debugUtilsCreateInfo, _ctx->allocator);
         }
     }
 

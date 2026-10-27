@@ -29,5 +29,9 @@ namespace tempest::renderer
     private:
         Vector<const char*> getRequiredExtensions() const noexcept;
         void createGraphicsCommandPoolAndAllocateBuffers() const noexcept;
+        void setupDebugMessenger() const noexcept;
+
+    private:
+        struct VulkanContext* _ctx{};
     };
 } // namespace tempest::renderer
