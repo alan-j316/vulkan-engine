@@ -63,4 +63,17 @@ namespace tempest::core
         }
         return false;
     }
+
+
+    bool ResizeEventListener::onEvent(EventCode code, void* sender, const EventContext context)
+    {
+        if (static_cast<SystemEventCode>(code) == SystemEventCode::WINDOW_RESIZED)
+        {
+            const int w = context.i32[0];
+            const int h = context.i32[1];
+            _app.onResize(w, h);
+            return true;
+        }
+        return false;
+    }
 } // namespace tempest::core

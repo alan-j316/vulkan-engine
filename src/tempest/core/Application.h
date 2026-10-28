@@ -32,6 +32,7 @@ namespace tempest
             Application() noexcept;
             bool create(Game* game) noexcept;
             bool run() noexcept;
+            void onResize(uint32_t w, uint32_t h) const;
 
         private:
             bool _isRunning{};
@@ -46,10 +47,12 @@ namespace tempest
 
             ApplicationEventListener _appEventListener;
             KeyEventListener _keyEventListener;
+            ResizeEventListener _resizeEventListener;
 
             // Friend class
             friend ApplicationEventListener;
             friend KeyEventListener;
+            friend ResizeEventListener;
 
             // Static variables
             static constexpr double TARGET_FRAME_TIME_S{ 1.0 / 60.0 }; ///< Frame time in seconds.

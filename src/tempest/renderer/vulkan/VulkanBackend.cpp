@@ -184,7 +184,7 @@ namespace tempest::renderer
         //  SWAP CHAIN CREATION
         // ---------------------
         // TODO: Update width and height
-        _ctx->swapChain.create(_ctx->device, _ctx->surface, 1280, 720);
+        _ctx->swapChain.create(_ctx->device, _ctx->surface, _ctx->swapChainExtent.width, _ctx->swapChainExtent.height);
 
 
         // -------------------------
@@ -242,103 +242,21 @@ namespace tempest::renderer
         log::info("Vulkan Backend successfully shutdown!");
     }
 
+
     void VulkanBackend::onResize(const uint32_t width, const uint32_t height) noexcept
     {
+        const auto& dev       = _ctx->device.getLogicalDevice();
         _ctx->swapChainExtent = { .width = width, .height = height };
+        // if (dev.waitForFences(*_ctx->inFlightFences[_ctx->frameIndex], vk::True, UINT64_MAX) != vk::Result::eSuccess)
+        // {
+        //     log::error("[Resize]: Unable to wait for in-flight fence. Swap chain won't be resized!");
+        //     return;
+        // }
+        dev.waitIdle();
+        log::info(std::format("Resizing to {} x {} ", _ctx->swapChainExtent.width, _ctx->swapChainExtent.height));
         _ctx->swapChain.recreate(_ctx->device, _ctx->surface, width, height);
     }
 
-    //
-    // void VulkanBackend::recordCommandBuffer(const uint32_t imageIndex) const noexcept
-    // {
-    //     auto commandBufferHandles = _ctx->graphicsCommandBuffers;
-    //
-    //     _ctx->graphicsCommandPool->startRecording(commandBufferHandles[_ctx->frameIndex], false, false);
-    //
-    //     // Transition swap chain image to ImageLayout::eColorAttachmentOptimal
-    //     transitionImageLayout(swapChainImages[imageIndex], vk::ImageLayout::eUndefined,
-    //                           vk::ImageLayout::eColorAttachmentOptimal, {}, // no need to wait for previous operation
-    //                           vk::AccessFlagBits2::eColorAttachmentWrite,
-    //                           vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-    //                           vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::ImageAspectFlagBits::eColor);
-    //     // Transition depth image to depth attachment optimal layout
-    //     // We need a single barrier for depth attachment writes(we don't care after rendering).
-    //     transitionImageLayout(
-    //         *depthImage, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthAttachmentOptimal,
-    //         vk::AccessFlagBits2::eDepthStencilAttachmentWrite, vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
-    //         vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
-    //         vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
-    //         vk::ImageAspectFlagBits::eDepth);
-    //
-    //     // Transition the multisampled image
-    //     // transitionImageLayout(*colorImage, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal,
-    //     //                       vk::AccessFlagBits2::eColorAttachmentWrite,
-    //     vk::AccessFlagBits2::eColorAttachmentWrite,
-    //     //                       vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-    //     //                       vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-    //     vk::ImageAspectFlagBits::eColor);
-    //
-    //     constexpr vk::ClearColorValue clearColor{ 0.0f, 0.0f, 0.0f, 1.0f };
-    //     // constexpr vk::ClearDepthStencilValue clearDepth{ .depth = 1.0f, .stencil = 0 };
-    //
-    //     // Dynamic rendering doesn't require a RenderPass but we need to specify the attachment info
-    //     vk::RenderingAttachmentInfo attachmentInfo{
-    //         .imageView          = colorImageView,
-    //         .imageLayout        = vk::ImageLayout::eColorAttachmentOptimal,
-    //         .resolveMode        = vk::ResolveModeFlagBits::eAverage,
-    //         .resolveImageView   = _ctx->swapChain->getImageViews[imageIndex],
-    //         .resolveImageLayout = vk::ImageLayout::eColorAttachmentOptimal,
-    //         .loadOp             = vk::AttachmentLoadOp::eClear,  // What to do to the attachment before rendering
-    //         .storeOp            = vk::AttachmentStoreOp::eStore, // What to do to the attachment after rendering
-    //         .clearValue         = clearColor
-    //     };
-    //     //
-    //     // vk::RenderingAttachmentInfo depthAttachmentInfo{ .imageView   = depthImageView,
-    //     //                                                  .imageLayout = vk::ImageLayout::eDepthAttachmentOptimal,
-    //     //                                                  .loadOp      = vk::AttachmentLoadOp::eClear,
-    //     //                                                  .storeOp     = vk::AttachmentStoreOp::eDontCare,
-    //     //                                                  .clearValue  = clearDepth };
-    //
-    //     // Create the rendering info
-    //     const vk::RenderingInfo renderingInfo{ .renderArea           = { .offset = { .x = 0, .y = 0 },
-    //                                                                      .extent = _ctx->swapChainExtent },
-    //                                            .layerCount           = 1,
-    //                                            .colorAttachmentCount = 1,
-    //                                            .pColorAttachments    = &attachmentInfo,
-    //                                            .pDepthAttachment     = nullptr };
-    //     // .pDepthAttachment     = &depthAttachmentInfo };
-    //
-    //     // Begin Rendering
-    //     // commandBuffers[frameIndex].beginRendering(renderingInfo);
-    //     // commandBuffers[frameIndex].bindPipeline(vk::PipelineBindPoint::eGraphics, *graphicsPipeline);
-    //     // // Bind the vertex buffer
-    //     // commandBuffers[frameIndex].bindVertexBuffers(0, *vertexBuffer, { 0 });
-    //     // commandBuffers[frameIndex].bindIndexBuffer(*indexBuffer, 0,
-    //     //                                            vk::IndexTypeValue<decltype(indices)::value_type>::value);
-    //     // Set dynamic states
-    //     // NOTE: The negative height is due to the fact the glm has an inverted y axis in the projection matrix.
-    //     commandBuffers[frameIndex].setViewport(0,
-    //                                            vk::Viewport(0.0f, static_cast<float>(swapChainExtent.height),
-    //                                                         static_cast<float>(swapChainExtent.width),
-    //                                                         -static_cast<float>(swapChainExtent.height),
-    //                                                         0.0f, 1.0f));
-    //     commandBuffers[frameIndex].setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), swapChainExtent));
-    //
-    //     // Bind the descriptor set for uniforms
-    //     // commandBuffers[frameIndex].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0,
-    //     //                                               *descriptorSets[frameIndex], nullptr);
-    //     // Draw
-    //     // commandBuffers[frameIndex].drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
-    //     // End rendering
-    //     commandBuffers[frameIndex].endRendering();
-    //
-    //     // Transition image layout for presentation
-    //     transitionImageLayout(swapChainImages[imageIndex], vk::ImageLayout::eColorAttachmentOptimal,
-    //                           vk::ImageLayout::ePresentSrcKHR, vk::AccessFlagBits2::eColorAttachmentWrite, {},
-    //                           vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-    //                           vk::PipelineStageFlagBits2::eBottomOfPipe, vk::ImageAspectFlagBits::eColor);
-    //     commandBuffers[frameIndex].end();
-    // }
 
     bool VulkanBackend::beginFrame(float deltaTime) noexcept
     {
@@ -467,15 +385,16 @@ namespace tempest::renderer
                                          .pCommandBuffers =
                                              &*_ctx->graphicsCommandPool.getBaseCommandBuffer(bufferHandle),
                                          .signalSemaphoreCount = 1,
-                                         .pSignalSemaphores    = &*_ctx->renderFinishedSemaphore[_ctx->swapChainImageIndex] };
+                                         .pSignalSemaphores =
+                                             &*_ctx->renderFinishedSemaphore[_ctx->swapChainImageIndex] };
 
         // TODO: Refactor
         _ctx->device.getGraphicsQueue().submit(submitInfo, _ctx->inFlightFences[_ctx->frameIndex]);
 
         // Present swap chain
-        _ctx->swapChain.presentSwapChain(_ctx->device, _ctx->surface, _ctx->device.getGraphicsQueue(),
-                                         _ctx->device.getPresentQueue(),
-                                         _ctx->renderFinishedSemaphore[_ctx->swapChainImageIndex], _ctx->swapChainImageIndex);
+        _ctx->swapChain.presentSwapChain(
+            _ctx->device, _ctx->surface, _ctx->device.getGraphicsQueue(), _ctx->device.getPresentQueue(),
+            _ctx->renderFinishedSemaphore[_ctx->swapChainImageIndex], _ctx->swapChainImageIndex);
 
         _ctx->frameIndex = (_ctx->frameIndex + 1) % _ctx->swapChain.getMaxFramesInFlight();
 

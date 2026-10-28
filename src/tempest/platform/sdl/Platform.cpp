@@ -112,8 +112,12 @@ namespace tempest::platform
                 case SDL_EVENT_QUIT:
                     core::fireEvent(static_cast<core::EventCode>(core::SystemEventCode::APPLICATION_QUIT), nullptr, {});
                     return false;
-                case SDL_EVENT_WINDOW_RESIZED:
-                    // TODO: Handle resizing
+                case SDL_EVENT_WINDOW_RESIZED: {
+                    int w{}, h{};
+                    SDL_GetWindowSizeInPixels(_state->window, &w, &h);
+                    core::fireEvent(static_cast<core::EventCode>(core::SystemEventCode::WINDOW_RESIZED), nullptr,
+                                    { .i32 = { w, h } });
+                }
                     return true;
                 case SDL_EVENT_KEY_DOWN:
                     core::input::processKey(static_cast<core::Keycode>(event.key.key), true);

@@ -16,11 +16,13 @@
 
 namespace tempest::renderer
 {
-    void VulkanSwapChain::create(VulkanDevice& device, const vk::raii::SurfaceKHR& surface, const uint32_t width, const uint32_t height) noexcept
+    void VulkanSwapChain::create(VulkanDevice& device, const vk::raii::SurfaceKHR& surface, const uint32_t width,
+                                 const uint32_t height) noexcept
     { _createVulkanSwapChain(device, surface, width, height); }
 
 
-    void VulkanSwapChain::recreate(VulkanDevice& device, const vk::raii::SurfaceKHR& surface, const uint32_t width, const uint32_t height) noexcept
+    void VulkanSwapChain::recreate(VulkanDevice& device, const vk::raii::SurfaceKHR& surface, const uint32_t width,
+                                   const uint32_t height) noexcept
     {
         const auto oldSwapChain = &*_swapChainInstance;
         destroy();
@@ -31,8 +33,9 @@ namespace tempest::renderer
     void VulkanSwapChain::destroy() noexcept { _cleanupSwapChain(); }
 
 
-    uint32_t VulkanSwapChain::acquireNextImageIndex(VulkanDevice& device, const vk::raii::SurfaceKHR& surface, const size_t timeout,
-                                                    const vk::Semaphore imageAvailableSemaphore, const vk::Fence fence)
+    uint32_t VulkanSwapChain::acquireNextImageIndex(VulkanDevice& device, const vk::raii::SurfaceKHR& surface,
+                                                    const size_t timeout, const vk::Semaphore imageAvailableSemaphore,
+                                                    const vk::Fence fence)
     {
         const auto [result, index] = _swapChainInstance.acquireNextImage(timeout, imageAvailableSemaphore, fence);
         if (result == vk::Result::eErrorOutOfDateKHR)
@@ -41,16 +44,16 @@ namespace tempest::renderer
         }
         if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
         {
-            log::warn(std::format("An error occurred while acquiring swapchain image."));
+            log::warn(std::format("An error occurred while acquiring swap chain image."));
         }
 
         return index;
     }
 
 
-    void VulkanSwapChain::presentSwapChain(VulkanDevice& device, const vk::raii::SurfaceKHR& surface, vk::raii::Queue graphicsQueue,
-                                           const vk::raii::Queue& presentQueue, vk::Semaphore renderCompleteSemaphore,
-                                           uint32_t imageIndex)
+    void VulkanSwapChain::presentSwapChain(VulkanDevice& device, const vk::raii::SurfaceKHR& surface,
+                                           vk::raii::Queue graphicsQueue, const vk::raii::Queue& presentQueue,
+                                           vk::Semaphore renderCompleteSemaphore, uint32_t imageIndex)
     {
         const vk::PresentInfoKHR presentInfo{
             .waitSemaphoreCount = 1,
@@ -78,14 +81,15 @@ namespace tempest::renderer
     //        PRIVATE METHODS
     // +===============================
 
-    void VulkanSwapChain::_createVulkanSwapChain(VulkanDevice& device, const vk::raii::SurfaceKHR& surface, const uint32_t width, const uint32_t height,
+    void VulkanSwapChain::_createVulkanSwapChain(VulkanDevice& device, const vk::raii::SurfaceKHR& surface,
+                                                 const uint32_t width, const uint32_t height,
                                                  const vk::SwapchainKHR* oldSwapChain) noexcept
     {
-        _maxFramesInFlight           = MAX_FRAMES_IN_FLIGHT_DEF;
-        _extent                      = { .width = width, .height = height };
-        // context.swapChainExtent      = _extent;
-        const auto capabilities      = device.getSwapChainSupport().capabilities;
-        _extent                      = _chooseSwapChainExtent(capabilities);
+        _maxFramesInFlight      = MAX_FRAMES_IN_FLIGHT_DEF;
+        _extent                 = { .width = width, .height = height };
+        const auto capabilities = device.getSwapChainSupport().capabilities;
+        _extent                 = _chooseSwapChainExtent(capabilities);
+        // TODO: Update the context swapchain extent from here
         const auto& vkSurface        = surface;
         const uint32_t minImageCount = _chooseMinImageCount(capabilities);
 

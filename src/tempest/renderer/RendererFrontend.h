@@ -22,7 +22,7 @@ namespace tempest::renderer
     public:
         bool init(RendererType type, std::string_view applicationName, platform::PlatformState* platformState) noexcept;
         void shutdown() noexcept;
-        void onResize(uint32_t width, uint32_t height) noexcept;
+        void onResize(uint32_t width, uint32_t height) const noexcept;
         bool drawFrame(const RenderPacket& packet) const noexcept;
 
     private:

@@ -90,7 +90,7 @@ namespace tempest::core
         {
             if (listener->onEvent(code, sender, context))
             {
-                // If event has been handled then there is no need to propogate it to
+                // If event has been handled then there is no need to propagate it to
                 // other listeners
                 return true;
             }

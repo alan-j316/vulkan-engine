@@ -26,7 +26,8 @@ namespace tempest::core
 {
     static bool _isInitialized = false; // TODO: Update to TMP based singleton
 
-    Application::Application() noexcept: _appEventListener(*this), _keyEventListener(*this) {}
+    Application::Application() noexcept: _appEventListener(*this), _keyEventListener(*this), _resizeEventListener(*this)
+    {}
 
 
     bool Application::create(Game* game) noexcept
@@ -82,6 +83,7 @@ namespace tempest::core
         registerEvent(static_cast<EventCode>(SystemEventCode::APPLICATION_QUIT), &_appEventListener);
         registerEvent(static_cast<EventCode>(SystemEventCode::KEY_PRESSED), &_keyEventListener);
         registerEvent(static_cast<EventCode>(SystemEventCode::KEY_RELEASED), &_keyEventListener);
+        registerEvent(static_cast<EventCode>(SystemEventCode::WINDOW_RESIZED), &_resizeEventListener);
 
         _isInitialized = true;
 
@@ -154,6 +156,7 @@ namespace tempest::core
         unregisterEvent(static_cast<EventCode>(SystemEventCode::APPLICATION_QUIT), &_appEventListener);
         unregisterEvent(static_cast<EventCode>(SystemEventCode::KEY_PRESSED), &_keyEventListener);
         unregisterEvent(static_cast<EventCode>(SystemEventCode::KEY_RELEASED), &_keyEventListener);
+        unregisterEvent(static_cast<EventCode>(SystemEventCode::WINDOW_RESIZED), &_resizeEventListener);
 
         event::shutdown();
         input::shutdown();
@@ -162,4 +165,6 @@ namespace tempest::core
 
         return true;
     }
+
+    void Application::onResize(const uint32_t w, const uint32_t h) const { _renderer.onResize(w, h); }
 } // namespace tempest::core

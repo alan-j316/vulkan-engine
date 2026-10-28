@@ -25,7 +25,7 @@ namespace tempest::renderer
         {
             log::info("Vulkan Renderer Active!");
             const auto rawMem = memory::alloc(sizeof(VulkanBackend), memory::MemoryTag::MEMORY_TAG_RENDERER);
-            _rendererBackend = new (rawMem) VulkanBackend();
+            _rendererBackend  = new (rawMem) VulkanBackend();
         }
         else
         {
@@ -59,9 +59,9 @@ namespace tempest::renderer
     }
 
 
-    void RendererFrontend::onResize(uint32_t width, uint32_t height) noexcept
+    void RendererFrontend::onResize(const uint32_t width, const uint32_t height) const noexcept
     {
-        // TODO: Impl
+        _rendererBackend->onResize(width, height);
     }
 
 

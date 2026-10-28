@@ -36,4 +36,15 @@ namespace tempest::core
     private:
         Application& _app;
     };
+
+
+    class ResizeEventListener: public Listener
+    {
+    public:
+        explicit ResizeEventListener(Application& app): _app(app) {}
+        bool onEvent(EventCode code, void* sender, EventContext context) override;
+
+    private:
+        Application& _app;
+    };
 } // namespace tempest::core
