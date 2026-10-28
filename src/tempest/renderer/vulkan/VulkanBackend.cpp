@@ -42,7 +42,7 @@ namespace tempest::renderer
         Vector<CommandBufferHandle> graphicsCommandBuffers{ makeVector<CommandBufferHandle>() };
         // Synchronization primitives
         Vector<vk::raii::Semaphore> imageAvailableSemaphores{ makeVector<vk::raii::Semaphore>() };
-        Vector<vk::raii::Semaphore> queueCompleteSemaphore{ makeVector<vk::raii::Semaphore>() };
+        Vector<vk::raii::Semaphore> renderFinishedSemaphore{ makeVector<vk::raii::Semaphore>() };
         Vector<vk::raii::Fence> inFlightFences{};
         // Vector<VulkanFence> imagesInFlight{};
     };
@@ -204,11 +204,15 @@ namespace tempest::renderer
             vk::SemaphoreCreateInfo semaphoreCreateInfo{};
             _ctx->imageAvailableSemaphores.emplace_back(_ctx->device.getLogicalDevice(), semaphoreCreateInfo,
                                                         _ctx->allocator);
-            _ctx->queueCompleteSemaphore.emplace_back(_ctx->device.getLogicalDevice(), semaphoreCreateInfo,
-                                                      _ctx->allocator);
-
             constexpr vk::FenceCreateInfo fenceCreateInfo{ .flags = vk::FenceCreateFlagBits::eSignaled };
             _ctx->inFlightFences.emplace_back(_ctx->device.getLogicalDevice(), fenceCreateInfo, _ctx->allocator);
+        }
+
+        for (size_t i = 0; i < _ctx->swapChain.getImages().size(); ++i)
+        {
+            vk::SemaphoreCreateInfo semaphoreCreateInfo{};
+            _ctx->renderFinishedSemaphore.emplace_back(_ctx->device.getLogicalDevice(), semaphoreCreateInfo,
+                                                       _ctx->allocator);
         }
 
         log::info("Vulkan Renderer Initialized");
@@ -223,7 +227,7 @@ namespace tempest::renderer
 
         // Destroy sync primitives
         _ctx->imageAvailableSemaphores.clear();
-        _ctx->queueCompleteSemaphore.clear();
+        _ctx->renderFinishedSemaphore.clear();
         _ctx->inFlightFences.clear();
         _ctx->swapChain.destroy();
 
@@ -463,15 +467,15 @@ namespace tempest::renderer
                                          .pCommandBuffers =
                                              &*_ctx->graphicsCommandPool.getBaseCommandBuffer(bufferHandle),
                                          .signalSemaphoreCount = 1,
-                                         .pSignalSemaphores    = &*_ctx->queueCompleteSemaphore[_ctx->frameIndex] };
+                                         .pSignalSemaphores    = &*_ctx->renderFinishedSemaphore[_ctx->swapChainImageIndex] };
 
         // TODO: Refactor
         _ctx->device.getGraphicsQueue().submit(submitInfo, _ctx->inFlightFences[_ctx->frameIndex]);
 
         // Present swap chain
         _ctx->swapChain.presentSwapChain(_ctx->device, _ctx->surface, _ctx->device.getGraphicsQueue(),
-                                         _ctx->device.getPresentQueue(), _ctx->queueCompleteSemaphore[_ctx->frameIndex],
-                                         _ctx->swapChainImageIndex);
+                                         _ctx->device.getPresentQueue(),
+                                         _ctx->renderFinishedSemaphore[_ctx->swapChainImageIndex], _ctx->swapChainImageIndex);
 
         _ctx->frameIndex = (_ctx->frameIndex + 1) % _ctx->swapChain.getMaxFramesInFlight();
 
