@@ -420,8 +420,6 @@ namespace tempest::renderer
 
     void VulkanBackend::createGraphicsCommandPoolAndAllocateBuffers() const noexcept
     {
-        // const auto rawMem         = memory::alloc(sizeof(VulkanCommandPool), memory::MemoryTag::MEMORY_TAG_RENDERER);
-        // _ctx->graphicsCommandPool = new (rawMem) VulkanCommandPool();
         _ctx->graphicsCommandPool.createCommandPool(_ctx->device, _ctx->device.getQueueInfo().graphicsFamilyIndex);
         log::info("Command pool for Graphics Family created!");
         /// Create a command buffer for each swapchain image.

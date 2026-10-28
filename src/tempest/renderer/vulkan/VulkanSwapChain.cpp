@@ -87,7 +87,7 @@ namespace tempest::renderer
     {
         _maxFramesInFlight      = MAX_FRAMES_IN_FLIGHT_DEF;
         _extent                 = { .width = width, .height = height };
-        const auto capabilities = device.getSwapChainSupport().capabilities;
+        const auto capabilities = device.getSurfaceCapabilities(surface);
         _extent                 = _chooseSwapChainExtent(capabilities);
         // TODO: Update the context swapchain extent from here
         const auto& vkSurface        = surface;

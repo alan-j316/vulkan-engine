@@ -32,8 +32,19 @@ namespace tempest::renderer
         { return _physicalDevice; }
         [[nodiscard]] constexpr const vk::raii::Device& getLogicalDevice() const noexcept { return _logicalDevice; }
 
+        /**
+         * @note Don't use for querying capabilities as it can give outdated values, esp the window size.
+         *       Use @ref queryCapabilities method directly.
+         */
         [[nodiscard]] constexpr const VulkanSwapChainSupportInfo& getSwapChainSupport() const noexcept
-        { return _swapChainSupport; }
+        {
+            // TODO: Refactor, swapchain support need not be cache as the window resize can persist the
+            // window size and cause crashes
+            return _swapChainSupport;
+        }
+
+        [[nodiscard]] vk::SurfaceCapabilitiesKHR getSurfaceCapabilities(const vk::raii::SurfaceKHR& surface) const noexcept;
+
         [[nodiscard]] constexpr const VulkanQueueFamilyInfo& getQueueInfo() const noexcept { return _queueInfo; }
 
         [[nodiscard]] constexpr const vk::PhysicalDeviceProperties& getProperties() const noexcept

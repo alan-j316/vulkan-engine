@@ -474,4 +474,8 @@ namespace tempest::renderer
     }
 
 
+    vk::SurfaceCapabilitiesKHR VulkanDevice::getSurfaceCapabilities(const vk::raii::SurfaceKHR& surface) const noexcept
+    { return _physicalDevice.getSurfaceCapabilitiesKHR(surface); }
+
+
 } // namespace tempest::renderer
