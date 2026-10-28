@@ -235,12 +235,14 @@ namespace tempest::renderer
         memory::free(_ctx, sizeof(VulkanContext), memory::MemoryTag::MEMORY_TAG_RENDERER);
         // NOTE: RAII will do rest of the cleanup
 
-
         log::info("Vulkan Backend successfully shutdown!");
     }
 
     void VulkanBackend::onResize(const uint32_t width, const uint32_t height) noexcept
-    { _ctx->swapChain.recreate(_ctx->device, _ctx->surface, width, height); }
+    {
+        _ctx->swapChainExtent = { .width = width, .height = height };
+        _ctx->swapChain.recreate(_ctx->device, _ctx->surface, width, height);
+    }
 
     //
     // void VulkanBackend::recordCommandBuffer(const uint32_t imageIndex) const noexcept
@@ -338,6 +340,7 @@ namespace tempest::renderer
     {
         // TODO: Handle swapchain recreation
         auto& device = _ctx->device.getLogicalDevice();
+
         // Wait for previous frame to be finished
         if (vk::Result::eSuccess !=
             device.waitForFences(*_ctx->inFlightFences[_ctx->frameIndex], vk::True, std::numeric_limits<size_t>::max()))
@@ -346,8 +349,8 @@ namespace tempest::renderer
             return false;
         }
         // Reset the fence
-        _ctx->inFlightFences[_ctx->frameIndex].clear();
-        device.waitIdle(); // TODO: Replace with fence sync
+        _ctx->device.getLogicalDevice().resetFences(*_ctx->inFlightFences[_ctx->frameIndex]);
+
         // Acquire the next image index
         _ctx->swapChainImageIndex = _ctx->swapChain.acquireNextImageIndex(
             _ctx->device, _ctx->surface, UINT64_MAX, _ctx->imageAvailableSemaphores[_ctx->frameIndex], nullptr);
