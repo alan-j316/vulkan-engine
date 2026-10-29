@@ -1,0 +1,54 @@
+#pragma once
+/**
+ * @file FileReader.h
+ * @author Alan Abraham P Kochumon
+ * @date Created on: July 24, 2026
+ *
+ * @brief Implementation for file reading logic.
+ *
+ * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
+ */
+
+
+#include "Logger.h"
+
+#include <format>
+#include <fstream>
+#include <vector>
+
+
+// TODO: Update to PMR
+
+namespace tempest::utils
+{
+    /**
+     * @brief Read a binary file with @p filename.
+     *
+     * @param filename The name of the file to read.
+     * @return A char array(vector) of the file data, or an empty vector if an error occured.
+     */
+    inline std::vector<char> readFile(const std::string& filename) noexcept
+    {
+        // Create a fstream with read binary and start at end of file set.
+        std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+        if (!file.is_open())
+        {
+            log::error(std::format("There was an error opening the file.").c_str());
+            return std::vector<char>{};
+        }
+
+        // Create a buffer
+        const auto fileSize = static_cast<std::size_t>(file.tellg());
+        std::vector<char> buffer(fileSize);
+
+        // Move the file ptr to the first
+        file.seekg(0);
+        // Read the file
+        file.read(buffer.data(), static_cast<long long>(fileSize));
+
+        file.close();
+
+        return buffer;
+    }
+} // namespace tempest::utils

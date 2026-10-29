@@ -46,15 +46,7 @@ target_link_libraries(
 set(SHADER_SOURCES basic.slang)
 AddSlangShaderTarget(${ENGINE_NAME} SOURCES ${SHADER_SOURCES})
 
-#add_custom_command(
-#        TARGET ${ENGINE_NAME}
-#        POST_BUILD
-#        COMMAND ${CMAKE_COMMAND} -E
-#        copy_directory
-#        "${CMAKE_CURRENT_SOURCE_DIR}/res/shaders"
-#        "$<TARGET_FILE_DIR:${ENGINE_NAME}>/shaders"
-#        COMMENT "Copying shaders to build directory..."
-#)
+
 
 #add_custom_command(
 #        TARGET ${ENGINE_NAME}

@@ -27,6 +27,7 @@ target_sources(
         Event.h
         Input.h
         Clock.h
+        FileReader.h
         EventListeners.h
 )
 
