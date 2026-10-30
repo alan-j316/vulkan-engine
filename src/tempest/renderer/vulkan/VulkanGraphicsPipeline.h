@@ -9,6 +9,7 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
+#include "VulkanSwapChain.h"
 #include "containers/Vector.h"
 #include "renderer/vulkan/VulkanDevice.h"
 #include "renderer/vulkan/VulkanTypes.inl"
@@ -21,9 +22,9 @@ namespace tempest::renderer
     struct GraphicsPipelineConfig
     {
         std::string vertShaderEntryPoint;
-        std::vector<char>& pVertShaderCode; // TODO: Change to PMR
+        std::vector<char> pVertShaderCode; // TODO: Change to PMR
         std::string fragShaderEntryPoint;
-        std::vector<char>& pFragShaderCode; // TODO: Change to PMR
+        std::vector<char> pFragShaderCode; // TODO: Change to PMR
 
         bool wireframe{ false };            /// Indicate whether pipeline draws only wireframes
         vk::Bool32 enableMsaa{ vk::False }; ///< Enable/Disable MSAA
@@ -45,10 +46,11 @@ namespace tempest::renderer
         /**
          * Create a graphics pipeline. Must only be called once per instance.
          * @param device The vulkan device.
+         * @param swapChain
          * @param config The graphics pipeline configuration.
          * @return `true` if pipeline was create successfully and `false` otherwise.
          */
-        bool create(const VulkanDevice& device, const GraphicsPipelineConfig& config);
+        bool create(const VulkanDevice& device, const VulkanSwapChain& swapChain, const GraphicsPipelineConfig& config);
 
         /**
          * Create a shader. The shader is not bound to the pipeline and must be manually bound using @ref bindShader.
@@ -75,6 +77,12 @@ namespace tempest::renderer
          * Destroy the render pipeline.
          */
         void destroy();
+
+        /// Get the vulkan graphics pipeline.
+        [[nodiscard]] const vk::raii::Pipeline& getBasePipeline() const { return _pipeline; }
+
+        /// Get the vulkan graphics pipeline.
+        [[nodiscard]] vk::raii::Pipeline& getBasePipeline() { return _pipeline; }
 
     private:
         vk::raii::PipelineLayout _pipelineLayout{ nullptr };

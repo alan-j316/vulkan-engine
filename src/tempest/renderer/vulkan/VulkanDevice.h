@@ -43,7 +43,8 @@ namespace tempest::renderer
             return _swapChainSupport;
         }
 
-        [[nodiscard]] vk::SurfaceCapabilitiesKHR getSurfaceCapabilities(const vk::raii::SurfaceKHR& surface) const noexcept;
+        [[nodiscard]] vk::SurfaceCapabilitiesKHR getSurfaceCapabilities(
+            const vk::raii::SurfaceKHR& surface) const noexcept;
 
         [[nodiscard]] constexpr const VulkanQueueFamilyInfo& getQueueInfo() const noexcept { return _queueInfo; }
 

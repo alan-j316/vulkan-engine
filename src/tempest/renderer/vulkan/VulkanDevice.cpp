@@ -12,6 +12,7 @@
 #include "VulkanDevice.h"
 
 #include "containers/Vector.h"
+#include "core/Asserts.h"
 #include "core/Logger.h"
 
 #include <map>
@@ -159,7 +160,6 @@ namespace tempest::renderer
         }
 
 
-
         // +=================================+
         //          QUEUE RETRIEVAL
         // +=================================+
@@ -167,7 +167,6 @@ namespace tempest::renderer
         _graphicsQueue = vk::raii::Queue(_logicalDevice, _queueInfo.graphicsFamilyIndex, 0);
         _presentQueue  = vk::raii::Queue(_logicalDevice, _queueInfo.presentFamilyIndex, 0);
         _transferQueue = vk::raii::Queue(_logicalDevice, _queueInfo.transferFamilyIndex, 0);
-
 
         return true;
     }

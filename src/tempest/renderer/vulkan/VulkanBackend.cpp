@@ -13,13 +13,14 @@
 
 #include "VulkanCommandPool.h"
 #include "VulkanFence.h"
+#include "VulkanGraphicsPipeline.h"
 #include "VulkanTypes.inl"
 #include "core/Asserts.h"
+#include "core/FileReader.h"
 #include "core/Logger.h"
 #include "core/MemorySubsystem.h"
 #include "platform/Platform.h"
 #include "renderer/vulkan/VulkanDevice.h"
-#include "renderer/vulkan/VulkanFence.h"
 #include "renderer/vulkan/VulkanPlatform.h"
 #include "renderer/vulkan/VulkanSwapChain.h"
 
@@ -39,6 +40,7 @@ namespace tempest::renderer
         VulkanDevice device{};
         VulkanSwapChain swapChain{};
         VulkanCommandPool graphicsCommandPool{};
+        VulkanGraphicsPipeline graphicsPipeline{};
         Vector<CommandBufferHandle> graphicsCommandBuffers{ makeVector<CommandBufferHandle>() };
         // Synchronization primitives
         Vector<vk::raii::Semaphore> imageAvailableSemaphores{ makeVector<vk::raii::Semaphore>() };
@@ -215,6 +217,33 @@ namespace tempest::renderer
                                                        _ctx->allocator);
         }
 
+
+        // ------------------------
+        //  PIPELINES
+        // ------------------------
+
+        // TODO: TEMPORARY
+        const auto vertCode = utils::readFile("assets/shaders/Simple.vert.spv");
+        const auto fragCode = utils::readFile("assets/shaders/Simple.frag.spv");
+        // TODO: TEMPORARY
+
+        _ctx->graphicsPipeline = VulkanGraphicsPipeline();
+        const GraphicsPipelineConfig pipelineConfig{
+            .vertShaderEntryPoint = "vertMain", // TODO: Update
+            .pVertShaderCode      = vertCode,
+            .fragShaderEntryPoint = "fragMain",
+            .pFragShaderCode      = fragCode,
+            .wireframe            = false,
+            .enableMsaa           = vk::False,
+            .msaaSamples          = vk::SampleCountFlagBits::e1,
+            .winding              = vk::FrontFace::eClockwise,
+            .cullMode             = vk::CullModeFlagBits::eNone,
+            .topology             = vk::PrimitiveTopology::eTriangleList,
+
+        };
+        _ctx->graphicsPipeline.create(_ctx->device, _ctx->swapChain, pipelineConfig);
+
+
         log::info("Vulkan Renderer Initialized");
         return _ctx->instance != nullptr;
     }
@@ -224,6 +253,8 @@ namespace tempest::renderer
     {
         // Wait for idle before shutting down sync primitives
         _ctx->device.getLogicalDevice().waitIdle();
+
+        _ctx->graphicsPipeline.destroy();
 
         // Destroy sync primitives
         _ctx->imageAvailableSemaphores.clear();
@@ -288,6 +319,9 @@ namespace tempest::renderer
         // NOTE: We are resetting the command buffer and re-recording it every frame.
         _ctx->graphicsCommandPool.startRecording(bufferHandle, true, false);
 
+        // Bind the pipeline
+        _ctx->graphicsCommandPool.bindPipeline(bufferHandle, vk::PipelineBindPoint::eGraphics, _ctx->graphicsPipeline);
+
         // log::warn("Unsupported layout transition; using a suboptimal fallback transition.");
         // TODO: Update transition flags
         constexpr VulkanLayoutTransitionConfig transitionConfig{
@@ -337,11 +371,12 @@ namespace tempest::renderer
         // Set dynamic states
         _ctx->graphicsCommandPool.getBaseCommandBuffer(bufferHandle)
             .setViewport(0,
-                         vk::Viewport(0.0f, static_cast<float>(_ctx->swapChainExtent.height),
-                                      static_cast<float>(_ctx->swapChainExtent.width),
-                                      -static_cast<float>(_ctx->swapChainExtent.height), 0.0f, 1.0f));
+                         vk::Viewport(0.0f, 0.0f, static_cast<float>(_ctx->swapChainExtent.width),
+                                      static_cast<float>(_ctx->swapChainExtent.height), 0.0f, 1.0f));
         _ctx->graphicsCommandPool.getBaseCommandBuffer(bufferHandle)
             .setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), _ctx->swapChainExtent));
+
+        _ctx->graphicsCommandPool.draw(bufferHandle, 3, 1, 0, 0);
 
         // TODO: Impl
         return true;

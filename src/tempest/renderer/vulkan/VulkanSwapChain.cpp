@@ -11,6 +11,7 @@
 #include "VulkanSwapChain.h"
 
 #include "VulkanDevice.h"
+#include "core/Asserts.h"
 #include "core/Logger.h"
 #include "core/MemorySubsystem.h"
 
@@ -197,7 +198,7 @@ namespace tempest::renderer
     {
         // Query the surface format
         const auto surfaceFormats = device.getPhysicalDevice().getSurfaceFormatsKHR(surface);
-        assert(surfaceFormats.size() > 0);
+        TEMPEST_ASSERT(surfaceFormats.size() > 0, "No supported format found for creating swapchain!");
         // Find a suitable format with srgb colorspace, and return the first one if not supported
         const auto formatIt = std::ranges::find_if(surfaceFormats, [](const auto& surfaceFormat) {
             return surfaceFormat.format == vk::Format::eB8G8R8A8Srgb &&

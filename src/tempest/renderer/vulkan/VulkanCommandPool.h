@@ -10,6 +10,7 @@
  */
 
 
+#include "VulkanGraphicsPipeline.h"
 #include "core/Asserts.h"
 #include "renderer/vulkan/VulkanTypes.inl"
 
@@ -51,6 +52,19 @@ namespace tempest::renderer
 
         /// Ends Single Time Command Buffer Recording.
         void endSingleTimeRecordingAndSubmit(CommandBufferHandle handle, const vk::raii::Queue& queue) noexcept;
+
+
+        /// Bind a pipeline to a given command buffer.
+        inline void bindPipeline(const CommandBufferHandle handle, const vk::PipelineBindPoint bindPoint,
+                                 const VulkanGraphicsPipeline& pipeline) const noexcept
+        { _commandBuffers[handle].bindPipeline(bindPoint, *pipeline.getBasePipeline()); }
+
+
+        /// Execute the given command buffer's draw command.
+        inline void draw(const CommandBufferHandle handle, const uint32_t vertexCount, const uint32_t instanceCount,
+                         const uint32_t firstVertex, const uint32_t firstInstance) const noexcept
+        { _commandBuffers[handle].draw(vertexCount, instanceCount, firstVertex, firstInstance); }
+
 
         [[nodiscard]] vk::raii::CommandBuffer& getBaseCommandBuffer(const CommandBufferHandle handle) noexcept
         {

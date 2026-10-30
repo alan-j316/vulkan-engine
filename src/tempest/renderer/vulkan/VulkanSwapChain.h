@@ -35,6 +35,9 @@ namespace tempest::renderer
         void presentSwapChain(VulkanDevice& device, const vk::raii::SurfaceKHR& surface, vk::raii::Queue graphicsQueue,
                               const vk::raii::Queue& presentQueue, vk::Semaphore renderCompleteSemaphore,
                               uint32_t imageIndex);
+        [[nodiscard]] vk::SurfaceFormatKHR getFormat() const { return _format; }
+        [[nodiscard]] vk::SurfaceFormatKHR getFormat() { return _format; }
+
         [[nodiscard]] uint32_t getImageCount() const noexcept { return _images.size(); }
         [[nodiscard]] uint8_t getMaxFramesInFlight() const noexcept { return _maxFramesInFlight; }
         [[nodiscard]] Vector<vk::raii::ImageView>& getImageViews() noexcept { return _imageViews; }

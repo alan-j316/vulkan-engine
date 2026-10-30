@@ -10,9 +10,12 @@
 
 #include "VulkanGraphicsPipeline.h"
 
+#include "VulkanSwapChain.h"
+
 namespace tempest::renderer
 {
-    bool VulkanGraphicsPipeline::create(const VulkanDevice& device, const GraphicsPipelineConfig& config)
+    bool VulkanGraphicsPipeline::create(const VulkanDevice& device, const VulkanSwapChain& swapChain,
+                                        const GraphicsPipelineConfig& config)
     {
 
         /// ----------------
@@ -104,7 +107,12 @@ namespace tempest::renderer
         //     .alphaBlendOp        = vk::BlendOp::eAdd,
         //     .colorWriteMask      = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
         //     vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA};
-
+        vk::PipelineColorBlendStateCreateInfo colorBlendingInfo{
+            .logicOpEnable   = vk::False,
+            .logicOp         = vk::LogicOp::eCopy,
+            .attachmentCount = 1,
+            .pAttachments    = &colorBlendAttachmentState,
+        };
 
         /// ----------------
         /// Pipeline
@@ -113,7 +121,32 @@ namespace tempest::renderer
         vk::PipelineLayoutCreateInfo pipelineLayoutInfo{ .setLayoutCount = 0, .pushConstantRangeCount = 0 };
         _pipelineLayout = vk::raii::PipelineLayout{ device.getLogicalDevice(), pipelineLayoutInfo };
 
-        return false;
+        const auto format = swapChain.getFormat().format;
+        vk::PipelineRenderingCreateInfo pipelineRenderingInfo{ .colorAttachmentCount    = 1,
+                                                               .pColorAttachmentFormats = &format };
+        vk::GraphicsPipelineCreateInfo graphicsPipelineInfo{ .pNext               = &pipelineRenderingInfo,
+                                                             .stageCount          = 2,
+                                                             .pStages             = stages,
+                                                             .pVertexInputState   = &vertexInfo,
+                                                             .pInputAssemblyState = &inputAssemblyInfo,
+                                                             .pViewportState      = &viewportStateInfo,
+                                                             .pRasterizationState = &rasterizationInfo,
+                                                             .pMultisampleState   = &multisamplingInfo,
+                                                             .pDepthStencilState  = nullptr,
+                                                             .pColorBlendState    = &colorBlendingInfo,
+                                                             .pDynamicState       = &dynamicStateInfo,
+                                                             .layout              = _pipelineLayout,
+                                                             .renderPass          = nullptr };
+        // vk::PipelineRenderingCreateInfo pipelineCreateInfo{
+        //     .pNext                   = &graphicsPipelineInfo,
+        //     .colorAttachmentCount    = 1,
+        //     .pColorAttachmentFormats = &format,
+        // };
+
+        // TODO: Update with custom allocator
+        _pipeline = vk::raii::Pipeline(device.getLogicalDevice(), nullptr, graphicsPipelineInfo, nullptr);
+
+        return true;
     }
 
     ShaderIndex VulkanGraphicsPipeline::createShader(const VulkanDevice& device, const std::vector<char>& pShaderCode)
@@ -129,5 +162,10 @@ namespace tempest::renderer
 
     void VulkanGraphicsPipeline::unbindShader(ShaderIndex index) {}
 
-    void VulkanGraphicsPipeline::destroy() {}
+    void VulkanGraphicsPipeline::destroy()
+    {
+        _pipeline       = nullptr;
+        _pipelineLayout = nullptr;
+        _shaders.clear();
+    }
 } // namespace tempest::renderer
