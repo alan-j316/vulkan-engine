@@ -11,6 +11,8 @@
 #include "VulkanGraphicsPipeline.h"
 
 #include "VulkanSwapChain.h"
+#include "core/Vertex.h"
+#include "renderer/vulkan/Utils.h"
 
 namespace tempest::renderer
 {
@@ -44,7 +46,14 @@ namespace tempest::renderer
         /// ----------------
         /// Vertex Input
         /// ----------------
-        vk::PipelineVertexInputStateCreateInfo vertexInfo{};
+        constexpr auto bindingDescription   = getBindingDescription<core::Vertex>(0, vk::VertexInputRate::eVertex);
+        constexpr auto attributeDescription = getAttributeDescription();
+        vk::PipelineVertexInputStateCreateInfo vertexInfo{ .vertexBindingDescriptionCount = 1,
+                                                           .pVertexBindingDescriptions    = &bindingDescription,
+                                                           .vertexAttributeDescriptionCount =
+                                                               attributeDescription.size(),
+                                                           .pVertexAttributeDescriptions =
+                                                               attributeDescription.data() };
 
 
         /// ----------------

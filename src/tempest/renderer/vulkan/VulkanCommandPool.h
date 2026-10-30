@@ -10,6 +10,7 @@
  */
 
 
+#include "VulkanBuffer.h"
 #include "VulkanGraphicsPipeline.h"
 #include "core/Asserts.h"
 #include "renderer/vulkan/VulkanTypes.inl"
@@ -18,7 +19,7 @@
 namespace tempest::renderer
 {
     /// Forward Declaration
-    struct VulkanDevice;
+    class VulkanDevice;
 
     class VulkanCommandPool
     {
@@ -54,6 +55,10 @@ namespace tempest::renderer
         void endSingleTimeRecordingAndSubmit(CommandBufferHandle handle, const vk::raii::Queue& queue) noexcept;
 
 
+        /// +---------------------------------------------------------------------------------------+
+        /// |                          FUNCTION PASSTHROUGHS                                        |
+        /// +---------------------------------------------------------------------------------------+
+
         /// Bind a pipeline to a given command buffer.
         inline void bindPipeline(const CommandBufferHandle handle, const vk::PipelineBindPoint bindPoint,
                                  const VulkanGraphicsPipeline& pipeline) const noexcept
@@ -66,7 +71,15 @@ namespace tempest::renderer
         { _commandBuffers[handle].draw(vertexCount, instanceCount, firstVertex, firstInstance); }
 
 
-        [[nodiscard]] vk::raii::CommandBuffer& getBaseCommandBuffer(const CommandBufferHandle handle) noexcept
+        /// Binds the vertex buffer to the given command buffer.
+        inline void bindVertexBuffer(const CommandBufferHandle handle, const size_t bindingIndex,
+                                     const VulkanBuffer& buffer) const
+        { _commandBuffers[handle].bindVertexBuffers(static_cast<uint32_t>(bindingIndex), buffer.getBuffer(), { 0 }); }
+
+
+        // TODO: Update to standard vk type rather than raii
+        [[nodiscard]] const vk::raii::CommandBuffer& getBaseCommandBuffer(
+            const CommandBufferHandle handle) const noexcept
         {
             TEMPEST_ASSERT(_states[handle] != CommandBufferState::FREED, "Trying to acquired a freed command buffer.");
             return _commandBuffers[handle];

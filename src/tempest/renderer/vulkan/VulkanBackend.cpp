@@ -11,14 +11,15 @@
 
 #include "VulkanBackend.h"
 
+#include "VulkanBuffer.h"
 #include "VulkanCommandPool.h"
-#include "VulkanFence.h"
 #include "VulkanGraphicsPipeline.h"
 #include "VulkanTypes.inl"
 #include "core/Asserts.h"
 #include "core/FileReader.h"
 #include "core/Logger.h"
 #include "core/MemorySubsystem.h"
+#include "core/Vertex.h"
 #include "platform/Platform.h"
 #include "renderer/vulkan/VulkanDevice.h"
 #include "renderer/vulkan/VulkanPlatform.h"
@@ -47,6 +48,8 @@ namespace tempest::renderer
         Vector<vk::raii::Semaphore> renderFinishedSemaphore{ makeVector<vk::raii::Semaphore>() };
         Vector<vk::raii::Fence> inFlightFences{};
         // Vector<VulkanFence> imagesInFlight{};
+        // TODO: REMOVE
+        VulkanBuffer vertexBuffer{};
     };
 
 
@@ -66,7 +69,9 @@ namespace tempest::renderer
     static vk::Bool32 debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
                                     vk::DebugUtilsMessageTypeFlagsEXT type,
                                     const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
-
+    const std::vector<core::Vertex> vertices = { { .position = { 0.0f, -0.5f, 0.0f }, .color = { 1.0f, 0.0f, 0.0f } },
+                                                 { .position = { 0.5f, 0.5f, 0.0f }, .color = { 0.0f, 1.0f, 0.0f } },
+                                                 { .position = { -0.5f, 0.5f, 0.0f }, .color = { 0.0f, 0.0f, 1.0f } } };
 
     bool VulkanBackend::init(platform::PlatformState* state, std::string_view applicationName) noexcept
     {
@@ -243,6 +248,15 @@ namespace tempest::renderer
         };
         _ctx->graphicsPipeline.create(_ctx->device, _ctx->swapChain, pipelineConfig);
 
+        /// TODO: TEMP REMOVE
+        const BufferConfig vertexConfig{
+            .size        = vertices.size() * sizeof(core::Vertex),
+            .usageFlags  = vk::BufferUsageFlagBits::eVertexBuffer,
+            .property    = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+            .sharingMode = vk::SharingMode::eExclusive,
+        };
+        _ctx->vertexBuffer.create(_ctx->device, vertexConfig);
+
 
         log::info("Vulkan Renderer Initialized");
         return _ctx->instance != nullptr;
@@ -309,7 +323,6 @@ namespace tempest::renderer
             _ctx->device, _ctx->surface, UINT64_MAX, _ctx->imageAvailableSemaphores[_ctx->frameIndex], nullptr);
 
 
-
         // ------------------------------
         //     COMMAND BUFFER RECORDING
         // ------------------------------
@@ -319,8 +332,16 @@ namespace tempest::renderer
         // NOTE: We are resetting the command buffer and re-recording it every frame.
         _ctx->graphicsCommandPool.startRecording(bufferHandle, true, false);
 
-        // Bind the pipeline
+
+        // ------------------------------
+        //     PIPELINE CONFIGURATION
+        // ------------------------------
         _ctx->graphicsCommandPool.bindPipeline(bufferHandle, vk::PipelineBindPoint::eGraphics, _ctx->graphicsPipeline);
+        void* vertexMemory = _ctx->vertexBuffer.map(0, vertices.size());
+        memcpy(vertexMemory, vertices.data(), vertices.size() * sizeof(core::Vertex));
+        _ctx->vertexBuffer.unmap();
+        _ctx->graphicsCommandPool.bindVertexBuffer(bufferHandle, 0, _ctx->vertexBuffer);
+
 
         // log::warn("Unsupported layout transition; using a suboptimal fallback transition.");
         // TODO: Update transition flags
@@ -376,9 +397,8 @@ namespace tempest::renderer
         _ctx->graphicsCommandPool.getBaseCommandBuffer(bufferHandle)
             .setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), _ctx->swapChainExtent));
 
-        _ctx->graphicsCommandPool.draw(bufferHandle, 3, 1, 0, 0);
+        _ctx->graphicsCommandPool.draw(bufferHandle, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 
-        // TODO: Impl
         return true;
     }
 
@@ -423,7 +443,6 @@ namespace tempest::renderer
                                          .pSignalSemaphores =
                                              &*_ctx->renderFinishedSemaphore[_ctx->swapChainImageIndex] };
 
-        // TODO: Refactor
         _ctx->device.getGraphicsQueue().submit(submitInfo, _ctx->inFlightFences[_ctx->frameIndex]);
 
         // Present swap chain
@@ -433,8 +452,6 @@ namespace tempest::renderer
 
         _ctx->frameIndex = (_ctx->frameIndex + 1) % _ctx->swapChain.getMaxFramesInFlight();
 
-
-        // TODO: Impl
         return true;
     }
 

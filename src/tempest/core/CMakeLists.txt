@@ -9,6 +9,7 @@ add_library(
         Input.cpp
         EventListeners.cpp
         Clock.cpp
+        AssetManager.cpp
 )
 add_library(Tempest::Internal::Core ALIAS ${TEMPEST_CORE_LIB})
 
@@ -29,6 +30,8 @@ target_sources(
         Clock.h
         FileReader.h
         EventListeners.h
+        AssetManager.h
+        Vertex.h
 )
 
 target_include_directories(${TEMPEST_CORE_LIB} PUBLIC ${TEMPEST_ROOT_DIR})
