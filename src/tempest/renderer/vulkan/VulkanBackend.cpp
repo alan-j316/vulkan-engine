@@ -47,6 +47,7 @@ namespace tempest::renderer
         Vector<vk::raii::Semaphore> imageAvailableSemaphores{ makeVector<vk::raii::Semaphore>() };
         Vector<vk::raii::Semaphore> renderFinishedSemaphore{ makeVector<vk::raii::Semaphore>() };
         Vector<vk::raii::Fence> inFlightFences{};
+        VmaAllocator vma{};
         // Vector<VulkanFence> imagesInFlight{};
         // TODO: REMOVE
         VulkanBuffer vertexBuffer{};
@@ -248,6 +249,21 @@ namespace tempest::renderer
         };
         _ctx->graphicsPipeline.create(_ctx->device, _ctx->swapChain, pipelineConfig);
 
+
+
+        // ------------------------
+        //  VMA
+        // ------------------------
+
+        VmaAllocatorCreateInfo vmaInfo{ .physicalDevice       = *_ctx->device.getPhysicalDevice(),
+                                        .device               = *_ctx->device.getLogicalDevice(),
+                                        .pAllocationCallbacks = *_ctx->allocator,
+                                        .instance             = *_ctx->instance,
+                                        .vulkanApiVersion     = MIN_VULKAN_VERSION };
+        vmaCreateAllocator(&vmaInfo, &_ctx->vma);
+
+
+
         /// TODO: TEMP REMOVE
         const BufferConfig vertexConfig{
             .size        = vertices.size() * sizeof(core::Vertex),
@@ -255,7 +271,7 @@ namespace tempest::renderer
             .property    = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
             .sharingMode = vk::SharingMode::eExclusive,
         };
-        _ctx->vertexBuffer.create(_ctx->device, vertexConfig);
+        _ctx->vertexBuffer.create(_ctx->vma, vertexConfig);
 
 
         log::info("Vulkan Renderer Initialized");
@@ -267,6 +283,13 @@ namespace tempest::renderer
     {
         // Wait for idle before shutting down sync primitives
         _ctx->device.getLogicalDevice().waitIdle();
+
+        // TODO: REMOVE
+        _ctx->vertexBuffer.destroy();
+        // TODO: END REMOVE
+
+
+        vmaDestroyAllocator(_ctx->vma);
 
         _ctx->graphicsPipeline.destroy();
 
@@ -337,7 +360,8 @@ namespace tempest::renderer
         //     PIPELINE CONFIGURATION
         // ------------------------------
         _ctx->graphicsCommandPool.bindPipeline(bufferHandle, vk::PipelineBindPoint::eGraphics, _ctx->graphicsPipeline);
-        void* vertexMemory = _ctx->vertexBuffer.map(0, vertices.size());
+        const auto vertSize = vertices.size() * sizeof(core::Vertex);
+        void* vertexMemory =        _ctx->vertexBuffer.map();
         memcpy(vertexMemory, vertices.data(), vertices.size() * sizeof(core::Vertex));
         _ctx->vertexBuffer.unmap();
         _ctx->graphicsCommandPool.bindVertexBuffer(bufferHandle, 0, _ctx->vertexBuffer);

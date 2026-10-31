@@ -12,6 +12,8 @@
 #include "VulkanDevice.h"
 #include "renderer/vulkan/VulkanTypes.inl"
 
+#include <vk_mem_alloc.h>
+
 namespace tempest::renderer
 {
     struct BufferConfig
@@ -26,36 +28,34 @@ namespace tempest::renderer
     class VulkanBuffer
     {
     public:
-        bool create(const VulkanDevice& device, const BufferConfig& config) noexcept;
+        bool create(VmaAllocator vma, const BufferConfig& config) noexcept;
 
         /**
          * Map the memory.
          * @note Must only be called by Host Visible Buffers.
-         * @return A raw pointer to the memory.
+         *
          */
-        void* map(size_t offset, size_t size);
+        void* map() const;
 
 
         /**
          * Unmap the mapped memory.
          */
-        void unmap();
+        void unmap() const;
+
+        void destroy() const noexcept;
 
 
         /**
          * Get the underlying vulkan buffer.
          */
-        [[nodiscard]] vk::Buffer getBuffer() const noexcept { return *_buffer; }
+        [[nodiscard]] vk::Buffer buffer() const noexcept { return _buffer; }
 
     private:
-        uint32_t findMemoryType(const VulkanDevice& device, uint32_t typeFilter,
-                                vk::MemoryPropertyFlags flags) const noexcept;
-
-
-    private:
-        vk::raii::Buffer _buffer{ nullptr };
-        vk::raii::DeviceMemory _memory{ nullptr };
-        vk::MemoryPropertyFlags _propertyFlags;
-        bool _mapped{ false };
+        size_t _size{};
+        vk::Buffer _buffer{};
+        VmaAllocation _allocation{};
+        VmaAllocator _allocator{};
+        void* _memory{};
     };
 } // namespace tempest::renderer

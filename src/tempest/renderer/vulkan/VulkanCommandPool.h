@@ -74,7 +74,7 @@ namespace tempest::renderer
         /// Binds the vertex buffer to the given command buffer.
         inline void bindVertexBuffer(const CommandBufferHandle handle, const size_t bindingIndex,
                                      const VulkanBuffer& buffer) const
-        { _commandBuffers[handle].bindVertexBuffers(static_cast<uint32_t>(bindingIndex), buffer.getBuffer(), { 0 }); }
+        { _commandBuffers[handle].bindVertexBuffers(static_cast<uint32_t>(bindingIndex), buffer.buffer(), { 0 }); }
 
 
         // TODO: Update to standard vk type rather than raii

@@ -18,77 +18,45 @@
 
 namespace tempest::renderer
 {
-    bool VulkanBuffer::create(const VulkanDevice& device, const BufferConfig& config) noexcept
+    bool VulkanBuffer::create(const VmaAllocator vma, const BufferConfig& config) noexcept
     {
-        _propertyFlags = config.property;
+        _allocator = vma;
+        _size      = config.size;
 
-        // Create the buffer
-        // TODO: Add queue family index for sharing.
-        const vk::BufferCreateInfo bufferInfo{ .size        = config.size,
-                                               .usage       = config.usageFlags,
-                                               .sharingMode = config.sharingMode,
-                                               .queueFamilyIndexCount =
-                                                   static_cast<uint32_t>(config.queueFamilies.size()),
-                                               .pQueueFamilyIndices = config.queueFamilies.data() };
-        // TODO: Update with vulkan allocator
-        _buffer = vk::raii::Buffer(device.getLogicalDevice(), bufferInfo, nullptr);
+        const VkBufferCreateInfo bufferInfo{ .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                                             .size  = config.size,
+                                             .usage = static_cast<VkBufferUsageFlags>(config.usageFlags) };
 
-        // Query memory requirements and find the heap type index
-        const vk::MemoryRequirements memoryRequirements = _buffer.getMemoryRequirements();
-        const auto type = findMemoryType(device, memoryRequirements.memoryTypeBits, config.property);
+        // TODO: Update to a configuration that matches our needs based on config
+        const VmaAllocationCreateInfo allocInfo{ .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+                                                 .usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST,
+                                                 .requiredFlags = VK_MEMORY_PROPERTY_HOST_COHERENT_BIT };
 
-        // Allocate device memory
-        const vk::MemoryAllocateInfo allocateInfo{
-            .allocationSize  = memoryRequirements.size,
-            .memoryTypeIndex = type,
-        };
-
-        // TODO: Update with custom allocator
-        _memory = vk::raii::DeviceMemory(device.getLogicalDevice(), allocateInfo, nullptr);
-
-        // Bind the memory
-        _buffer.bindMemory(_memory, 0);
-
-        return _buffer != nullptr && _memory != nullptr;
-    }
-
-
-    void* VulkanBuffer::map(const size_t offset, const size_t size)
-    {
-        TEMPEST_ASSERT((_propertyFlags & vk::MemoryPropertyFlagBits::eHostVisible) ==
-                           vk::MemoryPropertyFlagBits::eHostVisible,
-                       "Cannot map non-host memory");
-        _mapped = true;
-        return _memory.mapMemory(offset, size);
-    }
-
-
-    void VulkanBuffer::unmap()
-    {
-        const std::source_location location = std::source_location::current();
-        TEMPEST_ASSERT(_mapped == true,
-                       std::format("Cannot unmapped memory that is not mapped yet!\nFile: {} Line: {}:{}",
-                                   location.file_name(), location.line(), location.column())
-                           .c_str());
-        _memory.unmapMemory();
-        _mapped = false;
-    }
-
-
-    uint32_t VulkanBuffer::findMemoryType(const VulkanDevice& device, const uint32_t typeFilter,
-                                          const vk::MemoryPropertyFlags flags) const noexcept
-    {
-        const auto memoryProperties = device.getPhysicalDevice().getMemoryProperties();
-
-        for (size_t i{ 0 }; i < memoryProperties.memoryTypeCount; ++i)
+        VkBuffer buffer;
+        if (vmaCreateBuffer(vma, &bufferInfo, &allocInfo, &buffer, &_allocation, nullptr) != VK_SUCCESS)
         {
-            if ((typeFilter & (1 << i)) && (memoryProperties.memoryTypes[i].propertyFlags & flags) == flags)
-            {
-                return i;
-            }
+            log::error("There was an error creating the buffer!");
+            return false;
+        }
+        _buffer = buffer;
+
+        return _buffer != nullptr;
+    }
+
+    void* VulkanBuffer::map() const
+    {
+        // TODO: May be remove the conditional?
+        void* memory;
+        if (vmaMapMemory(_allocator, _allocation, &memory) != VK_SUCCESS)
+        {
+            log::error("There was an error mapping the memory!");
         }
 
-        log::error("Unable to find the memory type!");
-        return std::numeric_limits<uint32_t>::max();
+        return memory;
     }
+
+    void VulkanBuffer::unmap() const { vmaUnmapMemory(_allocator, _allocation); }
+
+    void VulkanBuffer::destroy() const noexcept { vmaDestroyBuffer(_allocator, _buffer, _allocation); }
+
 } // namespace tempest::renderer
