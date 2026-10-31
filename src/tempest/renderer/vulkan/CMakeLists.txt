@@ -33,6 +33,7 @@ target_sources(${TEMPEST_RENDERER_VULKAN_LIB} PUBLIC
 add_library(Tempest::Internal::Renderer::Vulkan ALIAS ${TEMPEST_RENDERER_VULKAN_LIB})
 
 target_compile_features(${TEMPEST_RENDERER_VULKAN_LIB} PRIVATE cxx_std_23)
+target_compile_definitions(${TEMPEST_RENDERER_VULKAN_LIB} PRIVATE VMA_IMPLEMENTATION)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 target_include_directories(${TEMPEST_RENDERER_VULKAN_LIB} PUBLIC ${TEMPEST_ROOT_DIR})
@@ -42,4 +43,5 @@ target_link_libraries(
         SDL3::SDL3-static
         Vulkan::Headers
         Vulkan::Hpp
+        VulkanMemoryAllocator::Headers
 )

@@ -75,6 +75,19 @@ FetchContent_Declare(
         GIT_PROGRESS TRUE
 )
 
+#-------------------------------------------------------------------------
+# Fetch Vulkan Memory Allocator(VMA) Headers
+#-------------------------------------------------------------------------
+message(STATUS "Include Vulkan C++ Headers")
+FetchContent_Declare(
+        VulkanMemoryAllocator
+        GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+        GIT_TAG v3.5.0
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+message(STATUS "Download and including VMA")
+
 #------------------------------------------------------------------------
 # Fetch STB Headers
 #------------------------------------------------------------------------
@@ -100,6 +113,7 @@ FetchContent_Declare(
 # FetchContent_GetProperties(VulkanHPP)
 # FetchContent_Populate(VulkanHPP)
 FetchContent_MakeAvailable(VulkanHPP)
+FetchContent_MakeAvailable(VulkanMemoryAllocator)
 
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE) # Disables google benchmark from creating its own test suite
 
