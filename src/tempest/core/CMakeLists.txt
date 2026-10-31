@@ -42,4 +42,5 @@ set_target_properties(${TEMPEST_CORE_LIB} PROPERTIES CXX_STANDARD_REQUIRED ON)
 target_link_libraries(
         ${TEMPEST_CORE_LIB} PRIVATE
         quill::quill
+        fastgltf::fastgltf
 )

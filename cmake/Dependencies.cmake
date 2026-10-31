@@ -78,7 +78,7 @@ FetchContent_Declare(
 #-------------------------------------------------------------------------
 # Fetch Vulkan Memory Allocator(VMA) Headers
 #-------------------------------------------------------------------------
-message(STATUS "Include Vulkan C++ Headers")
+message(STATUS "Download and including VMA")
 FetchContent_Declare(
         VulkanMemoryAllocator
         GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
@@ -86,7 +86,6 @@ FetchContent_Declare(
         GIT_SHALLOW TRUE
         GIT_PROGRESS TRUE
 )
-message(STATUS "Download and including VMA")
 
 #------------------------------------------------------------------------
 # Fetch STB Headers
@@ -96,6 +95,18 @@ FetchContent_Declare(
         stb
         GIT_REPOSITORY https://github.com/nothings/stb.git
         GIT_TAG master
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+#-------------------------------------------------------------------------
+# Fetch FastGLTF Headers
+#-------------------------------------------------------------------------
+message(STATUS "Download and including FastGLTF")
+FetchContent_Declare(
+        FastGLTF
+        GIT_REPOSITORY https://github.com/spnda/fastgltf.git
+        GIT_TAG v1.0.0
         GIT_SHALLOW TRUE
         GIT_PROGRESS TRUE
 )
@@ -114,6 +125,7 @@ FetchContent_Declare(
 # FetchContent_Populate(VulkanHPP)
 FetchContent_MakeAvailable(VulkanHPP)
 FetchContent_MakeAvailable(VulkanMemoryAllocator)
+FetchContent_MakeAvailable(FastGLTF)
 
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE) # Disables google benchmark from creating its own test suite
 

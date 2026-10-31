@@ -36,6 +36,30 @@ namespace tempest::core
         };
     };
 
+
+    // struct EventContext2
+    // {
+    //     uint32_t event;
+    //
+    //     union {
+    //         struct WindowResize
+    //         {
+    //             uint16_t width;
+    //             uint16_t height;
+    //         };
+    //
+    //         struct ApplicationExit
+    //         {
+    //             uint32_t exitCode{ 0 };
+    //         };
+    //
+    //         struct KeyPressedEvent
+    //         {
+    //
+    //         };
+    //     } data;
+    // };
+
     /// Event code type
     using EventCode = uint16_t;
 
