@@ -10,10 +10,12 @@
  */
 
 #include "Api.h"
+#include "AssetManager.h"
 #include "Clock.h"
 #include "core/EventListeners.h"
 #include "platform/Platform.h"
 #include "renderer/RendererFrontend.h"
+
 
 namespace tempest
 {
@@ -24,13 +26,18 @@ namespace tempest
         class RendererFrontend;
     }
 
+    struct TempestContext
+    {
+        core::AssetManager assetManager;
+    };
+
     namespace core
     {
         class TEMPEST_API Application
         {
         public:
             Application() noexcept;
-            bool create(Game* game) noexcept;
+            bool create() noexcept;
             bool run() noexcept;
             void onResize(uint32_t w, uint32_t h) const;
 
@@ -44,6 +51,7 @@ namespace tempest
             Clock _clock;
             bool _lockFrameRate{ false };
             renderer::RendererFrontend _renderer{};
+            TempestContext _context{};
 
             ApplicationEventListener _appEventListener;
             KeyEventListener _keyEventListener;
@@ -59,3 +67,9 @@ namespace tempest
         };
     } // namespace core
 } // namespace tempest
+
+extern "C"
+{
+    tempest::Game* createGame(tempest::TempestContext& ctx);
+    bool destroyGame(tempest::Game* game, tempest::TempestContext& ctx);
+}

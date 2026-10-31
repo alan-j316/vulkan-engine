@@ -1,6 +1,6 @@
 #pragma once
 /**
- * @file GameTypes.h
+ * @file Game.h
  * @author Alan Abraham P Kochumon
  * @date Created on: October 17, 2026
  *
@@ -26,9 +26,18 @@ namespace tempest
         [[nodiscard]] const AppConfig& getConfig() const { return _config; }
         [[nodiscard]] AppConfig& getConfig() { return _config; }
 
+        [[nodiscard]] TempestContext& getContext() const { return *_ctx; }
+
+        /**
+         * Setup the engine context. Must not be called inside the game.
+         * @param context The context to set.
+         */
+        void setContext(TempestContext* context) { _ctx = context; }
+
         void setConfig(const AppConfig& config) { _config = config; }
 
     private:
+        TempestContext* _ctx{};
         void* _state{};
         AppConfig _config{};
     };

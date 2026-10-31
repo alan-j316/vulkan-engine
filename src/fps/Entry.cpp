@@ -10,27 +10,28 @@
 
 #include "FPSGame.h"
 
-#include <Tempest.h>
 #include <Entry.h>
+#include <Tempest.h>
 #include <cstdlib>
 #include <new>
 #include <print>
 
 
-tempest::Game* createGame()
+tempest::Game* createGame(tempest::TempestContext& ctx)
 {
-    const auto fpsGame =
-        new (tempest::alloc(sizeof(fps::FPSGame), tempest::MemoryTag::MEMORY_TAG_GAME)) fps::FPSGame();
+    // TODO: Replace with context allocator
+    const auto fpsGame = new (tempest::alloc(sizeof(fps::FPSGame), tempest::MemoryTag::MEMORY_TAG_GAME)) fps::FPSGame();
     fpsGame->setConfig({ .startPosX = 100, .startPosY = 100, .width = 1280, .height = 720, .name = "FPS Game" });
     return fpsGame;
 }
 
 
-bool destroyGame(tempest::Game* game)
+bool destroyGame(tempest::Game* game, tempest::TempestContext& ctx)
 {
     if (!game)
         return false;
     game->~Game();
+    // TODO: Replace with context allocator
     tempest::free(game, sizeof(fps::FPSGame), tempest::MemoryTag::MEMORY_TAG_GAME);
     return true;
 }

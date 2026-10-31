@@ -13,35 +13,21 @@
 #include "MemorySubsystem.h"
 #include "core/Logger.h"
 
-extern tempest::Game* createGame();
-extern bool destroyGame(tempest::Game* game);
 
 
 int main()
 {
-    tempest::memory::init();
-    tempest::Game* game = createGame();
-    game->initialize();
-
     // Application
     tempest::core::Application application;
-    if (!application.create(game))
+    if (!application.create())
     {
         tempest::log::error("Failed to create application");
         return 1;
     }
 
-    // Game loop
     if (!application.run())
     {
         tempest::log::error("Application did not shutdown gracefully!");
         return 2;
     }
-
-    if (destroyGame(game))
-    {
-        tempest::log::info("Game destroyed successfully!");
-    }
-    tempest::memory::shutdown();
-    tempest::log::info("Memory system successfully shutdown!");
 }

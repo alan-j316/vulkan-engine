@@ -10,6 +10,7 @@
 
 #include "Application.h"
 
+#include "Asserts.h"
 #include "Game.h"
 #include "MemorySubsystem.h"
 #include "core/Event.h"
@@ -30,7 +31,7 @@ namespace tempest::core
     {}
 
 
-    bool Application::create(Game* game) noexcept
+    bool Application::create() noexcept
     {
         if (_isInitialized)
         {
@@ -38,12 +39,12 @@ namespace tempest::core
             return false;
         }
 
-        _game = game;
 
+        /// +---------------------------------------------------------------------------------------+
+        /// |                       SUBSYSTEM INITIALIZATION                                        |
+        /// +---------------------------------------------------------------------------------------+
 
-        // +=======================+
-        // | Initialize Subsystems |
-        // +=======================+
+        memory::init();
         log::init();
 
         if (!event::init())
@@ -54,11 +55,20 @@ namespace tempest::core
         // Input makes use of event system so that should be initialized first
         input::init();
 
-        // Initialize app state
-        _isRunning   = true;
-        _isSuspended = false;
+
+        /// +---------------------------------------------------------------------------------------+
+        /// |                       GAME CREATION AND INIT                                          |
+        /// +---------------------------------------------------------------------------------------+
+        _game = createGame(_context);
+        if (!_game->initialize())
+        {
+            log::error("There was an error initializing the game!");
+            return false;
+        }
+        _game->setContext(&_context);
 
         const auto& [startPosX, startPosY, width, height, name] = _game->getConfig();
+
         if (!_platform.startup(name, startPosX, startPosY, width, height))
         {
             log::error("There was an error initializing the platform");
@@ -66,28 +76,28 @@ namespace tempest::core
         }
 
         // TODO: Make renderer selectable
-        if (!_renderer.init(renderer::RendererType::VULKAN, game->getConfig().name, _platform.getState()))
+        if (!_renderer.init(renderer::RendererType::VULKAN, _game->getConfig().name, _platform.getState()))
         {
             log::error("There was an error initializing the renderer");
             return false;
         }
 
-        if (!_game->initialize())
-        {
-            log::error("There was an error initializing the game");
-            return false;
-        }
-        _game->onResize(_width, _height);
-
-        // Event Listener
+        /// +---------------------------------------------------------------------------------------+
+        /// |                       REGISTER EVENT LISTENERS                                        |
+        /// +---------------------------------------------------------------------------------------+
         registerEvent(static_cast<EventCode>(SystemEventCode::APPLICATION_QUIT), &_appEventListener);
         registerEvent(static_cast<EventCode>(SystemEventCode::KEY_PRESSED), &_keyEventListener);
         registerEvent(static_cast<EventCode>(SystemEventCode::KEY_RELEASED), &_keyEventListener);
         registerEvent(static_cast<EventCode>(SystemEventCode::WINDOW_RESIZED), &_resizeEventListener);
 
-        _isInitialized = true;
+        _game->onResize(_width, _height);
 
-        return true;
+        // Initialize application state
+        _isInitialized = true;
+        _isRunning     = true;
+        _isSuspended   = false;
+
+        return _isInitialized;
     }
 
 
@@ -162,6 +172,12 @@ namespace tempest::core
         input::shutdown();
         _renderer.shutdown();
         _platform.shutdown();
+
+        if (destroyGame(_game, _context))
+        {
+            log::info("Game destroyed successfully!");
+        }
+        memory::shutdown();
 
         return true;
     }
