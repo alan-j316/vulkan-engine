@@ -56,16 +56,7 @@ namespace tempest::core
         input::init();
 
 
-        /// +---------------------------------------------------------------------------------------+
-        /// |                       GAME CREATION AND INIT                                          |
-        /// +---------------------------------------------------------------------------------------+
         _game = createGame(_context);
-        if (!_game->initialize())
-        {
-            log::error("There was an error initializing the game!");
-            return false;
-        }
-        _game->setContext(&_context);
 
         const auto& [startPosX, startPosY, width, height, name] = _game->getConfig();
 
@@ -90,7 +81,19 @@ namespace tempest::core
         registerEvent(static_cast<EventCode>(SystemEventCode::KEY_RELEASED), &_keyEventListener);
         registerEvent(static_cast<EventCode>(SystemEventCode::WINDOW_RESIZED), &_resizeEventListener);
 
+
+        /// +---------------------------------------------------------------------------------------+
+        /// |                          GAME INITIALIZATION                                          |
+        /// +---------------------------------------------------------------------------------------+
+        if (!_game->initialize())
+        {
+            log::error("There was an error initializing the game!");
+            return false;
+        }
+        _game->setContext(&_context);
         _game->onResize(_width, _height);
+
+
 
         // Initialize application state
         _isInitialized = true;

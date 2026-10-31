@@ -9,6 +9,12 @@
  */
 
 #include "AssetManager.h"
+#include "core/Logger.h"
 
 namespace tempest::core
-{}
+{
+    void AssetManager::load(std::string_view asset) noexcept
+    {
+        log::info(std::format("Loading asset {}", asset));
+    }
+} // namespace tempest::core

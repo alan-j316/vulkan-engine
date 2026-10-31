@@ -9,11 +9,16 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
+#include <string_view>
 
 namespace tempest::core
 {
     class AssetManager
     {
+    public:
+        void load(std::string_view asset) noexcept;
+
+    private:
         // TODO: Impl
     };
 } // namespace tempest::core

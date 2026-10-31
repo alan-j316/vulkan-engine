@@ -17,6 +17,10 @@ namespace fps
     bool FPSGame::initialize()
     {
         tempest::log::info("Game initialized");
+
+        auto assertMgr = getContext().assetManager;
+        assertMgr.load("assets/buggy.gltf");
+
         return true;
     }
 
