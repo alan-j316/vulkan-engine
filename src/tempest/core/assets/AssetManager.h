@@ -9,16 +9,24 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
+#include "GLTFLoader.h"
+
 #include <string_view>
+#include <vector>
 
 namespace tempest::core
 {
+
     class AssetManager
     {
     public:
-        void load(std::string_view asset) noexcept;
+        void loadModel(std::string_view asset) noexcept;
 
     private:
+        GLTFLoader _gltfLoader;
+
+        // std::vector<AssetHandle> _geometryHandles;
+        // std::vector<Geometry> _geometries;
         // TODO: Impl
     };
 } // namespace tempest::core

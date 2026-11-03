@@ -10,8 +10,8 @@
  */
 
 #include "Api.h"
-#include "AssetManager.h"
 #include "Clock.h"
+#include "assets/AssetManager.h"
 #include "core/EventListeners.h"
 #include "platform/Platform.h"
 #include "renderer/RendererFrontend.h"

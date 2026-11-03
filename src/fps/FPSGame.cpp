@@ -19,7 +19,7 @@ namespace fps
         tempest::log::info("Game initialized");
 
         auto assertMgr = getContext().assetManager;
-        assertMgr.load("assets/buggy.gltf");
+        assertMgr.loadModel("assets/models/monkey.glb");
 
         return true;
     }
