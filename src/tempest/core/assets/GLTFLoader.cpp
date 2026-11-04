@@ -10,6 +10,7 @@
 
 #include "GLTFLoader.h"
 
+#include "../../../../out/build/MSVC-Release/_deps/fastgltf-src/include/fastgltf/tools.hpp"
 #include "core/Logger.h"
 
 #include <fastgltf/core.hpp>
@@ -35,26 +36,31 @@ namespace tempest::core
             log::error("There was an error reading the GLTF buffer.");
             return {};
         }
+        std::vector<Vertex> vertices;
 
         // Validate the GLTF spec enforcement. TODO: Enable in debug
         // fastgltf::validate(asset.get());
-        // for (const auto& mesh : asset.get().meshes)
-        // {
-        //     for (const auto& primitive : mesh.primitives)
-        //     {
-        //         const auto positionIt  = primitive.findAttribute("POSITION");
-        //         auto& positionAccessor = asset->accessors[positionIt->accessorIndex];
-        //         if (!positionAccessor.bufferViewIndex.has_value())
-        //             continue;
-        //         auto* vertices = static_cast<Vertex*>(glMapNamedBuffer(primitive.vertexBuffer, GL_WRITE_ONLY));
-        //         fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(
-        //             asset, positionAccessor, [&](fastgltf::math::fvec3 pos, std::size_t idx) {
-        //                 vertices[idx].position = fastgltf::math::fvec3(pos.x(), pos.y(), pos.z());
-        //                 vertices[idx].uv       = fastgltf::math::fvec2();
-        //             });
-        //     }
-        // }
-    return {};
+
+        // Iterate through each meshes and populate vertices
+        // TODO: Now only a single primitive is populated
+        for (const auto& mesh : asset.get().meshes)
+        {
+            for (const auto& primitive : mesh.primitives)
+            {
+                const auto positionIt  = primitive.findAttribute("POSITION");
+                auto& positionAccessor = asset->accessors[positionIt->accessorIndex];
+                if (!positionAccessor.bufferViewIndex.has_value())
+                    continue;
+                vertices.resize(positionAccessor.count);
+                fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(
+                    asset.get(), positionAccessor,
+                    [&vertices](fastgltf::math::fvec3 position, const size_t vertexIndex) noexcept {
+                        vertices[vertexIndex].position =
+                            Vec3{ .x = position.x(), .y = position.y(), .z = position.z() };
+                    });
+            }
+        }
+        return { .vertices = vertices };
     }
 
 

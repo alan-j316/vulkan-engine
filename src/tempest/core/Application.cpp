@@ -10,7 +10,6 @@
 
 #include "Application.h"
 
-#include "Asserts.h"
 #include "Game.h"
 #include "MemorySubsystem.h"
 #include "core/Event.h"
@@ -19,8 +18,6 @@
 #include "core/Logger.h"
 #include "platform/ClockTime.h"
 #include "renderer/RendererFrontend.h"
-
-#include <format>
 
 
 namespace tempest::core
@@ -85,15 +82,13 @@ namespace tempest::core
         /// +---------------------------------------------------------------------------------------+
         /// |                          GAME INITIALIZATION                                          |
         /// +---------------------------------------------------------------------------------------+
-.         _game->setContext(&_context);
+        _game->setContext(&_context);
         _game->onResize(_width, _height);
         if (!_game->initialize())
         {
             log::error("There was an error initializing the game!");
             return false;
         }
-
-
 
         // Initialize application state
         _isInitialized = true;

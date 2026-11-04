@@ -13,12 +13,19 @@
 #include "core/Logger.h"
 #include "core/assets/GLTFLoader.h"
 
+#include <format>
+#include <iostream> // TODO: REMOVE
+
+
 namespace tempest::core
 {
     void AssetManager::loadModel(std::string_view asset) noexcept
     {
         log::info(std::format("Loading asset {}", asset));
-        auto loadedAsset = std::move(_gltfLoader.load(std::filesystem::path(asset)));
-
+        auto loadedAsset = _gltfLoader.load(std::filesystem::path(asset));
+        for (const auto& vert : loadedAsset.vertices)
+        {
+            std::cout << std::format("<{}, {}, {}>\n", vert.position.x, vert.position.y, vert.position.z);
+        }
     }
 } // namespace tempest::core
