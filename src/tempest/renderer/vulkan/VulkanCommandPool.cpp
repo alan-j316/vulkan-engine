@@ -42,7 +42,7 @@ namespace tempest::renderer
     }
 
 
-    CommandBufferHandle VulkanCommandPool::allocate(const VulkanDevice& device, const bool isPrimary)
+    CmdBufferHandle VulkanCommandPool::allocate(const VulkanDevice& device, const bool isPrimary)
     {
         TEMPEST_ASSERT(
             _commandPool != nullptr,
@@ -77,14 +77,14 @@ namespace tempest::renderer
     }
 
 
-    void VulkanCommandPool::free(const CommandBufferHandle handle)
+    void VulkanCommandPool::free(const CmdBufferHandle handle)
     {
         _freeHandles.push_back(handle);
         _states[handle] = CommandBufferState::FREED;
     }
 
 
-    void VulkanCommandPool::startRecording(const CommandBufferHandle handle, const bool isSingleUse,
+    void VulkanCommandPool::startRecording(const CmdBufferHandle handle, const bool isSingleUse,
                                            const bool isSimultaneousUse) noexcept
     {
         TEMPEST_ASSERT(_states[handle] != CommandBufferState::FREED,
@@ -100,7 +100,7 @@ namespace tempest::renderer
     }
 
 
-    void VulkanCommandPool::endRecording(const CommandBufferHandle handle) noexcept
+    void VulkanCommandPool::endRecording(const CmdBufferHandle handle) noexcept
     {
         TEMPEST_ASSERT(_states[handle] != CommandBufferState::FREED,
                        "[Command Buffer End Recording]: Trying to end recording on a freed command buffer");
@@ -109,7 +109,7 @@ namespace tempest::renderer
     }
 
 
-    void VulkanCommandPool::submit(const CommandBufferHandle handle) noexcept
+    void VulkanCommandPool::submit(const CmdBufferHandle handle) noexcept
     {
         TEMPEST_ASSERT(_states[handle] != CommandBufferState::FREED,
                        "[Command Buffer Submit]: Trying to submit on a freed command buffer");
@@ -117,7 +117,7 @@ namespace tempest::renderer
     }
 
 
-    void VulkanCommandPool::reset(const CommandBufferHandle handle) noexcept
+    void VulkanCommandPool::reset(const CmdBufferHandle handle) noexcept
     {
         TEMPEST_ASSERT(_states[handle] != CommandBufferState::FREED,
                        "[Command Buffer Reset]: Trying to reset on a freed command buffer");
@@ -126,7 +126,7 @@ namespace tempest::renderer
     }
 
 
-    CommandBufferHandle VulkanCommandPool::allocateAndStartSingleTimeRecording(const VulkanDevice& device) noexcept
+    CmdBufferHandle VulkanCommandPool::allocateAndStartSingleTimeRecording(const VulkanDevice& device) noexcept
     {
         const auto handle = allocate(device, true);
         startRecording(handle, true, false);
@@ -134,7 +134,7 @@ namespace tempest::renderer
     }
 
 
-    void VulkanCommandPool::endSingleTimeRecordingAndSubmit(const CommandBufferHandle handle,
+    void VulkanCommandPool::endSingleTimeRecordingAndSubmit(const CmdBufferHandle handle,
                                                             const vk::raii::Queue& queue) noexcept
     {
         endRecording(handle);

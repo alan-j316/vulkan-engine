@@ -23,9 +23,14 @@ namespace tempest::core
     {
         log::info(std::format("Loading asset {}", asset));
         auto loadedAsset = _gltfLoader.load(std::filesystem::path(asset));
-        for (const auto& vert : loadedAsset.vertices)
-        {
-            std::cout << std::format("<{}, {}, {}>\n", vert.position.x, vert.position.y, vert.position.z);
-        }
+        // for (const auto& vert : loadedAsset.vertices)
+        // {
+        //     std::cout << std::format("<{}, {}, {}>\n", vert.position.x, vert.position.y, vert.position.z);
+        // }
+        // for (const auto& index : loadedAsset.indices)
+        // {
+        //     std::cout << index << ", ";
+        // }
+        // std::cout << std::endl;
     }
 } // namespace tempest::core

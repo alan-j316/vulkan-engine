@@ -31,28 +31,28 @@ namespace tempest::renderer
         void destroy() noexcept;
 
         /// Allocate a new command buffer from the command pool.
-        CommandBufferHandle allocate(const VulkanDevice& device, bool isPrimary);
+        CmdBufferHandle allocate(const VulkanDevice& device, bool isPrimary);
 
         /// Free the command buffer from the command pool.
-        void free(CommandBufferHandle handle);
+        void free(CmdBufferHandle handle);
 
         /// Start recording to the command buffer.
-        void startRecording(CommandBufferHandle handle, bool isSingleUse, bool isSimultaneousUse) noexcept;
+        void startRecording(CmdBufferHandle handle, bool isSingleUse, bool isSimultaneousUse) noexcept;
 
         /// End command buffer recording.
-        void endRecording(CommandBufferHandle handle) noexcept;
+        void endRecording(CmdBufferHandle handle) noexcept;
 
         /// Submit the command buffer with the given @p handle.
-        void submit(CommandBufferHandle handle) noexcept;
+        void submit(CmdBufferHandle handle) noexcept;
 
         /// Resets the command buffer
-        void reset(CommandBufferHandle handle) noexcept;
+        void reset(CmdBufferHandle handle) noexcept;
 
         /// Allocate a single time command buffer and start recording.
-        CommandBufferHandle allocateAndStartSingleTimeRecording(const VulkanDevice& device) noexcept;
+        CmdBufferHandle allocateAndStartSingleTimeRecording(const VulkanDevice& device) noexcept;
 
         /// Ends Single Time Command Buffer Recording.
-        void endSingleTimeRecordingAndSubmit(CommandBufferHandle handle, const vk::raii::Queue& queue) noexcept;
+        void endSingleTimeRecordingAndSubmit(CmdBufferHandle handle, const vk::raii::Queue& queue) noexcept;
 
 
         /// +---------------------------------------------------------------------------------------+
@@ -60,26 +60,39 @@ namespace tempest::renderer
         /// +---------------------------------------------------------------------------------------+
 
         /// Bind a pipeline to a given command buffer.
-        inline void bindPipeline(const CommandBufferHandle handle, const vk::PipelineBindPoint bindPoint,
+        inline void bindPipeline(const CmdBufferHandle handle, const vk::PipelineBindPoint bindPoint,
                                  const VulkanGraphicsPipeline& pipeline) const noexcept
         { _commandBuffers[handle].bindPipeline(bindPoint, *pipeline.getBasePipeline()); }
 
 
         /// Execute the given command buffer's draw command.
-        inline void draw(const CommandBufferHandle handle, const uint32_t vertexCount, const uint32_t instanceCount,
+        inline void draw(const CmdBufferHandle handle, const uint32_t vertexCount, const uint32_t instanceCount,
                          const uint32_t firstVertex, const uint32_t firstInstance) const noexcept
         { _commandBuffers[handle].draw(vertexCount, instanceCount, firstVertex, firstInstance); }
 
 
+        inline void drawIndexed(const CmdBufferHandle handle, const uint32_t indexCount, const uint32_t instanceCount,
+                                const uint32_t firstIndex, const int32_t vertexOffset,
+                                const uint32_t firstInstance) const
+        { _commandBuffers[handle].drawIndexed(indexCount, instanceCount, firstIndex, vertexOffset, firstInstance); }
+
+
         /// Binds the vertex buffer to the given command buffer.
-        inline void bindVertexBuffer(const CommandBufferHandle handle, const size_t bindingIndex,
+        inline void bindVertexBuffer(const CmdBufferHandle handle, const size_t bindingIndex,
                                      const VulkanBuffer& buffer) const
         { _commandBuffers[handle].bindVertexBuffers(static_cast<uint32_t>(bindingIndex), buffer.buffer(), { 0 }); }
 
 
+        /**
+         * @brief Bind the index buffer to the given command buffer.
+         */
+        inline void bindIndexBuffer(const CmdBufferHandle handle, const size_t offset, vk::IndexType indexType,
+                                    const VulkanBuffer& buffer) const
+        { _commandBuffers[handle].bindIndexBuffer(buffer.buffer(), offset, indexType); }
+
+
         // TODO: Update to standard vk type rather than raii
-        [[nodiscard]] const vk::raii::CommandBuffer& getBaseCommandBuffer(
-            const CommandBufferHandle handle) const noexcept
+        [[nodiscard]] const vk::raii::CommandBuffer& getBaseCommandBuffer(const CmdBufferHandle handle) const noexcept
         {
             TEMPEST_ASSERT(_states[handle] != CommandBufferState::FREED, "Trying to acquired a freed command buffer.");
             return _commandBuffers[handle];
@@ -90,7 +103,7 @@ namespace tempest::renderer
     private:
         vk::raii::CommandPool _commandPool{ nullptr };
         Vector<vk::raii::CommandBuffer> _commandBuffers{ makeVector<vk::raii::CommandBuffer>() };
-        Vector<CommandBufferHandle> _freeHandles{ makeVector<CommandBufferHandle>() };
+        Vector<CmdBufferHandle> _freeHandles{ makeVector<CmdBufferHandle>() };
         Vector<CommandBufferState> _states{ makeVector<CommandBufferState>() };
     };
 } // namespace tempest::renderer

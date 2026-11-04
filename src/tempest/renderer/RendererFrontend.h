@@ -25,6 +25,9 @@ namespace tempest::renderer
         void onResize(uint32_t width, uint32_t height) const noexcept;
         bool drawFrame(const RenderPacket& packet) const noexcept;
 
+        //// TEMPORARY EXPOSED
+        bool uploadGeometry(const struct Geometry& geometry) noexcept;
+
     private:
         bool beginFrame(float deltaTime) const noexcept;
         bool endFrame(float deltaTime) const noexcept;

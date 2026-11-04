@@ -21,6 +21,7 @@ namespace tempest::renderer
         virtual void onResize(uint32_t width, uint32_t height) noexcept                               = 0;
         virtual bool beginFrame(float deltaTime) noexcept                                             = 0;
         virtual bool endFrame(float deltaTime) noexcept                                               = 0;
+        virtual bool uploadGeometry(const struct Geometry& geometry)                                  = 0;
 
         constexpr void incrementFrameNumber() noexcept { ++_frameNumber; }
         constexpr size_t getFrameNumber() const noexcept { return _frameNumber; }

@@ -19,7 +19,8 @@
 #include "core/FileReader.h"
 #include "core/Logger.h"
 #include "core/MemorySubsystem.h"
-#include "core/Vertex.h"
+#include "core/assets/Asset.h"
+#include "core/assets/AssetManager.h"
 #include "platform/Platform.h"
 #include "renderer/vulkan/VulkanDevice.h"
 #include "renderer/vulkan/VulkanPlatform.h"
@@ -40,9 +41,9 @@ namespace tempest::renderer
         vk::Extent2D swapChainExtent{ .width = 1280, .height = 720 }; // TODO: Update
         VulkanDevice device{};
         VulkanSwapChain swapChain{};
-        VulkanCommandPool graphicsCommandPool{};
+        VulkanCommandPool graphicsCmdPool{};
         VulkanGraphicsPipeline graphicsPipeline{};
-        Vector<CommandBufferHandle> graphicsCommandBuffers{ makeVector<CommandBufferHandle>() };
+        Vector<CmdBufferHandle> graphicsCommandBuffers{ makeVector<CmdBufferHandle>() };
         // Synchronization primitives
         Vector<vk::raii::Semaphore> imageAvailableSemaphores{ makeVector<vk::raii::Semaphore>() };
         Vector<vk::raii::Semaphore> renderFinishedSemaphore{ makeVector<vk::raii::Semaphore>() };
@@ -50,7 +51,7 @@ namespace tempest::renderer
         VmaAllocator vma{};
         // Vector<VulkanFence> imagesInFlight{};
         // TODO: REMOVE
-        VulkanBuffer vertexBuffer{};
+        VulkanBuffer vertexBuffer{}, indexBuffer{};
     };
 
 
@@ -70,9 +71,11 @@ namespace tempest::renderer
     static vk::Bool32 debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
                                     vk::DebugUtilsMessageTypeFlagsEXT type,
                                     const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
-    const std::vector<core::Vertex> vertices = { { .position = { 0.0f, -0.5f, 0.0f }, .color = { 1.0f, 0.0f, 0.0f } },
-                                                 { .position = { 0.5f, 0.5f, 0.0f }, .color = { 0.0f, 1.0f, 0.0f } },
-                                                 { .position = { -0.5f, 0.5f, 0.0f }, .color = { 0.0f, 0.0f, 1.0f } } };
+    const std::vector<core::Vertex> vertices = { { .position = { -0.5f, -0.5f, 0.0f }, .color = { 1.0f, 0.0f, 0.0f } },
+                                                 { .position = { 0.5f, -0.5f, 0.0f }, .color = { 0.0f, 1.0f, 0.0f } },
+                                                 { .position = { 0.5f, 0.5f, 0.0f }, .color = { 0.0f, 0.0f, 1.0f } },
+                                                 { .position = { -0.5f, 0.5f, 0.0f }, .color = { 1.0f, 1.0f, 1.0f } } };
+    const std::vector<uint32_t> indices      = { 0, 1, 2, 2, 3, 0 };
 
     bool VulkanBackend::init(platform::PlatformState* state, std::string_view applicationName) noexcept
     {
@@ -265,14 +268,26 @@ namespace tempest::renderer
 
 
         /// TODO: TEMP REMOVE
+        constexpr auto VERTEX_SIZE = 64 * 1024 * 1024;
+        constexpr auto INDEX_SIZE  = 4 * 1024 * 1024;
         const BufferConfig vertexConfig{
-            .size        = vertices.size() * sizeof(core::Vertex),
+            .size = VERTEX_SIZE,
+            // .size        = vertices.size() * sizeof(core::Vertex),
             .usageFlags  = vk::BufferUsageFlagBits::eVertexBuffer,
             .property    = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
             .sharingMode = vk::SharingMode::eExclusive,
         };
         _ctx->vertexBuffer.create(_ctx->vma, vertexConfig);
 
+        const BufferConfig indexConfig{
+            .size = INDEX_SIZE,
+            // .size        = vertices.size() * sizeof(core::Vertex),
+            .usageFlags  = vk::BufferUsageFlagBits::eIndexBuffer,
+            .property    = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+            .sharingMode = vk::SharingMode::eExclusive,
+        };
+        _ctx->indexBuffer.create(_ctx->vma, indexConfig);
+        /// TODO: TEMP REMOVE
 
         log::info("Vulkan Renderer Initialized");
         return _ctx->instance != nullptr;
@@ -286,6 +301,7 @@ namespace tempest::renderer
 
         // TODO: REMOVE
         _ctx->vertexBuffer.destroy();
+        _ctx->indexBuffer.destroy();
         // TODO: END REMOVE
 
 
@@ -299,7 +315,7 @@ namespace tempest::renderer
         _ctx->inFlightFences.clear();
         _ctx->swapChain.destroy();
 
-        _ctx->graphicsCommandPool.destroy();
+        _ctx->graphicsCmdPool.destroy();
         _ctx->device.destroy();
         _ctx->surface  = nullptr;
         _ctx->instance = nullptr;
@@ -351,20 +367,29 @@ namespace tempest::renderer
         // ------------------------------
         // Get the command buffer handle, reset and begin recording.
         const auto bufferHandle = _ctx->graphicsCommandBuffers[_ctx->frameIndex];
-        _ctx->graphicsCommandPool.reset(bufferHandle);
+        _ctx->graphicsCmdPool.reset(bufferHandle);
         // NOTE: We are resetting the command buffer and re-recording it every frame.
-        _ctx->graphicsCommandPool.startRecording(bufferHandle, true, false);
+        _ctx->graphicsCmdPool.startRecording(bufferHandle, true, false);
 
 
         // ------------------------------
         //     PIPELINE CONFIGURATION
         // ------------------------------
-        _ctx->graphicsCommandPool.bindPipeline(bufferHandle, vk::PipelineBindPoint::eGraphics, _ctx->graphicsPipeline);
+        _ctx->graphicsCmdPool.bindPipeline(bufferHandle, vk::PipelineBindPoint::eGraphics, _ctx->graphicsPipeline);
+
+        // TODO: TEMP REMOVE
         const auto vertSize = vertices.size() * sizeof(core::Vertex);
-        void* vertexMemory =        _ctx->vertexBuffer.map();
-        memcpy(vertexMemory, vertices.data(), vertices.size() * sizeof(core::Vertex));
+        void* vertexMemory  = _ctx->vertexBuffer.map();
+        memcpy(vertexMemory, vertices.data(), vertSize);
         _ctx->vertexBuffer.unmap();
-        _ctx->graphicsCommandPool.bindVertexBuffer(bufferHandle, 0, _ctx->vertexBuffer);
+        _ctx->graphicsCmdPool.bindVertexBuffer(bufferHandle, 0, _ctx->vertexBuffer);
+
+        const auto idxSize = indices.size() * sizeof(uint32_t);
+        void* indexMemory  = _ctx->indexBuffer.map();
+        memcpy(indexMemory, indices.data(), idxSize);
+        _ctx->indexBuffer.unmap();
+        _ctx->graphicsCmdPool.bindIndexBuffer(bufferHandle, 0, vk::IndexType::eUint32, _ctx->indexBuffer);
+        // TODO: TEMP REMOVE
 
 
         // log::warn("Unsupported layout transition; using a suboptimal fallback transition.");
@@ -381,7 +406,7 @@ namespace tempest::renderer
             .layerCount    = 1
         };
         VulkanImage::transitionImageLayout(_ctx->swapChain.getImages()[_ctx->swapChainImageIndex], transitionConfig,
-                                           _ctx->graphicsCommandPool.getBaseCommandBuffer(bufferHandle));
+                                           _ctx->graphicsCmdPool.getBaseCommandBuffer(bufferHandle));
         std::srand(std::time(nullptr));
         const auto r = rand() / static_cast<float>(RAND_MAX);
         const auto g = rand() / static_cast<float>(RAND_MAX);
@@ -411,17 +436,20 @@ namespace tempest::renderer
             .pDepthAttachment     = nullptr // TODO:
         };
 
-        _ctx->graphicsCommandPool.getBaseCommandBuffer(bufferHandle).beginRendering(renderInfo);
+        _ctx->graphicsCmdPool.getBaseCommandBuffer(bufferHandle).beginRendering(renderInfo);
 
         // Set dynamic states
-        _ctx->graphicsCommandPool.getBaseCommandBuffer(bufferHandle)
+        // TODO: Abstract below methods
+        //       Introduce concept of active cmd buffer that is set in the beginning of frame
+        _ctx->graphicsCmdPool.getBaseCommandBuffer(bufferHandle)
             .setViewport(0,
                          vk::Viewport(0.0f, 0.0f, static_cast<float>(_ctx->swapChainExtent.width),
                                       static_cast<float>(_ctx->swapChainExtent.height), 0.0f, 1.0f));
-        _ctx->graphicsCommandPool.getBaseCommandBuffer(bufferHandle)
+        _ctx->graphicsCmdPool.getBaseCommandBuffer(bufferHandle)
             .setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), _ctx->swapChainExtent));
 
-        _ctx->graphicsCommandPool.draw(bufferHandle, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+        _ctx->graphicsCmdPool.drawIndexed(bufferHandle, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+        // _ctx->graphicsCommandPool.draw(bufferHandle, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 
         return true;
     }
@@ -433,7 +461,7 @@ namespace tempest::renderer
 
 
         // End the rendering
-        _ctx->graphicsCommandPool.getBaseCommandBuffer(bufferHandle).endRendering();
+        _ctx->graphicsCmdPool.getBaseCommandBuffer(bufferHandle).endRendering();
 
         // Transition the image back
         // TODO: Update transition flags
@@ -449,11 +477,11 @@ namespace tempest::renderer
             .layerCount    = 1
         };
         VulkanImage::transitionImageLayout(_ctx->swapChain.getImages()[_ctx->swapChainImageIndex], transitionConfig,
-                                           _ctx->graphicsCommandPool.getBaseCommandBuffer(bufferHandle));
+                                           _ctx->graphicsCmdPool.getBaseCommandBuffer(bufferHandle));
 
         // End recording
-        _ctx->graphicsCommandPool.endRecording(bufferHandle);
-        _ctx->graphicsCommandPool.submit(bufferHandle);
+        _ctx->graphicsCmdPool.endRecording(bufferHandle);
+        _ctx->graphicsCmdPool.submit(bufferHandle);
 
         // Submit the queue
         vk::PipelineStageFlags waitDstFlag{ vk::PipelineStageFlagBits::eColorAttachmentOutput };
@@ -461,8 +489,7 @@ namespace tempest::renderer
                                          .pWaitSemaphores    = &*_ctx->imageAvailableSemaphores[_ctx->frameIndex],
                                          .pWaitDstStageMask  = &waitDstFlag,
                                          .commandBufferCount = 1,
-                                         .pCommandBuffers =
-                                             &*_ctx->graphicsCommandPool.getBaseCommandBuffer(bufferHandle),
+                                         .pCommandBuffers = &*_ctx->graphicsCmdPool.getBaseCommandBuffer(bufferHandle),
                                          .signalSemaphoreCount = 1,
                                          .pSignalSemaphores =
                                              &*_ctx->renderFinishedSemaphore[_ctx->swapChainImageIndex] };
@@ -476,6 +503,19 @@ namespace tempest::renderer
 
         _ctx->frameIndex = (_ctx->frameIndex + 1) % _ctx->swapChain.getMaxFramesInFlight();
 
+        return true;
+    }
+
+
+    bool VulkanBackend::uploadGeometry(const Geometry& geometry)
+    {
+        // TODO
+        // const auto bufferHandle = _ctx->graphicsCommandBuffers[_ctx->frameIndex];
+        // _ctx->graphicsCommandPool.bindPipeline(bufferHandle, vk::PipelineBindPoint::eGraphics,
+        // _ctx->graphicsPipeline); const auto vertSize = geometry.vertices.size() * sizeof(core::Vertex); void*
+        // vertexMemory  = _ctx->vertexBuffer.map(); memcpy(vertexMemory, vertices.data(), vertices.size() *
+        // sizeof(core::Vertex)); _ctx->vertexBuffer.unmap(); _ctx->graphicsCommandPool.bindVertexBuffer(bufferHandle,
+        // 0, _ctx->vertexBuffer);
         return true;
     }
 
@@ -496,12 +536,12 @@ namespace tempest::renderer
 
     void VulkanBackend::createGraphicsCommandPoolAndAllocateBuffers() const noexcept
     {
-        _ctx->graphicsCommandPool.createCommandPool(_ctx->device, _ctx->device.getQueueInfo().graphicsFamilyIndex);
+        _ctx->graphicsCmdPool.createCommandPool(_ctx->device, _ctx->device.getQueueInfo().graphicsFamilyIndex);
         log::info("Command pool for Graphics Family created!");
         /// Create a command buffer for each swapchain image.
         for (size_t i = 0; i < _ctx->swapChain.getImageCount(); ++i)
         {
-            _ctx->graphicsCommandBuffers.push_back(_ctx->graphicsCommandPool.allocate(_ctx->device, true));
+            _ctx->graphicsCommandBuffers.push_back(_ctx->graphicsCmdPool.allocate(_ctx->device, true));
         }
         log::info("Command buffers allocated for Graphics Family!");
     }

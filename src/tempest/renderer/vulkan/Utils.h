@@ -11,6 +11,7 @@
 
 
 #include "core/Vertex.h"
+#include "core/assets/Asset.h"
 #include "renderer/vulkan/VulkanTypes.inl"
 
 #include <array>

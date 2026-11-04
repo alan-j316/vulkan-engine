@@ -82,7 +82,7 @@ namespace tempest::renderer
     //----------------------------------------------------------------
 
     /// Type aliases
-    using CommandBufferHandle = uint32_t;
+    using CmdBufferHandle = uint32_t;
 
     // Forward declarations
     class VulkanFence;

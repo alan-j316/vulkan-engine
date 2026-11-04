@@ -36,7 +36,8 @@ namespace tempest::core
             log::error("There was an error reading the GLTF buffer.");
             return {};
         }
-        std::vector<Vertex> vertices;
+
+        Geometry geometry{};
 
         // Validate the GLTF spec enforcement. TODO: Enable in debug
         // fastgltf::validate(asset.get());
@@ -47,20 +48,30 @@ namespace tempest::core
         {
             for (const auto& primitive : mesh.primitives)
             {
+                //--- READ POSITION --
                 const auto positionIt  = primitive.findAttribute("POSITION");
                 auto& positionAccessor = asset->accessors[positionIt->accessorIndex];
                 if (!positionAccessor.bufferViewIndex.has_value())
                     continue;
-                vertices.resize(positionAccessor.count);
+                // TODO: Update to flcn::CVec3
+                geometry.vertices.resize(positionAccessor.count);
                 fastgltf::iterateAccessorWithIndex<fastgltf::math::fvec3>(
                     asset.get(), positionAccessor,
-                    [&vertices](fastgltf::math::fvec3 position, const size_t vertexIndex) noexcept {
-                        vertices[vertexIndex].position =
+                    [&](fastgltf::math::fvec3 position, const size_t vertexIndex) noexcept {
+                        geometry.vertices[vertexIndex].position =
                             Vec3{ .x = position.x(), .y = position.y(), .z = position.z() };
                     });
+
+                // -- READ INDICES --
+                auto indexAccessor = std::move(asset->accessors[primitive.indicesAccessor.value()]);
+                geometry.indices.resize(indexAccessor.count);
+                size_t idx = 0;
+                fastgltf::iterateAccessor<uint32_t>(asset.get(), indexAccessor, [&](const uint32_t index) {
+                    geometry.indices[idx++] = index;
+                });
             }
         }
-        return { .vertices = vertices };
+        return geometry;
     }
 
 

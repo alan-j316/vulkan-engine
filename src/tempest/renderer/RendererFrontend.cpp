@@ -12,6 +12,7 @@
 
 #include "core/Logger.h"
 #include "core/MemorySubsystem.h"
+#include "core/assets/Asset.h"
 #include "renderer/RendererBackend.h"
 #include "renderer/vulkan/VulkanBackend.h"
 
@@ -60,9 +61,7 @@ namespace tempest::renderer
 
 
     void RendererFrontend::onResize(const uint32_t width, const uint32_t height) const noexcept
-    {
-        _rendererBackend->onResize(width, height);
-    }
+    { _rendererBackend->onResize(width, height); }
 
 
     bool RendererFrontend::drawFrame(const RenderPacket& packet) const noexcept
@@ -80,6 +79,10 @@ namespace tempest::renderer
 
         return true;
     }
+
+
+    bool RendererFrontend::uploadGeometry(const struct Geometry& geometry) noexcept
+    { return _rendererBackend->uploadGeometry(geometry); }
 
 
 

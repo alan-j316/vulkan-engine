@@ -25,6 +25,7 @@ namespace tempest::renderer
         void onResize(uint32_t width, uint32_t height) noexcept override;
         bool beginFrame(float deltaTime) noexcept override;
         bool endFrame(float deltaTime) noexcept override;
+        bool uploadGeometry(const Geometry& geometry) override;
 
     private:
         Vector<const char*> getRequiredExtensions() const noexcept;

@@ -12,19 +12,19 @@
 
 namespace tempest::core
 {
-    struct alignas(16) Vec4
-    {
-        float x, y, z, w;
-    };
-
-    struct alignas(16) Vec3
-    {
-        float x, y, z;
-    };
-
-    struct Vertex
-    {
-        Vec3 position;
-        Vec3 color;
-    };
+    // struct alignas(16) Vec4
+    // {
+    //     float x, y, z, w;
+    // };
+    //
+    // struct alignas(16) Vec3
+    // {
+    //     float x, y, z;
+    // };
+    //
+    // struct Vertex
+    // {
+    //     Vec3 position;
+    //     Vec3 color;
+    // };
 } // namespace tempest::core

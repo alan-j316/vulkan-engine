@@ -9,6 +9,7 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
+#include <containers/Vector.h>
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -17,7 +18,7 @@
 namespace tempest::core
 {
     // TODO: Swap in with falcon
-    struct alignas(16) Vec3
+    struct Vec3
     {
         float x, y, z;
     };
@@ -31,12 +32,14 @@ namespace tempest::core
     struct Vertex
     {
         Vec3 position;
+        Vec3 color;
         Vec2 uv;
     };
 
     struct Geometry
     {
-        std::vector<Vertex> vertices;
+        Vector<Vertex> vertices{ makeVector<Vertex>() };
+        Vector<uint32_t> indices{ makeVector<uint32_t>() };
     };
 
     // using AssetHandle = uint32_t;
