@@ -32,7 +32,9 @@ namespace tempest::core
     struct Vertex
     {
         Vec3 position;
-        Vec3 color;
+        Vec3 color{ .x = rand() / static_cast<float>(RAND_MAX),
+                    .y = rand() / static_cast<float>(RAND_MAX),
+                    .z = rand() / static_cast<float>(RAND_MAX) }; // TODO: Remove
         Vec2 uv;
     };
 

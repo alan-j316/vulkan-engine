@@ -26,8 +26,8 @@ namespace tempest::renderer
      */
     struct RenderUploadEvent
     {
-        std::vector<core::Vertex> vertices;
-        std::vector<uint32_t> indices;
+        Vector<core::Vertex> vertices{ makeVector<core::Vertex>() };
+        Vector<uint32_t> indices{ makeVector<uint32_t>() };
     };
 
 

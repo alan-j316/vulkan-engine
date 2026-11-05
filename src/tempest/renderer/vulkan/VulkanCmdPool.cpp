@@ -16,6 +16,8 @@
 
 namespace tempest::renderer
 {
+    void VulkanCommandPool::makeActive(const CmdBufferHandle handle) noexcept { _activeHandle = handle; }
+
     bool VulkanCommandPool::createCommandPool(const VulkanDevice& device, const uint32_t queueFamilyIndex) noexcept
     {
         // For allocation command buffer we need a command pool first
@@ -28,29 +30,29 @@ namespace tempest::renderer
 
         // Command buffers execute by submitting them to ONE of the device queues, like graphics or presentation,
         // and each queue type require a different command buffer
-        _commandPool = vk::raii::CommandPool(device.getLogicalDevice(), commandPoolCreateInfo);
-        return _commandPool != nullptr;
+        _cmdPool = vk::raii::CommandPool(device.getLogicalDevice(), commandPoolCreateInfo);
+        return _cmdPool != nullptr;
     }
 
 
     void VulkanCommandPool::destroy() noexcept
     {
-        _commandBuffers.clear();
+        _cmdBuffers.clear();
         _freeHandles.clear();
         _states.clear();
-        _commandPool = nullptr;
+        _cmdPool = nullptr;
     }
 
 
-    CmdBufferHandle VulkanCommandPool::allocate(const VulkanDevice& device, const bool isPrimary)
+    VulkanCommandPool::CmdBufferHandle VulkanCommandPool::allocate(const VulkanDevice& device, const bool isPrimary)
     {
         TEMPEST_ASSERT(
-            _commandPool != nullptr,
+            _cmdPool != nullptr,
             "[CommandBuffer Allocate]: Command Pool not created! Call createCommandPool(...) to create a command "
             "pool before allocating buffers.");
 
         const vk::CommandBufferAllocateInfo allocateInfo{
-            .commandPool        = _commandPool,
+            .commandPool        = _cmdPool,
             .level              = isPrimary ? vk::CommandBufferLevel::ePrimary : vk::CommandBufferLevel::eSecondary,
             .commandBufferCount = 1,
         };
@@ -63,15 +65,15 @@ namespace tempest::renderer
             const auto handle = _freeHandles.size() - 1;
             _freeHandles.pop_back();
             _states[handle]         = CommandBufferState::UNALLOCATED;
-            _commandBuffers[handle] = std::move(vk::raii::CommandBuffers(device.getLogicalDevice(), allocateInfo)[0]);
+            _cmdBuffers[handle] = std::move(vk::raii::CommandBuffers(device.getLogicalDevice(), allocateInfo)[0]);
             return handle;
         }
         else
         {
-            const auto handle = _commandBuffers.size();
-            TEMPEST_ASSERT(_commandBuffers.size() == _states.size(), "Command buffer and states out-of-sync");
+            const auto handle = _cmdBuffers.size();
+            TEMPEST_ASSERT(_cmdBuffers.size() == _states.size(), "Command buffer and states out-of-sync");
             _states.push_back(CommandBufferState::UNALLOCATED);
-            _commandBuffers.push_back(std::move(vk::raii::CommandBuffers(device.getLogicalDevice(), allocateInfo)[0]));
+            _cmdBuffers.push_back(std::move(vk::raii::CommandBuffers(device.getLogicalDevice(), allocateInfo)[0]));
             return handle;
         }
     }
@@ -84,10 +86,14 @@ namespace tempest::renderer
     }
 
 
-    void VulkanCommandPool::startRecording(const CmdBufferHandle handle, const bool isSingleUse,
-                                           const bool isSimultaneousUse) noexcept
+    void VulkanCommandPool::freeActive() { free(_activeHandle); }
+
+
+    void VulkanCommandPool::startRecording(const bool isSingleUse, const bool isSimultaneousUse) noexcept
     {
-        TEMPEST_ASSERT(_states[handle] != CommandBufferState::FREED,
+        TEMPEST_ASSERT(_activeHandle != InvalidCmdBufferHandle,
+                       "[CmdBuffer]: No active handle. Set one using setActive.");
+        TEMPEST_ASSERT(_states[_activeHandle] != CommandBufferState::FREED,
                        "[Command Buffer Start Recording]: Trying to record to a freed command buffer");
 
         vk::CommandBufferUsageFlags flags = static_cast<vk::CommandBufferUsageFlagBits>(0x0);
@@ -95,41 +101,46 @@ namespace tempest::renderer
         flags |= isSimultaneousUse ? vk::CommandBufferUsageFlagBits::eSimultaneousUse : flags;
 
         const vk::CommandBufferBeginInfo beginInfo{ .flags = flags };
-        _commandBuffers[handle].begin(beginInfo);
-        _states[handle] = CommandBufferState::RECORDING;
+        _cmdBuffers[_activeHandle].begin(beginInfo);
+        _states[_activeHandle] = CommandBufferState::RECORDING;
     }
 
 
-    void VulkanCommandPool::endRecording(const CmdBufferHandle handle) noexcept
+    void VulkanCommandPool::endRecording() noexcept
     {
-        TEMPEST_ASSERT(_states[handle] != CommandBufferState::FREED,
+        TEMPEST_ASSERT(_activeHandle != InvalidCmdBufferHandle,
+                       "[CmdBuffer]: No active handle. Set one using setActive.");
+        TEMPEST_ASSERT(_states[_activeHandle] != CommandBufferState::FREED,
                        "[Command Buffer End Recording]: Trying to end recording on a freed command buffer");
-        _states[handle] = CommandBufferState::RECORDING_ENDED;
-        _commandBuffers[handle].end();
+        _states[_activeHandle] = CommandBufferState::RECORDING_ENDED;
+        _cmdBuffers[_activeHandle].end();
     }
 
 
-    void VulkanCommandPool::submit(const CmdBufferHandle handle) noexcept
+    void VulkanCommandPool::submit() noexcept
     {
-        TEMPEST_ASSERT(_states[handle] != CommandBufferState::FREED,
+        TEMPEST_ASSERT(_activeHandle != InvalidCmdBufferHandle,
+                       "[CmdBuffer]: No active handle. Set one using setActive.");
+        TEMPEST_ASSERT(_states[_activeHandle] != CommandBufferState::FREED,
                        "[Command Buffer Submit]: Trying to submit on a freed command buffer");
-        _states[handle] = CommandBufferState::SUBMITTED;
+        _states[_activeHandle] = CommandBufferState::SUBMITTED;
     }
 
 
-    void VulkanCommandPool::reset(const CmdBufferHandle handle) noexcept
+    void VulkanCommandPool::reset() noexcept
     {
-        TEMPEST_ASSERT(_states[handle] != CommandBufferState::FREED,
+        TEMPEST_ASSERT(_states[_activeHandle] != CommandBufferState::FREED,
                        "[Command Buffer Reset]: Trying to reset on a freed command buffer");
-        _states[handle] = CommandBufferState::READY;
-        _commandBuffers[handle].reset();
+        _states[_activeHandle] = CommandBufferState::READY;
+        _cmdBuffers[_activeHandle].reset();
     }
 
 
-    CmdBufferHandle VulkanCommandPool::allocateAndStartSingleTimeRecording(const VulkanDevice& device) noexcept
+    VulkanCommandPool::CmdBufferHandle VulkanCommandPool::allocateAndStartSingleTimeRecording(const VulkanDevice& device) noexcept
     {
         const auto handle = allocate(device, true);
-        startRecording(handle, true, false);
+        makeActive(handle);
+        startRecording(true, false);
         return handle;
     }
 
@@ -137,12 +148,13 @@ namespace tempest::renderer
     void VulkanCommandPool::endSingleTimeRecordingAndSubmit(const CmdBufferHandle handle,
                                                             const vk::raii::Queue& queue) noexcept
     {
-        endRecording(handle);
+        makeActive(handle);
+        endRecording();
 
         // Submit to the queue
         const vk::SubmitInfo submitInfo{
             .commandBufferCount = 1,
-            .pCommandBuffers    = &*_commandBuffers[handle],
+            .pCommandBuffers    = &*_cmdBuffers[handle],
         };
 
         queue.submit(submitInfo);
