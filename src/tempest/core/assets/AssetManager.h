@@ -10,6 +10,7 @@
  */
 
 #include "GLTFLoader.h"
+#include "renderer/events/RendererEventQueue.h"
 
 #include <string_view>
 #include <vector>
@@ -21,10 +22,14 @@ namespace tempest::core
     class AssetManager
     {
     public:
+        bool init(renderer::RendererEventQueue* rendererEventQueue) noexcept;
         void loadModel(std::string_view asset) noexcept;
 
     private:
         GLTFLoader _gltfLoader;
+
+
+        renderer::RendererEventQueue* _rendererEventQueue;
 
         std::vector<Vertex> _vertices;
         std::vector<AssetHandle> _vertexHandles;

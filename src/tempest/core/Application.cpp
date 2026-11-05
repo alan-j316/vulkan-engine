@@ -52,6 +52,9 @@ namespace tempest::core
         // Input makes use of event system so that should be initialized first
         input::init();
 
+        // Initialize the asset manager with the event queue
+        _context.assetManager.init(&_rendererEventQueue);
+
 
         _game = createGame(_context);
 
@@ -64,7 +67,8 @@ namespace tempest::core
         }
 
         // TODO: Make renderer selectable
-        if (!_renderer.init(renderer::RendererType::VULKAN, _game->getConfig().name, _platform.getState()))
+        if (!_renderer.init(renderer::RendererType::VULKAN, _game->getConfig().name, _platform.getState(),
+                            &_rendererEventQueue))
         {
             log::error("There was an error initializing the renderer");
             return false;

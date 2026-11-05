@@ -19,10 +19,24 @@
 
 namespace tempest::core
 {
+    bool AssetManager::init(renderer::RendererEventQueue* rendererEventQueue) noexcept
+    {
+        _rendererEventQueue = rendererEventQueue;
+        return true;
+    }
+
+
     void AssetManager::loadModel(std::string_view asset) noexcept
     {
         log::info(std::format("Loading asset {}", asset));
-        auto loadedAsset = _gltfLoader.load(std::filesystem::path(asset));
+        auto loadedAsset                   = _gltfLoader.load(std::filesystem::path(asset));
+        std::vector<core::Vertex> vertices = { { .position = { -0.5f, -0.5f, 0.0f }, .color = { 1.0f, 0.0f, 0.0f } },
+                                               { .position = { 0.5f, -0.5f, 0.0f }, .color = { 0.0f, 1.0f, 0.0f } },
+                                               { .position = { 0.5f, 0.5f, 0.0f }, .color = { 0.0f, 0.0f, 1.0f } },
+                                               { .position = { -0.5f, 0.5f, 0.0f }, .color = { 1.0f, 1.0f, 1.0f } } };
+        std::vector<uint32_t> indices      = { 0, 1, 2, 2, 3, 0 };
+        renderer::RenderUploadEvent event{ .vertices = vertices, .indices = indices };
+        _rendererEventQueue->push(event);
         // for (const auto& vert : loadedAsset.vertices)
         // {
         //     std::cout << std::format("<{}, {}, {}>\n", vert.position.x, vert.position.y, vert.position.z);

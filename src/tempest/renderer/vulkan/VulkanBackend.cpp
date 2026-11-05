@@ -26,6 +26,8 @@
 #include "renderer/vulkan/VulkanPlatform.h"
 #include "renderer/vulkan/VulkanSwapChain.h"
 
+#include <algorithm>
+#include <iterator>
 
 namespace tempest::renderer
 {
@@ -51,6 +53,7 @@ namespace tempest::renderer
         VmaAllocator vma{};
         // Vector<VulkanFence> imagesInFlight{};
         // TODO: REMOVE
+        size_t activeIndices{ 0 };
         VulkanBuffer vertexBuffer{}, indexBuffer{};
     };
 
@@ -71,18 +74,20 @@ namespace tempest::renderer
     static vk::Bool32 debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
                                     vk::DebugUtilsMessageTypeFlagsEXT type,
                                     const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
-    const std::vector<core::Vertex> vertices = { { .position = { -0.5f, -0.5f, 0.0f }, .color = { 1.0f, 0.0f, 0.0f } },
-                                                 { .position = { 0.5f, -0.5f, 0.0f }, .color = { 0.0f, 1.0f, 0.0f } },
-                                                 { .position = { 0.5f, 0.5f, 0.0f }, .color = { 0.0f, 0.0f, 1.0f } },
-                                                 { .position = { -0.5f, 0.5f, 0.0f }, .color = { 1.0f, 1.0f, 1.0f } } };
-    const std::vector<uint32_t> indices      = { 0, 1, 2, 2, 3, 0 };
+    // std::vector<core::Vertex> vertices = { { .position = { -0.5f, -0.5f, 0.0f }, .color = { 1.0f, 0.0f, 0.0f } },
+    //                                        { .position = { 0.5f, -0.5f, 0.0f }, .color = { 0.0f, 1.0f, 0.0f } },
+    //                                        { .position = { 0.5f, 0.5f, 0.0f }, .color = { 0.0f, 0.0f, 1.0f } },
+    //                                        { .position = { -0.5f, 0.5f, 0.0f }, .color = { 1.0f, 1.0f, 1.0f } } };
+    // std::vector<uint32_t> indices      = { 0, 1, 2, 2, 3, 0 };
 
-    bool VulkanBackend::init(platform::PlatformState* state, std::string_view applicationName) noexcept
+    bool VulkanBackend::init(platform::PlatformState* state, std::string_view applicationName,
+                             RendererEventQueue* rendererEventQueue) noexcept
     {
         const auto rawCtxMemory = memory::alloc(sizeof(VulkanContext), memory::MemoryTag::MEMORY_TAG_RENDERER);
         _ctx                    = new (rawCtxMemory) VulkanContext();
+        _rendererEventQueue     = rendererEventQueue;
+        _state                  = state;
 
-        _state = state;
         const vk::ApplicationInfo applicationInfo{ .pApplicationName   = applicationName.data(),
                                                    .applicationVersion = VK_MAKE_VERSION(APP_VERSION, 0, 0),
                                                    .pEngineName        = ENGINE_NAME,
@@ -344,6 +349,8 @@ namespace tempest::renderer
 
     bool VulkanBackend::beginFrame(float deltaTime) noexcept
     {
+        update();
+
         // TODO: Handle swapchain recreation
         auto& device = _ctx->device.getLogicalDevice();
 
@@ -378,19 +385,21 @@ namespace tempest::renderer
         _ctx->graphicsCmdPool.bindPipeline(bufferHandle, vk::PipelineBindPoint::eGraphics, _ctx->graphicsPipeline);
 
         // TODO: TEMP REMOVE
-        const auto vertSize = vertices.size() * sizeof(core::Vertex);
-        void* vertexMemory  = _ctx->vertexBuffer.map();
-        memcpy(vertexMemory, vertices.data(), vertSize);
-        _ctx->vertexBuffer.unmap();
-        _ctx->graphicsCmdPool.bindVertexBuffer(bufferHandle, 0, _ctx->vertexBuffer);
+        // const auto vertSize = vertices.size() * sizeof(core::Vertex);
+        // void* vertexMemory  = _ctx->vertexBuffer.map();
+        // memcpy(vertexMemory, vertices.data(), vertSize);
+        // _ctx->vertexBuffer.unmap();
+        // _ctx->graphicsCmdPool.bindVertexBuffer(bufferHandle, 0, _ctx->vertexBuffer);
+        //
+        // const auto idxSize = indices.size() * sizeof(uint32_t);
+        // void* indexMemory  = _ctx->indexBuffer.map();
+        // memcpy(indexMemory, indices.data(), idxSize);
+        // _ctx->indexBuffer.unmap();
+        // _ctx->graphicsCmdPool.bindIndexBuffer(bufferHandle, 0, vk::IndexType::eUint32, _ctx->indexBuffer);
 
-        const auto idxSize = indices.size() * sizeof(uint32_t);
-        void* indexMemory  = _ctx->indexBuffer.map();
-        memcpy(indexMemory, indices.data(), idxSize);
-        _ctx->indexBuffer.unmap();
+        _ctx->graphicsCmdPool.bindVertexBuffer(bufferHandle, 0, _ctx->vertexBuffer);
         _ctx->graphicsCmdPool.bindIndexBuffer(bufferHandle, 0, vk::IndexType::eUint32, _ctx->indexBuffer);
         // TODO: TEMP REMOVE
-
 
         // log::warn("Unsupported layout transition; using a suboptimal fallback transition.");
         // TODO: Update transition flags
@@ -448,7 +457,7 @@ namespace tempest::renderer
         _ctx->graphicsCmdPool.getBaseCommandBuffer(bufferHandle)
             .setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), _ctx->swapChainExtent));
 
-        _ctx->graphicsCmdPool.drawIndexed(bufferHandle, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+        _ctx->graphicsCmdPool.drawIndexed(bufferHandle, static_cast<uint32_t>(_ctx->activeIndices), 1, 0, 0, 0);
         // _ctx->graphicsCommandPool.draw(bufferHandle, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 
         return true;
@@ -507,9 +516,11 @@ namespace tempest::renderer
     }
 
 
-    bool VulkanBackend::uploadGeometry(const Geometry& geometry)
+    bool VulkanBackend::uploadGeometry(const core::Geometry& geometry)
     {
-        // TODO
+        // TODO: Update
+        // std::copy(geometry.vertices.begin(), geometry.vertices.end(), std::back_inserter(vertices));
+        // std::copy(geometry.indices.begin(), geometry.indices.end(), std::back_inserter(indices));
         // const auto bufferHandle = _ctx->graphicsCommandBuffers[_ctx->frameIndex];
         // _ctx->graphicsCommandPool.bindPipeline(bufferHandle, vk::PipelineBindPoint::eGraphics,
         // _ctx->graphicsPipeline); const auto vertSize = geometry.vertices.size() * sizeof(core::Vertex); void*
@@ -587,6 +598,37 @@ namespace tempest::renderer
                                                                                  .messageType     = messageType,
                                                                                  .pfnUserCallback = &debugCallback };
             _ctx->debugMessenger = _ctx->instance.createDebugUtilsMessengerEXT(debugUtilsCreateInfo, _ctx->allocator);
+        }
+    }
+
+
+
+    /// +---------------------------------------------------------------------------------------+
+    /// |                                UPDATE                                                 |
+    /// +---------------------------------------------------------------------------------------+
+    /// TODO: Temporary buffer handle pass (REMOVE after making active buffer in place).
+    void VulkanBackend::update() noexcept
+    {
+        const auto bufferHandle = _ctx->graphicsCommandBuffers[_ctx->frameIndex];
+
+        RenderUploadEvent event{};
+        while (_rendererEventQueue->poll(event))
+        {
+            const auto& vertices = event.vertices;
+            const auto& indices  = event.indices;
+
+            // Upload vertex data.
+            const auto vertSize = vertices.size() * sizeof(core::Vertex);
+            void* vertexMemory  = _ctx->vertexBuffer.map();
+            memcpy(vertexMemory, vertices.data(), vertSize);
+            _ctx->vertexBuffer.unmap();
+
+            // Upload index data.
+            const auto idxSize = indices.size() * sizeof(uint32_t);
+            void* indexMemory  = _ctx->indexBuffer.map();
+            memcpy(indexMemory, indices.data(), idxSize);
+            _ctx->indexBuffer.unmap();
+            _ctx->activeIndices = indices.size();
         }
     }
 

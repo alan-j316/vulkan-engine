@@ -18,6 +18,11 @@ namespace tempest::platform
     struct PlatformState;
 }
 
+namespace tempest::core
+{
+    struct Geometry;
+}
+
 namespace tempest::renderer
 {
     enum class RendererType : uint8_t

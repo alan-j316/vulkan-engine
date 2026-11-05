@@ -28,6 +28,7 @@ target_include_directories(${ENGINE_NAME} PRIVATE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 
+add_subdirectory(renderer/events)
 add_subdirectory(core)
 add_subdirectory(platform)
 add_subdirectory(renderer)
@@ -45,7 +46,6 @@ target_link_libraries(
 
 set(SHADER_SOURCES basic.slang)
 AddSlangShaderTarget(${ENGINE_NAME} SOURCES ${SHADER_SOURCES})
-
 
 
 #add_custom_command(

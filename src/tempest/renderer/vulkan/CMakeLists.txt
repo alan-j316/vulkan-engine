@@ -44,4 +44,5 @@ target_link_libraries(
         Vulkan::Headers
         Vulkan::Hpp
         VulkanMemoryAllocator::Headers
+        Tempest::Internal::Renderer::Events
 )

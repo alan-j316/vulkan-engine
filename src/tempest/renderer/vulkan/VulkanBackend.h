@@ -20,17 +20,18 @@ namespace tempest::renderer
     class VulkanBackend: public RendererBackend
     {
     public:
-        bool init(platform::PlatformState* state, std::string_view applicationName) noexcept override;
+        bool init(platform::PlatformState* state, std::string_view applicationName, RendererEventQueue* rendererEventQueue) noexcept override;
         void shutdown() noexcept override;
         void onResize(uint32_t width, uint32_t height) noexcept override;
         bool beginFrame(float deltaTime) noexcept override;
         bool endFrame(float deltaTime) noexcept override;
-        bool uploadGeometry(const Geometry& geometry) override;
+        bool uploadGeometry(const core::Geometry& geometry) override;
 
     private:
         Vector<const char*> getRequiredExtensions() const noexcept;
         void createGraphicsCommandPoolAndAllocateBuffers() const noexcept;
         void setupDebugMessenger() const noexcept;
+        void update() noexcept;
 
     private:
         struct VulkanContext* _ctx{};

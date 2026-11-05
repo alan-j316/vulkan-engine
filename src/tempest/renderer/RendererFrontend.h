@@ -9,6 +9,7 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
+#include "events/RendererEventQueue.h"
 #include "renderer/RendererTypes.inl"
 
 #include <cstdint>
@@ -20,13 +21,14 @@ namespace tempest::renderer
     class RendererFrontend
     {
     public:
-        bool init(RendererType type, std::string_view applicationName, platform::PlatformState* platformState) noexcept;
+        bool init(RendererType type, std::string_view applicationName, platform::PlatformState* platformState,
+                  RendererEventQueue* rendererEventQueue) noexcept;
         void shutdown() noexcept;
         void onResize(uint32_t width, uint32_t height) const noexcept;
         bool drawFrame(const RenderPacket& packet) const noexcept;
 
         //// TEMPORARY EXPOSED
-        bool uploadGeometry(const struct Geometry& geometry) noexcept;
+        bool uploadGeometry(const core::Geometry& geometry) noexcept;
 
     private:
         bool beginFrame(float deltaTime) const noexcept;

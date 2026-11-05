@@ -3,6 +3,8 @@ add_library(
         ${TEMPEST_RENDERER_LIB}
         STATIC
         RendererFrontend.cpp
+
+        events/RendererEventQueue.cpp
 )
 
 add_subdirectory(vulkan)
@@ -14,6 +16,8 @@ target_sources(${TEMPEST_RENDERER_LIB} PUBLIC
         RendererFrontend.h
         RendererBackend.h
         RendererTypes.inl
+
+        events/RendererEventQueue.h
 )
 
 add_library(Tempest::Internal::Renderer ALIAS ${TEMPEST_RENDERER_LIB})

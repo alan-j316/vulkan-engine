@@ -19,7 +19,7 @@
 namespace tempest::renderer
 {
     bool RendererFrontend::init(const RendererType type, const std::string_view applicationName,
-                                platform::PlatformState* platformState) noexcept
+                                platform::PlatformState* platformState, RendererEventQueue* rendererEventQueue) noexcept
     {
         _activeBackend = type;
         if (type == RendererType::VULKAN)
@@ -34,7 +34,7 @@ namespace tempest::renderer
             return false;
         }
 
-        if (!_rendererBackend->init(platformState, applicationName))
+        if (!_rendererBackend->init(platformState, applicationName, rendererEventQueue))
         {
             log::error("An error occurred initializing the renderer!");
             return false;
@@ -81,7 +81,7 @@ namespace tempest::renderer
     }
 
 
-    bool RendererFrontend::uploadGeometry(const struct Geometry& geometry) noexcept
+    bool RendererFrontend::uploadGeometry(const core::Geometry& geometry) noexcept
     { return _rendererBackend->uploadGeometry(geometry); }
 
 

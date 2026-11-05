@@ -15,7 +15,7 @@
 #include "core/EventListeners.h"
 #include "platform/Platform.h"
 #include "renderer/RendererFrontend.h"
-
+#include "renderer/events/RendererEventQueue.h"
 
 namespace tempest
 {
@@ -56,6 +56,9 @@ namespace tempest
             ApplicationEventListener _appEventListener;
             KeyEventListener _keyEventListener;
             ResizeEventListener _resizeEventListener;
+
+            /// System Events
+            renderer::RendererEventQueue _rendererEventQueue{};
 
             // Friend class
             friend ApplicationEventListener;

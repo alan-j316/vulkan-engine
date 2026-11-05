@@ -14,7 +14,6 @@ add_library(
 )
 add_library(Tempest::Internal::Core ALIAS ${TEMPEST_CORE_LIB})
 
-
 target_sources(
         ${TEMPEST_CORE_LIB} PUBLIC
         FILE_SET HEADERS
@@ -46,4 +45,5 @@ target_link_libraries(
         ${TEMPEST_CORE_LIB} PRIVATE
         quill::quill
         fastgltf::fastgltf
+        Tempest::Internal::Renderer::Events
 )
