@@ -6,7 +6,7 @@ add_library(
         VulkanDevice.cpp
         VulkanSwapChain.cpp
         VulkanImage.cpp
-        VulkanCommandPool.cpp
+        VulkanCmdPool.cpp
         VulkanGraphicsPipeline.cpp
         VulkanBuffer.cpp
         VmaImpl.cpp
@@ -25,7 +25,7 @@ target_sources(${TEMPEST_RENDERER_VULKAN_LIB} PUBLIC
         VulkanPlatform.h
         VulkanSwapChain.h
         VulkanImage.h
-        VulkanCommandPool.h
+        VulkanCmdPool.h
         VulkanGraphicsPipeline.h
         Utils.h
         VulkanBuffer.h

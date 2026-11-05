@@ -21,7 +21,7 @@ namespace tempest::renderer
     /// Forward Declaration
     class VulkanDevice;
 
-    class VulkanCommandPool
+    class VulkanCmdPool
     {
     public:
         /// +---------------------------------------------------------------------------------------+
@@ -107,8 +107,7 @@ namespace tempest::renderer
         {
             TEMPEST_ASSERT(_activeHandle != InvalidCmdBufferHandle,
                            "[CmdBuffer]: No active handle. Set one using setActive.");
-            _cmdBuffers[_activeHandle].drawIndexed(indexCount, instanceCount, firstIndex, vertexOffset,
-                                                       firstInstance);
+            _cmdBuffers[_activeHandle].drawIndexed(indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
         }
 
 
@@ -117,16 +116,14 @@ namespace tempest::renderer
         {
             TEMPEST_ASSERT(_activeHandle != InvalidCmdBufferHandle,
                            "[CmdBuffer]: No active handle. Set one using setActive.");
-            _cmdBuffers[_activeHandle].bindVertexBuffers(static_cast<uint32_t>(bindingIndex), buffer.buffer(),
-                                                             { 0 });
+            _cmdBuffers[_activeHandle].bindVertexBuffers(static_cast<uint32_t>(bindingIndex), buffer.buffer(), { 0 });
         }
 
 
         /**
          * @brief Bind the index buffer to the given command buffer.
          */
-        inline void bindIndexBuffer(const size_t offset, vk::IndexType indexType,
-                                    const VulkanBuffer& buffer) const
+        inline void bindIndexBuffer(const size_t offset, vk::IndexType indexType, const VulkanBuffer& buffer) const
         {
             TEMPEST_ASSERT(_activeHandle != InvalidCmdBufferHandle,
                            "[CmdBuffer]: No active handle. Set one using setActive.");
@@ -135,11 +132,12 @@ namespace tempest::renderer
 
 
         // TODO: Update to standard vk type rather than raii
-        [[nodiscard]] vk::CommandBuffer baseCmdBuffer() const noexcept
+        [[nodiscard]] const vk::raii::CommandBuffer& baseCmdBuffer() const noexcept
         {
             TEMPEST_ASSERT(_activeHandle != InvalidCmdBufferHandle,
                            "[CmdBuffer]: No active handle. Set one using setActive.");
-            TEMPEST_ASSERT(_states[_activeHandle] != CommandBufferState::FREED, "Trying to acquired a freed command buffer.");
+            TEMPEST_ASSERT(_states[_activeHandle] != CommandBufferState::FREED,
+                           "Trying to acquired a freed command buffer.");
             return _cmdBuffers[_activeHandle];
         }
 

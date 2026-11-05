@@ -30,23 +30,8 @@ namespace tempest::core
     {
         log::info(std::format("Loading asset {}", asset));
         auto loadedAsset = _gltfLoader.load(std::filesystem::path(asset));
-        // std::vector<core::Vertex> vertices = { { .position = { -0.5f, -0.5f, 0.0f }, .color = { 1.0f, 0.0f, 0.0f } },
-        //                                        { .position = { 0.5f, -0.5f, 0.0f }, .color = { 0.0f, 1.0f, 0.0f } },
-        //                                        { .position = { 0.5f, 0.5f, 0.0f }, .color = { 0.0f, 0.0f, 1.0f } },
-        //                                        { .position = { -0.5f, 0.5f, 0.0f }, .color = { 1.0f, 1.0f, 1.0f } }
-        //                                        };
-        // std::vector<uint32_t> indices      = { 0, 1, 2, 2, 3, 0 };
         renderer::RenderUploadEvent event{ .vertices = std::move(loadedAsset.vertices),
                                            .indices  = std::move(loadedAsset.indices) };
         _rendererEventQueue->push(event);
-        // for (const auto& vert : loadedAsset.vertices)
-        // {
-        //     std::cout << std::format("<{}, {}, {}>\n", vert.position.x, vert.position.y, vert.position.z);
-        // }
-        // for (const auto& index : loadedAsset.indices)
-        // {
-        //     std::cout << index << ", ";
-        // }
-        // std::cout << std::endl;
     }
 } // namespace tempest::core

@@ -81,9 +81,6 @@ namespace tempest::renderer
     //         CONTEXTS AND VULKAN STRUCTURE ABSTRACTIONS
     //----------------------------------------------------------------
 
-    /// Type aliases
-    using CmdBufferHandle = uint32_t;
-
     // Forward declarations
     class VulkanFence;
 

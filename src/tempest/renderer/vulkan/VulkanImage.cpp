@@ -10,7 +10,7 @@
 
 #include "VulkanImage.h"
 
-#include "VulkanCommandPool.h"
+#include "VulkanCmdPool.h"
 #include "VulkanDevice.h"
 #include "core/Logger.h"
 #include "core/MemorySubsystem.h"
