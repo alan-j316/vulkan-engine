@@ -449,17 +449,13 @@ namespace tempest::renderer
             .pDepthAttachment     = nullptr // TODO:
         };
 
-        _ctx->graphicsCmdPool.baseCmdBuffer().beginRendering(renderInfo);
+        _ctx->graphicsCmdPool.beginRendering(renderInfo);
 
         // Set dynamic states
-        // TODO: Abstract below methods
-        //       Introduce concept of active cmd buffer that is set in the beginning of frame
-        _ctx->graphicsCmdPool.baseCmdBuffer().setViewport(
-            0,
-            vk::Viewport(0.0f, 0.0f, static_cast<float>(_ctx->swapChainExtent.width),
-                         static_cast<float>(_ctx->swapChainExtent.height), 0.0f, 1.0f));
-        _ctx->graphicsCmdPool.baseCmdBuffer().setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), _ctx->swapChainExtent));
-
+        _ctx->graphicsCmdPool.setViewport(0,
+                                          vk::Viewport(0.0f, 0.0f, static_cast<float>(_ctx->swapChainExtent.width),
+                                                       static_cast<float>(_ctx->swapChainExtent.height), 0.0f, 1.0f));
+        _ctx->graphicsCmdPool.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), _ctx->swapChainExtent));
         _ctx->graphicsCmdPool.drawIndexed(static_cast<uint32_t>(_ctx->activeIndices), 1, 0, 0, 0);
         // _ctx->graphicsCommandPool.draw(bufferHandle, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 
@@ -474,7 +470,7 @@ namespace tempest::renderer
         _ctx->graphicsCmdPool.makeActive(bufferHandle);
 
         // End the rendering
-        _ctx->graphicsCmdPool.baseCmdBuffer().endRendering();
+        _ctx->graphicsCmdPool.endRendering();
 
         // Transition the image back
         // TODO: Update transition flags

@@ -120,9 +120,7 @@ namespace tempest::renderer
         }
 
 
-        /**
-         * @brief Bind the index buffer to the given command buffer.
-         */
+        /// @brief Bind the index buffer to the given command buffer.
         inline void bindIndexBuffer(const size_t offset, vk::IndexType indexType, const VulkanBuffer& buffer) const
         {
             TEMPEST_ASSERT(_activeHandle != InvalidCmdBufferHandle,
@@ -130,6 +128,46 @@ namespace tempest::renderer
             _cmdBuffers[_activeHandle].bindIndexBuffer(buffer.buffer(), offset, indexType);
         }
 
+
+        /// @brief vkCmdBeginRendering wrapper.
+        inline void beginRendering(const vk::RenderingInfo& info) const noexcept
+        {
+            TEMPEST_ASSERT(_activeHandle != InvalidCmdBufferHandle,
+                           "[CmdBuffer]: No active handle. Set one using setActive.");
+            _cmdBuffers[_activeHandle].beginRendering(info);
+        }
+
+        /// @brief vkCmdEndRendering wrapper.
+        inline void endRendering() const noexcept
+        {
+            TEMPEST_ASSERT(_activeHandle != InvalidCmdBufferHandle,
+                           "[CmdBuffer]: No active handle. Set one using setActive.");
+            _cmdBuffers[_activeHandle].endRendering();
+        }
+
+
+        /// @brief Set the viewport on the active command buffer.
+        inline void setViewport(const uint32_t firstViewport,
+                                const vk::ArrayProxy<const vk::Viewport> viewports) const noexcept
+        {
+            TEMPEST_ASSERT(_activeHandle != InvalidCmdBufferHandle,
+                           "[CmdBuffer]: No active handle. Set one using setActive.");
+            _cmdBuffers[_activeHandle].setViewport(firstViewport, viewports);
+        }
+
+
+        /// @brief Set the active command buffer's scissor.
+        inline void setScissor(const uint32_t firstScissor, const vk::ArrayProxy<vk::Rect2D const>& scissors)
+        {
+            TEMPEST_ASSERT(_activeHandle != InvalidCmdBufferHandle,
+                           "[CmdBuffer]: No active handle. Set one using setActive.");
+            _cmdBuffers[_activeHandle].setScissor(firstScissor, scissors);
+        }
+
+
+        /// +---------------------------------------------------------------------------------------+
+        /// |                                 GETTERS                                               |
+        /// +---------------------------------------------------------------------------------------+
 
         // TODO: Update to standard vk type rather than raii
         [[nodiscard]] const vk::raii::CommandBuffer& baseCmdBuffer() const noexcept
@@ -141,7 +179,10 @@ namespace tempest::renderer
             return _cmdBuffers[_activeHandle];
         }
 
+        [[nodiscard]] vk::CommandBuffer get(const CmdBufferHandle handle) const noexcept { return _cmdBuffers[handle]; }
+
         [[nodiscard]] size_t cmdBufferCount() const noexcept { return _cmdBuffers.size(); }
+
 
     private:
         vk::raii::CommandPool _cmdPool{ nullptr };
