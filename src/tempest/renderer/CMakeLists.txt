@@ -28,6 +28,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 target_include_directories(${TEMPEST_RENDERER_LIB} PUBLIC ${TEMPEST_ROOT_DIR})
 
 target_link_libraries(
-        ${TEMPEST_RENDERER_LIB} PUBLIC # TODO: Update to private after init vulkan using pimpl idiom
+        ${TEMPEST_RENDERER_LIB} PUBLIC
         Tempest::Internal::Renderer::Vulkan
 )

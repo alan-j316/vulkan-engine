@@ -10,10 +10,11 @@
 
 #include "GLTFLoader.h"
 
-#include "../../../../out/build/MSVC-Release/_deps/fastgltf-src/include/fastgltf/tools.hpp"
 #include "core/Logger.h"
 
+#include <falcon/Falcon.h>
 #include <fastgltf/core.hpp>
+#include <fastgltf/tools.hpp>
 #include <fastgltf/types.hpp>
 
 namespace tempest::core
@@ -59,7 +60,7 @@ namespace tempest::core
                     asset.get(), positionAccessor,
                     [&](fastgltf::math::fvec3 position, const size_t vertexIndex) noexcept {
                         geometry.vertices[vertexIndex].position =
-                            Vec3{ .x = position.x(), .y = position.y(), .z = position.z() };
+                            flcn::Vec3F{ position.x(), position.y(), position.z() };
                     });
 
                 // -- READ INDICES --

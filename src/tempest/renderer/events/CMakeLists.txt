@@ -1,7 +1,7 @@
 set(TEMPEST_RENDERER_EVENT_LIB TempestRendererEvents${TEMPEST_INTERNAL_TARGET_SUFFIX})
 add_library(
         ${TEMPEST_RENDERER_EVENT_LIB}
-        OBJECT
+        STATIC
         RendererEventQueue.cpp
 )
 
@@ -20,10 +20,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 target_include_directories(${TEMPEST_RENDERER_EVENT_LIB} PUBLIC ${TEMPEST_ROOT_DIR})
 
-#target_link_libraries(
-#        ${TEMPEST_RENDERER_EVENT_LIB} PRIVATE
-#        SDL3::SDL3-static
-#        Vulkan::Headers
-#        Vulkan::Hpp
-#        VulkanMemoryAllocator::Headers
-#)
+target_link_libraries(
+        ${TEMPEST_RENDERER_EVENT_LIB} PUBLIC
+        Tempest::Internal::Core
+)

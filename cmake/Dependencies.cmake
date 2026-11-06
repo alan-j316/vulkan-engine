@@ -24,6 +24,12 @@ FetchContent_Declare(
         SYSTEM
 )
 
+FetchContent_Declare(
+        Falcon
+        GIT_REPOSITORY https://github.com/alan-j316/falcon-game-math.git
+        GIT_TAG 31f71c916be699922e462ccf2f144ca0a9d27148
+        SYSTEM
+)
 
 # TinyObjLoader gives error with compatability
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Minimum policy version" FORCE)
@@ -31,14 +37,6 @@ FetchContent_Declare(
         tinyobj
         GIT_REPOSITORY https://github.com/tinyobjloader/tinyobjloader.git
         GIT_TAG v1.0.6
-        SYSTEM
-)
-
-# TODO: Replace glm with our falcon math library
-FetchContent_Declare(
-        glm
-        GIT_REPOSITORY https://github.com/icaven/glm.git
-        GIT_TAG dca38025fba63bb9284023e6de55f756b9e37cec
         SYSTEM
 )
 
@@ -126,13 +124,13 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(VulkanHPP)
 FetchContent_MakeAvailable(VulkanMemoryAllocator)
 FetchContent_MakeAvailable(FastGLTF)
+FetchContent_MakeAvailable(Falcon)
 
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE) # Disables google benchmark from creating its own test suite
 
 FetchContent_MakeAvailable(googletest)
 FetchContent_MakeAvailable(googlebenchmark)
 FetchContent_MakeAvailable(sdl3)
-FetchContent_MakeAvailable(glm)
 FetchContent_MakeAvailable(stb)
 FetchContent_MakeAvailable(tinyobj)
 FetchContent_MakeAvailable(quill)

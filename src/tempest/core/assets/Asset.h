@@ -12,30 +12,30 @@
 #include <containers/Vector.h>
 #include <cstddef>
 #include <cstdint>
+#include <falcon/Falcon.h>
 #include <string>
 #include <vector>
 
 namespace tempest::core
 {
     // TODO: Swap in with falcon
-    struct Vec3
-    {
-        float x, y, z;
-    };
-
-    struct Vec2
-    {
-        float x, y;
-    };
+    // struct Vec3
+    // {
+    //     float x, y, z;
+    // };
+    //
+    // struct Vec2
+    // {
+    //     float x, y;
+    // };
 
 
     struct Vertex
     {
-        Vec3 position;
-        Vec3 color{ .x = rand() / static_cast<float>(RAND_MAX),
-                    .y = rand() / static_cast<float>(RAND_MAX),
-                    .z = rand() / static_cast<float>(RAND_MAX) }; // TODO: Remove
-        Vec2 uv;
+        flcn::Vec3F position;
+        flcn::Vec3F color{ rand() / static_cast<float>(RAND_MAX), rand() / static_cast<float>(RAND_MAX),
+                           rand() / static_cast<float>(RAND_MAX) }; // TODO: Remove
+        flcn::CVec2F uv;                                            // TODO: Update all storage types to CVec after library is updated.
     };
 
     struct Geometry

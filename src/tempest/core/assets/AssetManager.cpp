@@ -16,7 +16,6 @@
 #include <format>
 #include <iostream> // TODO: REMOVE
 
-
 namespace tempest::core
 {
     bool AssetManager::init(renderer::RendererEventQueue* rendererEventQueue) noexcept
