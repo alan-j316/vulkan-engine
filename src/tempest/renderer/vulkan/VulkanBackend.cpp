@@ -77,20 +77,16 @@ namespace tempest::renderer
     {
         const float s1 = 1 / (std::tan(fov * 0.5f) * aspect);
         const float s2 = 1 / std::tan(fov * 0.5f);
-        return flcn::Mat4F{
-            s1, 0, 0, 0, 0, -s2, 0, 0, 0, 0, -far / (far - near), -(far * near) / (far - near), 0, 0, -1, 0
-        };
+        return flcn::Mat4F{ s1, 0, 0,  0, 0, -s2, 0, 0, 0, 0, -far / (far - near), -(far * near) / (far - near),
+                            0,  0, -1, 0 };
     }
+    // TODO: Temporary REMOVE END
+
 
     /// Debug Callback
     static vk::Bool32 debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
                                     vk::DebugUtilsMessageTypeFlagsEXT type,
                                     const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData);
-    // std::vector<core::Vertex> vertices = { { .position = { -0.5f, -0.5f, 0.0f }, .color = { 1.0f, 0.0f, 0.0f } },
-    //                                        { .position = { 0.5f, -0.5f, 0.0f }, .color = { 0.0f, 1.0f, 0.0f } },
-    //                                        { .position = { 0.5f, 0.5f, 0.0f }, .color = { 0.0f, 0.0f, 1.0f } },
-    //                                        { .position = { -0.5f, 0.5f, 0.0f }, .color = { 1.0f, 1.0f, 1.0f } } };
-    // std::vector<uint32_t> indices      = { 0, 1, 2, 2, 3, 0 };
 
     bool VulkanBackend::init(platform::PlatformState* state, std::string_view applicationName,
                              RendererEventQueue* rendererEventQueue) noexcept
@@ -469,11 +465,11 @@ namespace tempest::renderer
         _ctx->graphicsCmdPool.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), _ctx->swapChainExtent));
         // _ctx->graphicsCommandPool.draw(bufferHandle, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
         // TODO: TEMP REMOVE
-        auto view = flcn::Mat4F::identity();
+        auto view  = flcn::Mat4F::identity();
         view(2, 3) = -4;
         GlobalUniform uniform{ .model = flcn::Mat4F::identity(),
                                .view  = view,
-                               .proj  = makePersp(1280 / 720, flcn::constants::PI<float> / 4, 0.1f, 10.0f) };
+                               .proj  = makePersp(1280.0f / 720.0f, flcn::constants::PI<float> / 4, 0.1f, 10.0f) };
         // makePersp(1280 / 720, flcn::constants::PI<float> / 4, 0.1f, 1000.0f)
         _ctx->graphicsPipeline.updateGlobalUBO(_ctx->frameIndex, uniform);
         // TODO: TEMP REMOVE END
