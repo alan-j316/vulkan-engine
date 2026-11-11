@@ -164,6 +164,16 @@ namespace tempest::renderer
             _cmdBuffers[_activeHandle].setScissor(firstScissor, scissors);
         }
 
+        /// @brief Bind the given descriptor set to the command buffer.
+        inline void bindDescriptorSet(const vk::PipelineBindPoint pipelineBindPoint, const vk::PipelineLayout layout,
+                                      const uint32_t firstSet,
+                                      const vk::ArrayProxy<const vk::DescriptorSet>& descriptorSets,
+                                      const vk::ArrayProxy<const uint32_t>& dynamicOffsets) const noexcept
+        {
+            _cmdBuffers[_activeHandle].bindDescriptorSets(pipelineBindPoint, layout, firstSet, descriptorSets,
+                                                          dynamicOffsets);
+        }
+
 
         /// +---------------------------------------------------------------------------------------+
         /// |                                 GETTERS                                               |

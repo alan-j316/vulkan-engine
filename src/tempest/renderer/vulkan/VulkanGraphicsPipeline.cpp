@@ -10,6 +10,7 @@
 
 #include "VulkanGraphicsPipeline.h"
 
+#include "Asserts.h"
 #include "VulkanSwapChain.h"
 #include "core/Vertex.h"
 #include "renderer/vulkan/Utils.h"
@@ -17,7 +18,7 @@
 namespace tempest::renderer
 {
     bool VulkanGraphicsPipeline::create(const VulkanDevice& device, const VulkanSwapChain& swapChain,
-                                        const GraphicsPipelineConfig& config)
+                                        const GraphicsPipelineConfig& config, const VmaAllocator& vmaAllocator)
     {
 
         /// ----------------
@@ -123,11 +124,35 @@ namespace tempest::renderer
             .pAttachments    = &colorBlendAttachmentState,
         };
 
+
+        /// ----------------
+        /// Descriptors
+        /// ----------------
+        vk::DescriptorSetLayoutBinding uboBindingLayout{ .binding         = 0,
+                                                         .descriptorType  = vk::DescriptorType::eUniformBuffer,
+                                                         .descriptorCount = 1,
+                                                         .stageFlags      = vk::ShaderStageFlagBits::eVertex };
+        vk::DescriptorSetLayoutCreateInfo descriptorInfo{ .bindingCount = 1, .pBindings = &uboBindingLayout };
+        // TODO: Use custom vk allocator.
+        _globalDescriptorSetLayout = vk::raii::DescriptorSetLayout(device.getLogicalDevice(), descriptorInfo, nullptr);
+
+        vk::DescriptorPoolSize globalPoolSize{ .type            = vk::DescriptorType::eUniformBuffer,
+                                               .descriptorCount = swapChain.getImageCount() };
+
+        // Individual descriptor sets can be freed(eFreeDescriptorSet)
+        vk::DescriptorPoolCreateInfo poolCreateInfo{ .flags   = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
+                                                     .maxSets = swapChain.getImageCount(),
+                                                     .poolSizeCount = 1,
+                                                     .pPoolSizes    = &globalPoolSize };
+        _globalDescriptorPool = vk::raii::DescriptorPool(device.getLogicalDevice(), poolCreateInfo, nullptr);
+
+
         /// ----------------
         /// Pipeline
         /// ----------------
-        /// TODO: Make configurable
-        vk::PipelineLayoutCreateInfo pipelineLayoutInfo{ .setLayoutCount = 0, .pushConstantRangeCount = 0 };
+        vk::PipelineLayoutCreateInfo pipelineLayoutInfo{ .setLayoutCount         = 1,
+                                                         .pSetLayouts            = &*_globalDescriptorSetLayout,
+                                                         .pushConstantRangeCount = 0 };
         _pipelineLayout = vk::raii::PipelineLayout{ device.getLogicalDevice(), pipelineLayoutInfo };
 
         const auto format = swapChain.getFormat().format;
@@ -155,6 +180,58 @@ namespace tempest::renderer
         // TODO: Update with custom allocator
         _pipeline = vk::raii::Pipeline(device.getLogicalDevice(), nullptr, graphicsPipelineInfo, nullptr);
 
+        /// ----------------
+        /// Uniform Buffer
+        /// ----------------
+        _globalUniformBuffers.resize(swapChain.getMaxFramesInFlight());
+        _uniformBufferPtr.resize(swapChain.getMaxFramesInFlight());
+        for (size_t i = 0; i < swapChain.getMaxFramesInFlight(); ++i)
+        {
+            _globalUniformBuffers[i] = VulkanBuffer();
+            BufferConfig globalUBOBufferConfig{
+                .size        = sizeof(GlobalUniform),
+                .usageFlags  = vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer,
+                .property    = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+                .sharingMode = vk::SharingMode::eExclusive
+            };
+            _globalUniformBuffers[i].create(vmaAllocator, globalUBOBufferConfig);
+            // The buffer is persistently mapped and stored in a vector.
+            _uniformBufferPtr[i] = _globalUniformBuffers[i].map();
+        }
+
+
+        /// ----------------
+        /// Descriptor Sets
+        /// ----------------
+        Vector globalDescriptorLayouts(makeVector<vk::DescriptorSetLayout>());
+        for (size_t i = 0; i < swapChain.getMaxFramesInFlight(); ++i)
+        {
+            globalDescriptorLayouts.push_back(*_globalDescriptorSetLayout);
+        }
+
+        vk::DescriptorSetAllocateInfo descriptorSetInfo{
+            .descriptorPool     = _globalDescriptorPool,
+            .descriptorSetCount = static_cast<uint32_t>(globalDescriptorLayouts.size()),
+            .pSetLayouts        = globalDescriptorLayouts.data(),
+        };
+
+        _globalDescriptorSets = device.getLogicalDevice().allocateDescriptorSets(descriptorSetInfo);
+
+        // Configure the descriptor buffer
+        for (size_t i = 0; i < swapChain.getMaxFramesInFlight(); ++i)
+        {
+            vk::DescriptorBufferInfo bufferInfo{ .buffer = _globalUniformBuffers[i].buffer(),
+                                                 .offset = 0,
+                                                 .range  = sizeof(GlobalUniform) };
+            vk::WriteDescriptorSet descriptorWrite{ .dstSet          = _globalDescriptorSets[i],
+                                                    .dstBinding      = 0,
+                                                    .dstArrayElement = 0,
+                                                    .descriptorCount = 1,
+                                                    .descriptorType  = vk::DescriptorType::eUniformBuffer,
+                                                    .pBufferInfo     = &bufferInfo };
+            device.getLogicalDevice().updateDescriptorSets(descriptorWrite, {});
+        }
+
         return true;
     }
 
@@ -167,13 +244,31 @@ namespace tempest::renderer
         return static_cast<ShaderIndex>(_shaders.size() - 1);
     }
 
-    void VulkanGraphicsPipeline::bindShader(ShaderIndex index) {}
+    void VulkanGraphicsPipeline::updateGlobalUBO(const size_t frameIndex, const GlobalUniform& ubo) noexcept
+    {
+        // TODO: Update hardcoded values
+        TEMPEST_ASSERT(frameIndex < 3, "[GraphicsPipeline/updateGlobalUBO]: Frame Index out of bounds!");
+        // NOTE: The buffer is already mapped for the lifetime of pipeline
+        memcpy(_uniformBufferPtr[frameIndex], &ubo, sizeof(GlobalUniform));
+    }
 
-    void VulkanGraphicsPipeline::unbindShader(ShaderIndex index) {}
 
     void VulkanGraphicsPipeline::destroy()
     {
-        _pipeline       = nullptr;
+        // Unmap the uniform buffer memory
+        for (const auto& buffer : _globalUniformBuffers)
+        {
+            buffer.unmap();
+        }
+
+        _globalDescriptorSets.clear();
+        _globalUniformBuffers.clear();
+
+        _pipeline = nullptr;
+
+        _globalDescriptorPool      = nullptr;
+        _globalDescriptorSetLayout = nullptr;
+
         _pipelineLayout = nullptr;
         _shaders.clear();
     }

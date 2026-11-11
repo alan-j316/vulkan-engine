@@ -18,24 +18,12 @@
 
 namespace tempest::core
 {
-    // TODO: Swap in with falcon
-    // struct Vec3
-    // {
-    //     float x, y, z;
-    // };
-    //
-    // struct Vec2
-    // {
-    //     float x, y;
-    // };
-
-
     struct Vertex
     {
         flcn::Vec3F position;
         flcn::Vec3F color{ rand() / static_cast<float>(RAND_MAX), rand() / static_cast<float>(RAND_MAX),
                            rand() / static_cast<float>(RAND_MAX) }; // TODO: Remove
-        flcn::CVec2F uv;                                            // TODO: Update all storage types to CVec after library is updated.
+        flcn::CVec2F uv; // TODO: Update all storage types to CVec after library is updated.
     };
 
     struct Geometry

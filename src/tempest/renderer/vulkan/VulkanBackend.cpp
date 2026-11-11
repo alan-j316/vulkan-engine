@@ -70,6 +70,18 @@ namespace tempest::renderer
     static std::vector<const char*> VALIDATION_LAYERS{};
 #endif
 
+
+    // TODO: Temporary REMOVE
+    // NOTE: fov must be in radians
+    static flcn::Mat4F makePersp(float aspect, float fov, float far, float near)
+    {
+        const float s1 = 1 / (std::tan(fov * 0.5f) * aspect);
+        const float s2 = 1 / std::tan(fov * 0.5f);
+        return flcn::Mat4F{
+            s1, 0, 0, 0, 0, -s2, 0, 0, 0, 0, -far / (far - near), -(far * near) / (far - near), 0, 0, -1, 0
+        };
+    }
+
     /// Debug Callback
     static vk::Bool32 debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
                                     vk::DebugUtilsMessageTypeFlagsEXT type,
@@ -233,6 +245,18 @@ namespace tempest::renderer
 
 
         // ------------------------
+        //  VMA
+        // ------------------------
+
+        VmaAllocatorCreateInfo vmaInfo{ .physicalDevice       = *_ctx->device.getPhysicalDevice(),
+                                        .device               = *_ctx->device.getLogicalDevice(),
+                                        .pAllocationCallbacks = *_ctx->allocator,
+                                        .instance             = *_ctx->instance,
+                                        .vulkanApiVersion     = MIN_VULKAN_VERSION };
+        vmaCreateAllocator(&vmaInfo, &_ctx->vma);
+
+
+        // ------------------------
         //  PIPELINES
         // ------------------------
 
@@ -255,20 +279,7 @@ namespace tempest::renderer
             .topology             = vk::PrimitiveTopology::eTriangleList,
 
         };
-        _ctx->graphicsPipeline.create(_ctx->device, _ctx->swapChain, pipelineConfig);
-
-
-
-        // ------------------------
-        //  VMA
-        // ------------------------
-
-        VmaAllocatorCreateInfo vmaInfo{ .physicalDevice       = *_ctx->device.getPhysicalDevice(),
-                                        .device               = *_ctx->device.getLogicalDevice(),
-                                        .pAllocationCallbacks = *_ctx->allocator,
-                                        .instance             = *_ctx->instance,
-                                        .vulkanApiVersion     = MIN_VULKAN_VERSION };
-        vmaCreateAllocator(&vmaInfo, &_ctx->vma);
+        _ctx->graphicsPipeline.create(_ctx->device, _ctx->swapChain, pipelineConfig, _ctx->vma);
 
 
 
@@ -456,8 +467,20 @@ namespace tempest::renderer
                                           vk::Viewport(0.0f, 0.0f, static_cast<float>(_ctx->swapChainExtent.width),
                                                        static_cast<float>(_ctx->swapChainExtent.height), 0.0f, 1.0f));
         _ctx->graphicsCmdPool.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), _ctx->swapChainExtent));
-        _ctx->graphicsCmdPool.drawIndexed(static_cast<uint32_t>(_ctx->activeIndices), 1, 0, 0, 0);
         // _ctx->graphicsCommandPool.draw(bufferHandle, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+        // TODO: TEMP REMOVE
+        auto view = flcn::Mat4F::identity();
+        view(2, 3) = -4;
+        GlobalUniform uniform{ .model = flcn::Mat4F::identity(),
+                               .view  = view,
+                               .proj  = makePersp(1280 / 720, flcn::constants::PI<float> / 4, 0.1f, 10.0f) };
+        // makePersp(1280 / 720, flcn::constants::PI<float> / 4, 0.1f, 1000.0f)
+        _ctx->graphicsPipeline.updateGlobalUBO(_ctx->frameIndex, uniform);
+        // TODO: TEMP REMOVE END
+        _ctx->graphicsCmdPool.bindDescriptorSet(vk::PipelineBindPoint::eGraphics, _ctx->graphicsPipeline.getLayout(), 0,
+                                                _ctx->graphicsPipeline.descriptorSet(_ctx->frameIndex), nullptr);
+
+        _ctx->graphicsCmdPool.drawIndexed(static_cast<uint32_t>(_ctx->activeIndices), 1, 0, 0, 0);
 
         return true;
     }

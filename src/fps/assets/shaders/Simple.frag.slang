@@ -1,6 +1,5 @@
 import Simple_shared;
 
-
 [shader("fragment")]
 float4 fragMain(VertexOutput inVert): SV_Target {
     float3 color = inVert.color;

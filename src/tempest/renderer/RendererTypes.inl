@@ -32,6 +32,17 @@ namespace tempest::renderer
     };
 
 
+    // Global Uniform Object
+    struct GlobalUniform
+    {
+        flcn::Mat4F model;
+        flcn::Mat4F view;
+        flcn::Mat4F proj; // Move to Model/LocalUniform
+        // Padded to 256-bytes to satisfy the guaranteed minUniformBufferOffsetAlignment(which is commonly to be 256)
+        flcn::Mat4F _reserved0;
+    };
+
+
     /// Simple data packet for rendering.
     struct RenderPacket
     {
