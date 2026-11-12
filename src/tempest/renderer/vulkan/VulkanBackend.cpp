@@ -77,17 +77,6 @@ namespace tempest::renderer
 #endif
 
 
-    // TODO: Temporary REMOVE
-    // NOTE: fov must be in radians
-    static flcn::Mat4F makePersp(const float aspect, const float fov, const float far, const float near)
-    {
-        const float s1 = 1 / (std::tan(fov * 0.5f) * aspect);
-        const float s2 = 1 / std::tan(fov * 0.5f);
-        return flcn::Mat4F{ s1, 0, 0,  0, 0, -s2, 0, 0, 0, 0, -far / (far - near), -(far * near) / (far - near),
-                            0,  0, -1, 0 };
-    }
-
-
     /////////////////////////////////////
     /// TODO: TEMPORARY METHODS REMOVE
     /////////////////////////////////////
@@ -544,19 +533,11 @@ namespace tempest::renderer
                                           vk::Viewport(0.0f, 0.0f, static_cast<float>(_ctx->swapChainExtent.width),
                                                        static_cast<float>(_ctx->swapChainExtent.height), 0.0f, 1.0f));
         _ctx->graphicsCmdPool.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), _ctx->swapChainExtent));
-        // _ctx->graphicsCommandPool.draw(bufferHandle, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
-        // TODO: TEMP REMOVE
-        auto view  = flcn::Mat4F::identity();
-        view(2, 3) = -4;
-        GlobalUniform uniform{ .view = view,
-                               .proj = makePersp(1280.0f / 720.0f, flcn::constants::PI<float> / 4, 0.1f, 10.0f) };
-        // makePersp(1280 / 720, flcn::constants::PI<float> / 4, 0.1f, 1000.0f)
-        _ctx->graphicsPipeline.updateGlobalUBO(_ctx->frameIndex, uniform);
-        // TODO: TEMP REMOVE END
-        _ctx->graphicsCmdPool.bindDescriptorSet(vk::PipelineBindPoint::eGraphics, _ctx->graphicsPipeline.descriptorLayout(), 0,
+        _ctx->graphicsCmdPool.bindDescriptorSet(vk::PipelineBindPoint::eGraphics,
+                                                _ctx->graphicsPipeline.descriptorLayout(), 0,
                                                 _ctx->graphicsPipeline.descriptorSet(_ctx->frameIndex), nullptr);
-
         _ctx->graphicsCmdPool.drawIndexed(static_cast<uint32_t>(_ctx->activeIndices), 1, 0, 0, 0);
+        //TODO: Needs to put the binding right here
 
         return true;
     }
@@ -601,7 +582,6 @@ namespace tempest::renderer
                                          .signalSemaphoreCount = 1,
                                          .pSignalSemaphores =
                                              &*_ctx->renderFinishedSemaphore[_ctx->swapChainImageIndex] };
-
         _ctx->device.getGraphicsQueue().submit(submitInfo, _ctx->inFlightFences[_ctx->frameIndex]);
 
         // Present swap chain
@@ -626,6 +606,16 @@ namespace tempest::renderer
         // vertexMemory  = _ctx->vertexBuffer.map(); memcpy(vertexMemory, vertices.data(), vertices.size() *
         // sizeof(core::Vertex)); _ctx->vertexBuffer.unmap(); _ctx->graphicsCommandPool.bindVertexBuffer(bufferHandle,
         // 0, _ctx->vertexBuffer);
+        return true;
+    }
+
+
+    bool VulkanBackend::updateGlobalState(flcn::Mat4F projection, flcn::Mat4F view, flcn::Vec3F viewPosition,
+                                          flcn::Vec4F ambientColor, uint32_t mode) noexcept
+    {
+        const auto cmdBufferHandle = _ctx->graphicsCommandBuffers[_ctx->frameIndex];
+        _ctx->graphicsCmdPool.makeActive(cmdBufferHandle);
+        _ctx->graphicsPipeline.updateGlobalUBO(_ctx->frameIndex, GlobalUniform{ .view = view, .proj = projection });
         return true;
     }
 

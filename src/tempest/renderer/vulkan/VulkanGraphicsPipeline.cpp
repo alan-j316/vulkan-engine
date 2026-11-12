@@ -248,12 +248,12 @@ namespace tempest::renderer
         return static_cast<ShaderIndex>(_shaders.size() - 1);
     }
 
-    void VulkanGraphicsPipeline::updateGlobalUBO(const size_t frameIndex, const GlobalUniform& ubo) const noexcept
+    void VulkanGraphicsPipeline::updateGlobalUBO(const size_t index, const GlobalUniform& ubo) const noexcept
     {
         // TODO: Update hardcoded values
-        TEMPEST_ASSERT(frameIndex < 3, "[GraphicsPipeline/updateGlobalUBO]: Frame Index out of bounds!");
+        TEMPEST_ASSERT(index < MAX_FRAMES_IN_FLIGHT_DEF, "[GraphicsPipeline/updateGlobalUBO]: Frame Index out of bounds!");
         // NOTE: The buffer is already mapped for the lifetime of pipeline
-        memcpy(_pGlobalUniformBuffers[frameIndex], &ubo, sizeof(GlobalUniform));
+        memcpy(_pGlobalUniformBuffers[index], &ubo, sizeof(GlobalUniform));
     }
 
 

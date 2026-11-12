@@ -67,10 +67,10 @@ namespace tempest::renderer
 
         /**
          * Updates the global uniform buffer object for the frame.
-         * @param frameIndex The index of the current rendering frame.
+         * @param index The index of the current rendering frame.
          * @param ubo        The uniform object to update with.
          */
-        void updateGlobalUBO(size_t frameIndex, const GlobalUniform& ubo) const noexcept;
+        void updateGlobalUBO(size_t index, const GlobalUniform& ubo) const noexcept;
 
 
         /**
@@ -96,22 +96,13 @@ namespace tempest::renderer
         vk::raii::PipelineLayout _pipelineLayout{ nullptr };
         vk::raii::Pipeline _pipeline{ nullptr };
         Vector<vk::raii::ShaderModule> _shaders{};
-        // TODO: Temp; requires refactor.
 
-        // Global Uniform
-        // TODO: Update from std::vector to stack-allocated array
-        // std::vector<vk::raii::DescriptorSet> _globalDescriptorSets{};
-        // Vector<VulkanBuffer> _globalUniformBuffers{};
-        // Vector<void*> _uniformBufferPtr{ makeVector<void*>() }; // Used for persistent mapping
 
-        //---------------- GLOBAL UBO --------------------------
-        // TODO: MOVE to global config and assign to max frames in flight.
-        static constexpr size_t DESCRIPTOR_COUNT = 2; // 3 for triple buffering.
-        vk::DescriptorSet _globalDescriptorSets[DESCRIPTOR_COUNT]{ nullptr,
-                                                                   nullptr }; // TODO: REMOVE TOP AND RENAME THIS.
+        // ------------------------ GLOBAL UBO ------------------------
+        vk::DescriptorSet _globalDescriptorSets[MAX_FRAMES_IN_FLIGHT_DEF]{ nullptr, nullptr };
         vk::raii::DescriptorSetLayout _globalDescriptorSetLayout{ nullptr };
         vk::raii::DescriptorPool _globalDescriptorPool{ nullptr };
-        VulkanBuffer _globalUniformBuffers[DESCRIPTOR_COUNT]{};
-        void* _pGlobalUniformBuffers[DESCRIPTOR_COUNT]{ nullptr, nullptr }; // Used for persistent mapping
+        VulkanBuffer _globalUniformBuffers[MAX_FRAMES_IN_FLIGHT_DEF]{};
+        void* _pGlobalUniformBuffers[MAX_FRAMES_IN_FLIGHT_DEF]{ nullptr, nullptr }; // Used for persistent mapping
     };
 } // namespace tempest::renderer

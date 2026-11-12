@@ -10,6 +10,7 @@
 
 #include "RendererFrontend.h"
 
+#include "TempMath.h"
 #include "core/Logger.h"
 #include "core/MemorySubsystem.h"
 #include "core/assets/Asset.h"
@@ -69,6 +70,12 @@ namespace tempest::renderer
         // Proceed with the operation if rendering can be started.
         if (beginFrame(packet.deltaTime))
         {
+            // TODO: TEMP REMOVE
+            auto view      = flcn::Mat4F::identity();
+            view(2, 3)     = -4;
+            const auto proj = tmp::makePersp(1280.0f / 720.0f, flcn::constants::PI<float> / 4, 0.1f, 10.0f);
+            _rendererBackend->updateGlobalState(proj, view, flcn::Vec3F::zero(), flcn::Vec4F::zero(), 0);
+            // TODO: TEMP REMOVE END
             // If the frame can't be ended then the error is fatal and application must be quit.
             if (const auto result = endFrame(packet.deltaTime); !result)
             {
