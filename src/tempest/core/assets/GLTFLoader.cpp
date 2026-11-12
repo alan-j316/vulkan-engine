@@ -64,12 +64,23 @@ namespace tempest::core
                     });
 
                 // -- READ INDICES --
-                auto indexAccessor = std::move(asset->accessors[primitive.indicesAccessor.value()]);
+
+                const auto& indexAccessor = std::move(asset->accessors[primitive.indicesAccessor.value()]);
                 geometry.indices.resize(indexAccessor.count);
                 size_t idx = 0;
-                fastgltf::iterateAccessor<uint32_t>(asset.get(), indexAccessor, [&](const uint32_t index) {
-                    geometry.indices[idx++] = index;
-                });
+                if (indexAccessor.componentType == fastgltf::ComponentType::UnsignedShort)
+                {
+                    fastgltf::iterateAccessor<uint16_t>(asset.get(), indexAccessor, [&](const uint16_t index) {
+                        geometry.indices[idx++] = static_cast<uint32_t>(index);
+                    });
+                }
+                else if (indexAccessor.componentType == fastgltf::ComponentType::UnsignedInt)
+                {
+
+                    fastgltf::iterateAccessor<uint32_t>(asset.get(), indexAccessor, [&](const uint32_t index) {
+                        geometry.indices[idx++] = static_cast<uint32_t>(index);
+                    });
+                }
             }
         }
         return geometry;

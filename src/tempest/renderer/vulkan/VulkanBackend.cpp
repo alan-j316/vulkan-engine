@@ -73,7 +73,7 @@ namespace tempest::renderer
 
     // TODO: Temporary REMOVE
     // NOTE: fov must be in radians
-    static flcn::Mat4F makePersp(float aspect, float fov, float far, float near)
+    static flcn::Mat4F makePersp(const float aspect, const float fov, const float far, const float near)
     {
         const float s1 = 1 / (std::tan(fov * 0.5f) * aspect);
         const float s2 = 1 / std::tan(fov * 0.5f);
@@ -317,9 +317,9 @@ namespace tempest::renderer
         // TODO: END REMOVE
 
 
-        vmaDestroyAllocator(_ctx->vma);
-
         _ctx->graphicsPipeline.destroy();
+
+        vmaDestroyAllocator(_ctx->vma);
 
         // Destroy sync primitives
         _ctx->imageAvailableSemaphores.clear();

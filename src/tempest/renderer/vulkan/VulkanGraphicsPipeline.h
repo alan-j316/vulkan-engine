@@ -70,7 +70,7 @@ namespace tempest::renderer
          * @param frameIndex The index of the current rendering frame.
          * @param ubo        The uniform object to update with.
          */
-        void updateGlobalUBO(size_t frameIndex, const GlobalUniform& ubo) noexcept;
+        void updateGlobalUBO(size_t frameIndex, const GlobalUniform& ubo) const noexcept;
 
 
         /**
