@@ -9,6 +9,7 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
+#include "VulkanBuffer.h"
 #include "renderer/vulkan/VulkanDevice.h"
 #include "renderer/vulkan/VulkanTypes.inl"
 
@@ -27,14 +28,13 @@ namespace tempest::renderer
         // [[nodiscard]] const vk::ImageLayout& getImageLayout() const noexcept { return _layout; }
 
         void transitionImageLayout(vk::ImageLayout newLayout, const VulkanLayoutTransitionConfig& config,
-                                   const vk::raii::CommandBuffer& commandBuffer) noexcept;
+                                   const vk::CommandBuffer& commandBuffer) noexcept;
         static void transitionImageLayout(const vk::Image& image, const VulkanLayoutTransitionConfig& config,
-                                          const vk::raii::CommandBuffer& commandBuffer) noexcept;
-        //
-        // /// Copy data from a staging buffer to this image.
-        // void copyFromBuffer(const Buffer& buffer, const CommandBuffer& commandBuffer,
-        //                     size_t commandBufferIndex = 1) const noexcept;
-        //
+                                          const vk::CommandBuffer& commandBuffer) noexcept;
+
+        /// Copy data from a staging buffer to this image.
+        void copyFromBuffer(const VulkanBuffer& buffer, vk::CommandBuffer cmdBuffer) const noexcept;
+
         // void generateMipmaps(const RenderDevice& device, const CommandBuffer& commandBuffer,
         //                      size_t commandBufferIndex = 0) const noexcept;
 

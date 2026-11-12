@@ -29,6 +29,12 @@
 #include <algorithm>
 #include <iterator>
 
+// TODO: Temporary REMOVE
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+// TODO: Temporary REMOVE END
+
+
 namespace tempest::renderer
 {
     struct VulkanContext
@@ -79,6 +85,33 @@ namespace tempest::renderer
         const float s2 = 1 / std::tan(fov * 0.5f);
         return flcn::Mat4F{ s1, 0, 0,  0, 0, -s2, 0, 0, 0, 0, -far / (far - near), -(far * near) / (far - near),
                             0,  0, -1, 0 };
+    }
+
+
+    /////////////////////////////////////
+    /// TODO: TEMPORARY METHODS REMOVE
+    /////////////////////////////////////
+    struct Texture
+    {
+        stbi_uc* pixels;
+        int32_t width, height, channels;
+        size_t size;
+    };
+
+
+    Texture readTexture()
+    {
+        Texture texture;
+        texture.pixels = stbi_load("assets/textures/viking_room.png", &texture.width, &texture.height,
+                                   &texture.channels, STBI_rgb_alpha);
+        texture.size   = texture.width * texture.height * 4;
+
+        if (texture.pixels == nullptr)
+        {
+            log::error("There was an error loading the image");
+        }
+        // NOT VERY GOOD ERROR HANDLING
+        return texture;
     }
     // TODO: Temporary REMOVE END
 
@@ -299,6 +332,54 @@ namespace tempest::renderer
             .sharingMode = vk::SharingMode::eExclusive,
         };
         _ctx->indexBuffer.create(_ctx->vma, indexConfig);
+
+        //// TEXTURE PROCESSING
+        // const auto texture = readTexture();
+        // VulkanBuffer texBuffer{};
+        // const BufferConfig textureConfig{ .size       = texture.size,
+        //                                   .usageFlags = vk::BufferUsageFlagBits::eTransferSrc,
+        //                                   .property   = vk::MemoryPropertyFlagBits::eHostVisible |
+        //                                       vk::MemoryPropertyFlagBits::eHostCoherent,
+        //                                   .sharingMode = vk::SharingMode::eExclusive };
+        // texBuffer.create(_ctx->vma, textureConfig);
+        // void* data = texBuffer.map();
+        // memcpy(data, texture.pixels, texture.size);
+        // texBuffer.unmap();
+        // stbi_image_free(texture.pixels);
+
+        // VulkanImageCreateInfo textureImgInfo{
+        //     .imageType = vk::ImageType::e2D,
+        //     .width     = static_cast<uint32_t>(texture.width),
+        //     .height    = static_cast<uint32_t>(texture.height),
+        //     .format    = vk::Format::eR8G8B8A8Srgb,
+        //     // TODO: Update property flags
+        //     .usage       = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
+        //     .properties  = vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible,
+        //     .aspectFlags = vk::ImageAspectFlagBits::eColor,
+        //     .tiling      = vk::ImageTiling::eOptimal,
+        //     .createView  = true,
+        //     .mipLevels   = 1,
+        //     .numSamples  = vk::SampleCountFlagBits::e1
+        // };
+        // VulkanImage textureImg{};
+        // textureImg.create(_ctx->device, textureImgInfo);
+        // // Transition layout for rendering
+        // const auto textureCmdId = _ctx->graphicsCmdPool.allocateAndStartSingleTimeRecording(_ctx->device);
+        // _ctx->graphicsCmdPool.makeActive(textureCmdId);
+        // VulkanLayoutTransitionConfig transitionConfig{ .srcAccessMask = {},
+        //                                                .srcStageMask  = vk::PipelineStageFlagBits2::eTopOfPipe,
+        //                                                .dstAccessMask = vk::AccessFlagBits2::eTransferWrite,
+        //                                                .dstStageMask  = vk::PipelineStageFlagBits2::eTransfer,
+        //                                                .oldLayout     = vk::ImageLayout::eUndefined,
+        //                                                .newLayout     = vk::ImageLayout::eTransferDstOptimal,
+        //                                                .aspectFlag    = vk::ImageAspectFlagBits::eColor };
+        // textureImg.transitionImageLayout(vk::ImageLayout::eTransferDstOptimal,transitionConfig,
+        // _ctx->graphicsCmdPool.get(textureCmdId));
+
+        // TODO:
+        // _ctx->graphicsCmdPool.endRecording();/
+
+        // texBuffer.destroy();
         /// TODO: TEMP REMOVE
 
         log::info("Vulkan Renderer Initialized");
@@ -467,13 +548,12 @@ namespace tempest::renderer
         // TODO: TEMP REMOVE
         auto view  = flcn::Mat4F::identity();
         view(2, 3) = -4;
-        GlobalUniform uniform{ .model = flcn::Mat4F::identity(),
-                               .view  = view,
-                               .proj  = makePersp(1280.0f / 720.0f, flcn::constants::PI<float> / 4, 0.1f, 10.0f) };
+        GlobalUniform uniform{ .view = view,
+                               .proj = makePersp(1280.0f / 720.0f, flcn::constants::PI<float> / 4, 0.1f, 10.0f) };
         // makePersp(1280 / 720, flcn::constants::PI<float> / 4, 0.1f, 1000.0f)
         _ctx->graphicsPipeline.updateGlobalUBO(_ctx->frameIndex, uniform);
         // TODO: TEMP REMOVE END
-        _ctx->graphicsCmdPool.bindDescriptorSet(vk::PipelineBindPoint::eGraphics, _ctx->graphicsPipeline.getLayout(), 0,
+        _ctx->graphicsCmdPool.bindDescriptorSet(vk::PipelineBindPoint::eGraphics, _ctx->graphicsPipeline.descriptorLayout(), 0,
                                                 _ctx->graphicsPipeline.descriptorSet(_ctx->frameIndex), nullptr);
 
         _ctx->graphicsCmdPool.drawIndexed(static_cast<uint32_t>(_ctx->activeIndices), 1, 0, 0, 0);
@@ -628,7 +708,7 @@ namespace tempest::renderer
     /// TODO: Temporary buffer handle pass (REMOVE after making active buffer in place).
     void VulkanBackend::update() noexcept
     {
-        const auto bufferHandle = _ctx->graphicsCommandBuffers[_ctx->frameIndex];
+        // const auto bufferHandle = _ctx->graphicsCommandBuffers[_ctx->frameIndex];
 
         RenderUploadEvent event{};
         while (_rendererEventQueue->poll(event))

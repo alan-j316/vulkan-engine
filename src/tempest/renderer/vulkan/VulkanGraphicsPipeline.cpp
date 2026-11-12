@@ -183,8 +183,6 @@ namespace tempest::renderer
         /// ----------------
         /// Uniform Buffer
         /// ----------------
-        _globalUniformBuffers.resize(swapChain.getMaxFramesInFlight());
-        _uniformBufferPtr.resize(swapChain.getMaxFramesInFlight());
         for (size_t i = 0; i < swapChain.getMaxFramesInFlight(); ++i)
         {
             _globalUniformBuffers[i] = VulkanBuffer();
@@ -196,7 +194,7 @@ namespace tempest::renderer
             };
             _globalUniformBuffers[i].create(vmaAllocator, globalUBOBufferConfig);
             // The buffer is persistently mapped and stored in a vector.
-            _uniformBufferPtr[i] = _globalUniformBuffers[i].map();
+            _pGlobalUniformBuffers[i] = _globalUniformBuffers[i].map();
         }
 
 
@@ -215,7 +213,13 @@ namespace tempest::renderer
             .pSetLayouts        = globalDescriptorLayouts.data(),
         };
 
-        _globalDescriptorSets = device.getLogicalDevice().allocateDescriptorSets(descriptorSetInfo);
+        const auto descriptorSetResult =
+            (*device.getLogicalDevice()).allocateDescriptorSets(&descriptorSetInfo, _globalDescriptorSets);
+        if (descriptorSetResult != vk::Result::eSuccess)
+        {
+            log::error("There was an error allocating the descriptor sets.");
+            return false;
+        }
 
         // Configure the descriptor buffer
         for (size_t i = 0; i < swapChain.getMaxFramesInFlight(); ++i)
@@ -249,7 +253,7 @@ namespace tempest::renderer
         // TODO: Update hardcoded values
         TEMPEST_ASSERT(frameIndex < 3, "[GraphicsPipeline/updateGlobalUBO]: Frame Index out of bounds!");
         // NOTE: The buffer is already mapped for the lifetime of pipeline
-        memcpy(_uniformBufferPtr[frameIndex], &ubo, sizeof(GlobalUniform));
+        memcpy(_pGlobalUniformBuffers[frameIndex], &ubo, sizeof(GlobalUniform));
     }
 
 
@@ -261,9 +265,8 @@ namespace tempest::renderer
             buffer.unmap();
             buffer.destroy();
         }
-
-        _globalDescriptorSets.clear();
-        _globalUniformBuffers.clear();
+        //
+        // _globalDescriptorSets.clear();
 
         _pipeline = nullptr;
 

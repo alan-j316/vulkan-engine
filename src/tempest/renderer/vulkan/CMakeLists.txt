@@ -45,6 +45,10 @@ target_link_libraries(
         Vulkan::Hpp
         VulkanMemoryAllocator::Headers
         Tempest::Internal::Renderer::Events
+        # TODO: TEMP REMOVE
+        std::stb
+        #TODO: END TEMP
+
         PUBLIC
         Tempest::Internal::Core
 )

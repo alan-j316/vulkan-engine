@@ -162,7 +162,7 @@ namespace tempest::renderer
 
 
     void VulkanImage::transitionImageLayout(const vk::ImageLayout newLayout, const VulkanLayoutTransitionConfig& config,
-                                            const vk::raii::CommandBuffer& commandBuffer) noexcept
+                                            const vk::CommandBuffer& commandBuffer) noexcept
     {
         transitionImageLayout(_image, config, commandBuffer);
         _layout = newLayout;
@@ -170,7 +170,7 @@ namespace tempest::renderer
 
 
     void VulkanImage::transitionImageLayout(const vk::Image& image, const VulkanLayoutTransitionConfig& config,
-                                            const vk::raii::CommandBuffer& commandBuffer) noexcept
+                                            const vk::CommandBuffer& commandBuffer) noexcept
     {
         vk::ImageMemoryBarrier2 barrier{ .srcStageMask        = config.srcStageMask,
                                          .srcAccessMask       = config.srcAccessMask,
@@ -192,6 +192,23 @@ namespace tempest::renderer
                                                  .pImageMemoryBarriers    = &barrier };
 
         commandBuffer.pipelineBarrier2(dependencyInfo);
+    }
+    void VulkanImage::copyFromBuffer(const VulkanBuffer& buffer, vk::CommandBuffer cmdBuffer) const noexcept
+    {
+        // We need to specify which part of the buffer will be copied to which part of the image.
+        const vk::BufferImageCopy region{ .bufferOffset = 0,
+                                          // Specify that our image is tightly packed
+                                          .bufferRowLength   = 0,
+                                          .bufferImageHeight = 0,
+                                          .imageSubresource  = { .aspectMask     = vk::ImageAspectFlagBits::eColor,
+                                                                 .mipLevel       = 0,
+                                                                 .baseArrayLayer = 0,
+                                                                 .layerCount     = 1 },
+                                          .imageOffset       = { .x = 0, .y = 0, .z = 0 },
+                                          .imageExtent       = { .width = _width, .height = _height, .depth = 1 } };
+        // Layout indicate the layout the image is currently using.
+        // Copy to many images from the buffer is possible.
+        cmdBuffer.copyBufferToImage(buffer.buffer(), _image, vk::ImageLayout::eTransferDstOptimal, region);
     }
 
 

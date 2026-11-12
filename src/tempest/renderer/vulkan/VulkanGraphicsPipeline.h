@@ -86,10 +86,10 @@ namespace tempest::renderer
 
         /// Get the global descriptor set for the current @p frameIndex.
         [[nodiscard]] vk::DescriptorSet descriptorSet(const uint32_t frameIndex) const noexcept
-        { return *_globalDescriptorSets[frameIndex]; }
+        { return _globalDescriptorSets[frameIndex]; }
 
         /// Get the vulkan pipeline layout.
-        [[nodiscard]] vk::PipelineLayout getLayout() const noexcept { return *_pipelineLayout; }
+        [[nodiscard]] vk::PipelineLayout descriptorLayout() const noexcept { return *_pipelineLayout; }
 
 
     private:
@@ -99,11 +99,19 @@ namespace tempest::renderer
         // TODO: Temp; requires refactor.
 
         // Global Uniform
-        vk::raii::DescriptorPool _globalDescriptorPool{ nullptr };
         // TODO: Update from std::vector to stack-allocated array
-        std::vector<vk::raii::DescriptorSet> _globalDescriptorSets{}; // 3 for triple buffering.
+        // std::vector<vk::raii::DescriptorSet> _globalDescriptorSets{};
+        // Vector<VulkanBuffer> _globalUniformBuffers{};
+        // Vector<void*> _uniformBufferPtr{ makeVector<void*>() }; // Used for persistent mapping
+
+        //---------------- GLOBAL UBO --------------------------
+        // TODO: MOVE to global config and assign to max frames in flight.
+        static constexpr size_t DESCRIPTOR_COUNT = 2; // 3 for triple buffering.
+        vk::DescriptorSet _globalDescriptorSets[DESCRIPTOR_COUNT]{ nullptr,
+                                                                   nullptr }; // TODO: REMOVE TOP AND RENAME THIS.
         vk::raii::DescriptorSetLayout _globalDescriptorSetLayout{ nullptr };
-        Vector<VulkanBuffer> _globalUniformBuffers{};
-        Vector<void*> _uniformBufferPtr{ makeVector<void*>() }; // Used for persistent mapping
+        vk::raii::DescriptorPool _globalDescriptorPool{ nullptr };
+        VulkanBuffer _globalUniformBuffers[DESCRIPTOR_COUNT]{};
+        void* _pGlobalUniformBuffers[DESCRIPTOR_COUNT]{ nullptr, nullptr }; // Used for persistent mapping
     };
 } // namespace tempest::renderer
