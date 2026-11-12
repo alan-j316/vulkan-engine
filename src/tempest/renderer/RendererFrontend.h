@@ -24,7 +24,7 @@ namespace tempest::renderer
         bool init(RendererType type, std::string_view applicationName, platform::PlatformState* platformState,
                   RendererEventQueue* rendererEventQueue) noexcept;
         void shutdown() noexcept;
-        void onResize(uint32_t width, uint32_t height) const noexcept;
+        void onResize(uint32_t width, uint32_t height) noexcept;
         bool drawFrame(const RenderPacket& packet) const noexcept;
 
         //// TEMPORARY EXPOSED
@@ -37,6 +37,8 @@ namespace tempest::renderer
     private:
         class RendererBackend* _rendererBackend{};
         RendererType _activeBackend{ RendererType::INVALID_BACKEND };
+        flcn::Mat4F _projection{};
+        float _farClip{ 0.01f }, _nearClip{ 10.0f };
     };
 
 } // namespace tempest::renderer

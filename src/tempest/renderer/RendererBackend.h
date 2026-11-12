@@ -28,6 +28,11 @@ namespace tempest::renderer
         /// Update the renderer's global state.
         virtual bool updateGlobalState(flcn::Mat4F projection, flcn::Mat4F view, flcn::Vec3F viewPosition,
                                        flcn::Vec4F ambientColor, uint32_t mode) noexcept = 0;
+        /// Update the object state.
+        /// @param model The model matrix.
+        virtual bool updateObjectState(const flcn::Mat4F& model) noexcept = 0;
+
+
         constexpr void incrementFrameNumber() noexcept { ++_frameNumber; }
         constexpr size_t getFrameNumber() const noexcept { return _frameNumber; }
 

@@ -536,8 +536,7 @@ namespace tempest::renderer
         _ctx->graphicsCmdPool.bindDescriptorSet(vk::PipelineBindPoint::eGraphics,
                                                 _ctx->graphicsPipeline.descriptorLayout(), 0,
                                                 _ctx->graphicsPipeline.descriptorSet(_ctx->frameIndex), nullptr);
-        _ctx->graphicsCmdPool.drawIndexed(static_cast<uint32_t>(_ctx->activeIndices), 1, 0, 0, 0);
-        //TODO: Needs to put the binding right here
+        // TODO: Needs to put the binding right here
 
         return true;
     }
@@ -616,6 +615,19 @@ namespace tempest::renderer
         const auto cmdBufferHandle = _ctx->graphicsCommandBuffers[_ctx->frameIndex];
         _ctx->graphicsCmdPool.makeActive(cmdBufferHandle);
         _ctx->graphicsPipeline.updateGlobalUBO(_ctx->frameIndex, GlobalUniform{ .view = view, .proj = projection });
+        return true;
+    }
+
+
+    bool VulkanBackend::updateObjectState(const flcn::Mat4F& model) noexcept
+    {
+        const auto cmdBufferHandle = _ctx->graphicsCommandBuffers[_ctx->frameIndex];
+        const auto cmdBuffer       = _ctx->graphicsCmdPool.get(cmdBufferHandle);
+        const ModelUniform modelUniform{ .model = model };
+        _ctx->graphicsPipeline.updateObjectUBO(cmdBuffer, modelUniform);
+        // TODO: TEMP REMOVE
+        _ctx->graphicsCmdPool.drawIndexed(static_cast<uint32_t>(_ctx->activeIndices), 1, 0, 0, 0);
+        // TODO: TEMP REMOVE END
         return true;
     }
 

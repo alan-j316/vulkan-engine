@@ -72,6 +72,12 @@ namespace tempest::renderer
          */
         void updateGlobalUBO(size_t index, const GlobalUniform& ubo) const noexcept;
 
+        /**
+         * Update the model uniform buffer.
+         * @param model The model matrix of MVP.
+         */
+        void updateObjectUBO(vk::CommandBuffer cmdBuffer, const ModelUniform& model) const noexcept;
+
 
         /**
          * Destroy the render pipeline.
@@ -104,5 +110,7 @@ namespace tempest::renderer
         vk::raii::DescriptorPool _globalDescriptorPool{ nullptr };
         VulkanBuffer _globalUniformBuffers[MAX_FRAMES_IN_FLIGHT_DEF]{};
         void* _pGlobalUniformBuffers[MAX_FRAMES_IN_FLIGHT_DEF]{ nullptr, nullptr }; // Used for persistent mapping
+
+        // ------------------------ MODEL UBO ------------------------
     };
 } // namespace tempest::renderer

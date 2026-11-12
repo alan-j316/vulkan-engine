@@ -42,6 +42,11 @@ namespace tempest::renderer
         flcn::Mat4F _reserved1;
     };
 
+    struct ModelUniform
+    {
+        flcn::Mat4F model;
+    };
+
 
     /// Simple data packet for rendering.
     struct RenderPacket

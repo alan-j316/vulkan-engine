@@ -184,5 +184,5 @@ namespace tempest::core
         return true;
     }
 
-    void Application::onResize(const uint32_t w, const uint32_t h) const { _renderer.onResize(w, h); }
+    void Application::onResize(const uint32_t w, const uint32_t h) { _renderer.onResize(w, h); }
 } // namespace tempest::core

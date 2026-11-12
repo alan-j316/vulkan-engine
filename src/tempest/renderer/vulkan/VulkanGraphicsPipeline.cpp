@@ -150,9 +150,14 @@ namespace tempest::renderer
         /// ----------------
         /// Pipeline
         /// ----------------
+        /// Push constants
+        vk::PushConstantRange pushConstantRange{ .stageFlags = vk::ShaderStageFlagBits::eVertex,
+                                                 .offset     = 0,
+                                                 .size       = sizeof(ModelUniform) };
         vk::PipelineLayoutCreateInfo pipelineLayoutInfo{ .setLayoutCount         = 1,
                                                          .pSetLayouts            = &*_globalDescriptorSetLayout,
-                                                         .pushConstantRangeCount = 0 };
+                                                         .pushConstantRangeCount = 1,
+                                                         .pPushConstantRanges    = &pushConstantRange };
         _pipelineLayout = vk::raii::PipelineLayout{ device.getLogicalDevice(), pipelineLayoutInfo };
 
         const auto format = swapChain.getFormat().format;
@@ -250,11 +255,16 @@ namespace tempest::renderer
 
     void VulkanGraphicsPipeline::updateGlobalUBO(const size_t index, const GlobalUniform& ubo) const noexcept
     {
-        // TODO: Update hardcoded values
-        TEMPEST_ASSERT(index < MAX_FRAMES_IN_FLIGHT_DEF, "[GraphicsPipeline/updateGlobalUBO]: Frame Index out of bounds!");
+        TEMPEST_ASSERT(index < MAX_FRAMES_IN_FLIGHT_DEF,
+                       "[GraphicsPipeline/updateGlobalUBO]: Frame Index out of bounds!");
         // NOTE: The buffer is already mapped for the lifetime of pipeline
         memcpy(_pGlobalUniformBuffers[index], &ubo, sizeof(GlobalUniform));
     }
+
+
+    void VulkanGraphicsPipeline::updateObjectUBO(const vk::CommandBuffer cmdBuffer,
+                                                 const ModelUniform& model) const noexcept
+    { cmdBuffer.pushConstants(_pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(ModelUniform), &model); }
 
 
     void VulkanGraphicsPipeline::destroy()
@@ -265,8 +275,6 @@ namespace tempest::renderer
             buffer.unmap();
             buffer.destroy();
         }
-        //
-        // _globalDescriptorSets.clear();
 
         _pipeline = nullptr;
 

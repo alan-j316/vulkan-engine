@@ -39,7 +39,7 @@ namespace tempest
             Application() noexcept;
             bool create() noexcept;
             bool run() noexcept;
-            void onResize(uint32_t w, uint32_t h) const;
+            void onResize(uint32_t w, uint32_t h);
 
         private:
             bool _isRunning{};

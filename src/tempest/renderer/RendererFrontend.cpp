@@ -41,6 +41,8 @@ namespace tempest::renderer
             return false;
         }
 
+        _projection = tmp::makePersp(1280.0f / 720.0f, flcn::constants::PI<float> / 4, _farClip, _nearClip);
+
         return true;
     }
 
@@ -61,9 +63,12 @@ namespace tempest::renderer
     }
 
 
-    void RendererFrontend::onResize(const uint32_t width, const uint32_t height) const noexcept
-    { _rendererBackend->onResize(width, height); }
-
+    void RendererFrontend::onResize(const uint32_t width, const uint32_t height) noexcept
+    {
+        _projection = tmp::makePersp(static_cast<float>(width) / static_cast<float>(height),
+                                     flcn::constants::PI<float> / 4, _farClip, _nearClip);
+        _rendererBackend->onResize(width, height);
+    }
 
     bool RendererFrontend::drawFrame(const RenderPacket& packet) const noexcept
     {
@@ -71,10 +76,11 @@ namespace tempest::renderer
         if (beginFrame(packet.deltaTime))
         {
             // TODO: TEMP REMOVE
-            auto view      = flcn::Mat4F::identity();
-            view(2, 3)     = -4;
-            const auto proj = tmp::makePersp(1280.0f / 720.0f, flcn::constants::PI<float> / 4, 0.1f, 10.0f);
-            _rendererBackend->updateGlobalState(proj, view, flcn::Vec3F::zero(), flcn::Vec4F::zero(), 0);
+            flcn::Mat4F model = flcn::Mat4F::makeRotationX(-flcn::constants::PI<float> / 2);
+            _rendererBackend->updateObjectState(model);
+            auto view  = flcn::Mat4F::identity();
+            view(2, 3) = -3;
+            _rendererBackend->updateGlobalState(_projection, view, flcn::Vec3F::zero(), flcn::Vec4F::zero(), 0);
             // TODO: TEMP REMOVE END
             // If the frame can't be ended then the error is fatal and application must be quit.
             if (const auto result = endFrame(packet.deltaTime); !result)
