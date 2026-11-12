@@ -49,7 +49,8 @@ namespace tempest::renderer
         constexpr QueueConfig queueConfig{ .enableGraphicsQueue         = true,
                                            .enableSeparateTransferQueue = false,
                                            .enableComputeQueue          = false };
-        if (!_device.init(_context.getRequiredExtensions(), queueConfig, MIN_GRAPHICS_API_VERSION))
+        const std::vector requiredDeviceExtensions{ SWAP_CHAIN_EXTENSION };
+        if (!_device.init(requiredDeviceExtensions, queueConfig, MIN_GRAPHICS_API_VERSION))
         {
             log::error("There was an error initializing the graphics devices.");
             return false;

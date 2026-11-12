@@ -8,15 +8,14 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
-#include "Image.h"
-
 #include "../utils/Logger.h"
 #include "Buffer.h"
 #include "CommandBuffer.h"
+#include "VulkanImage.h"
 
 namespace tempest::renderer
 {
-    bool Image::create(const RenderDevice& device, const uint32_t width, const uint32_t height, const vk::Format format,
+    bool VulkanImage::create(const RenderDevice& device, const uint32_t width, const uint32_t height, const vk::Format format,
                        const vk::ImageTiling tiling, const vk::ImageUsageFlags usage,
                        const vk::MemoryPropertyFlags properties, const uint32_t mipLevels,
                        const vk::SampleCountFlagBits numSamples, const vk::ImageAspectFlags aspectFlags) noexcept
@@ -39,7 +38,7 @@ namespace tempest::renderer
     }
 
 
-    void Image::transitionImageLayout(const vk::ImageLayout newLayout, const CommandBuffer& commandBuffer,
+    void VulkanImage::transitionImageLayout(const vk::ImageLayout newLayout, const CommandBuffer& commandBuffer,
                                       const size_t commandBufferIndex) const noexcept
     {
         // To transition an image layout, we need to create a pipeline barrier
@@ -87,7 +86,7 @@ namespace tempest::renderer
     }
 
 
-    void Image::copyFromBuffer(const Buffer& buffer, const CommandBuffer& commandBuffer,
+    void VulkanImage::copyFromBuffer(const Buffer& buffer, const CommandBuffer& commandBuffer,
                                const size_t commandBufferIndex) const noexcept
     {
         {
@@ -110,7 +109,7 @@ namespace tempest::renderer
     }
 
 
-    void Image::generateMipmaps(const RenderDevice& device, const CommandBuffer& commandBuffer,
+    void VulkanImage::generateMipmaps(const RenderDevice& device, const CommandBuffer& commandBuffer,
                                 const size_t commandBufferIndex) const noexcept
     {
         // Check for bit image platform support
@@ -181,7 +180,7 @@ namespace tempest::renderer
 
 
 
-    bool Image::createImage(const RenderDevice& device) noexcept
+    bool VulkanImage::createImage(const RenderDevice& device) noexcept
     {
         const vk::ImageCreateInfo imageInfo{ .imageType   = vk::ImageType::e2D,
                                              .format      = _format,
@@ -193,7 +192,7 @@ namespace tempest::renderer
                                              .usage       = _usageFlags,
                                              .sharingMode = vk::SharingMode::eExclusive };
 
-        _image = vk::raii::Image(device.getBaseDevice(), imageInfo);
+        _image = vk::raii::VulkanImage(device.getBaseDevice(), imageInfo);
 
         const vk::MemoryRequirements memRequirements = _image.getMemoryRequirements();
         const vk::MemoryAllocateInfo allocInfo{ .allocationSize  = memRequirements.size,
@@ -205,7 +204,7 @@ namespace tempest::renderer
     }
 
 
-    bool Image::createImageView(const RenderDevice& device, const vk::ImageAspectFlags aspectFlags) noexcept
+    bool VulkanImage::createImageView(const RenderDevice& device, const vk::ImageAspectFlags aspectFlags) noexcept
     {
         const vk::ImageViewCreateInfo viewInfo{ .image            = _image,
                                                 .viewType         = vk::ImageViewType::e2D,

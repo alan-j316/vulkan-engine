@@ -8,30 +8,30 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
-#include "CommandBuffer.h"
+#include "VulkanCommandBuffer.h"
 
 
 namespace tempest::renderer
 {
 
-    CommandBuffer::CommandBuffer(const RenderDevice& device, RenderQueue& queue, const size_t count) noexcept
+    VulkanCommandBuffer::VulkanCommandBuffer(const RenderDevice& device, RenderQueue& queue, const size_t count) noexcept
         : _count{ count }, _device{ device }, _queue{ queue }
     {
         createCommandPool();
         createCommandBuffers();
     }
 
-    void CommandBuffer::startRecording(const uint32_t index) const noexcept { _commandBuffers[index].begin({}); }
+    void VulkanCommandBuffer::startRecording(const uint32_t index) const noexcept { _commandBuffers[index].begin({}); }
 
-    void CommandBuffer::endRecording(const uint32_t index) const noexcept { _commandBuffers[index].end(); }
+    void VulkanCommandBuffer::endRecording(const uint32_t index) const noexcept { _commandBuffers[index].end(); }
 
-    void CommandBuffer::beginSingleTimeRecording(const uint32_t index) const noexcept
+    void VulkanCommandBuffer::beginSingleTimeRecording(const uint32_t index) const noexcept
     {
         constexpr vk::CommandBufferBeginInfo beginInfo{ .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit };
         _commandBuffers[index].begin(beginInfo);
     }
 
-    void CommandBuffer::endSingleTimeRecordingAndSubmit(const uint32_t index) const noexcept
+    void VulkanCommandBuffer::endSingleTimeRecordingAndSubmit(const uint32_t index) const noexcept
     {
         // End the command buffer
         _commandBuffers[index].end();
@@ -43,7 +43,7 @@ namespace tempest::renderer
     }
 
 
-    void CommandBuffer::createCommandPool() noexcept
+    void VulkanCommandBuffer::createCommandPool() noexcept
     {
         // For allocation command buffer we need a command pool first
         const vk::CommandPoolCreateInfo commandPoolCreateInfo{
@@ -58,7 +58,7 @@ namespace tempest::renderer
         _commandPool = vk::raii::CommandPool(_device.getBaseDevice(), commandPoolCreateInfo);
     }
 
-    void CommandBuffer::createCommandBuffers() noexcept
+    void VulkanCommandBuffer::createCommandBuffers() noexcept
     {
         const vk::CommandBufferAllocateInfo commandBufferInfo{
             .commandPool = _commandPool,

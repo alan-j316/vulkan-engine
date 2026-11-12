@@ -25,6 +25,7 @@ namespace tempest::platform
 
 namespace tempest::renderer
 {
+    using namespace std::string_literals;
     class TempestRenderer
     {
     public:
@@ -58,13 +59,13 @@ namespace tempest::renderer
         SwapChain _swapChain;
         Buffer _vertexBuffer, _indexBuffer;
         std::vector<Buffer> _uniformBuffers;
-        Image _colorImage, _depthImage;
+        VulkanImage _colorImage, _depthImage;
 
         std::string _appName, _engineName;
         uint32_t _appVersion, _engineVersion;
 
-
         static constexpr auto MIN_GRAPHICS_API_VERSION = VK_API_VERSION_1_3;
         static constexpr auto MAX_FRAMES_IN_FLIGHT     = 2;
+        static constexpr auto SWAP_CHAIN_EXTENSION     = "VK_KHR_swapchain";
     };
 } // namespace tempest::renderer

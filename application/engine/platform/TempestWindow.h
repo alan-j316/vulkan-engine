@@ -33,7 +33,7 @@ namespace tempest::platform
 
         TempestWindow& operator=(TempestWindow&& other) noexcept;
 
-        [[nodiscard]] constexpr SDL_Window* getCoreWindow() const noexcept;
+        [[nodiscard]] SDL_Window* getCoreWindow() const noexcept;
         [[nodiscard]] constexpr size_t getWidth() const noexcept { return _width; }
         [[nodiscard]] constexpr size_t getHeight() const noexcept { return _height; }
         [[nodiscard]] constexpr std::string_view getWindowName() const noexcept { return _name; }
@@ -48,7 +48,4 @@ namespace tempest::platform
         size_t _width, _height;
         std::string _name;
     };
-
-
-    constexpr SDL_Window* TempestWindow::getCoreWindow() const noexcept { return _window; }
 } // namespace tempest::platform

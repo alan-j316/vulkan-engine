@@ -24,21 +24,19 @@ FetchContent_Declare(
         SYSTEM
 )
 
+FetchContent_Declare(
+        Falcon
+        GIT_REPOSITORY https://github.com/alan-j316/falcon-game-math.git
+        GIT_TAG 31f71c916be699922e462ccf2f144ca0a9d27148
+        SYSTEM
+)
 
-# TinyObjLoader gives error with compatability
+# TinyObjLoader gives error with compatibility
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Minimum policy version" FORCE)
 FetchContent_Declare(
         tinyobj
         GIT_REPOSITORY https://github.com/tinyobjloader/tinyobjloader.git
         GIT_TAG v1.0.6
-        SYSTEM
-)
-
-# TODO: Replace glm with our falcon math library
-FetchContent_Declare(
-        glm
-        GIT_REPOSITORY https://github.com/icaven/glm.git
-        GIT_TAG dca38025fba63bb9284023e6de55f756b9e37cec
         SYSTEM
 )
 
@@ -75,6 +73,18 @@ FetchContent_Declare(
         GIT_PROGRESS TRUE
 )
 
+#-------------------------------------------------------------------------
+# Fetch Vulkan Memory Allocator(VMA) Headers
+#-------------------------------------------------------------------------
+message(STATUS "Download and including VMA")
+FetchContent_Declare(
+        VulkanMemoryAllocator
+        GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+        GIT_TAG v3.5.0
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
 #------------------------------------------------------------------------
 # Fetch STB Headers
 #------------------------------------------------------------------------
@@ -82,7 +92,19 @@ message(STATUS "Include STB Headers")
 FetchContent_Declare(
         stb
         GIT_REPOSITORY https://github.com/nothings/stb.git
-        GIT_TAG 2c980bb59875b0d32144a71867fbdebb2f77cd20
+        GIT_TAG master
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+)
+
+#-------------------------------------------------------------------------
+# Fetch FastGLTF Headers
+#-------------------------------------------------------------------------
+message(STATUS "Download and including FastGLTF")
+FetchContent_Declare(
+        FastGLTF
+        GIT_REPOSITORY https://github.com/spnda/fastgltf.git
+        GIT_TAG v1.0.0
         GIT_SHALLOW TRUE
         GIT_PROGRESS TRUE
 )
@@ -100,13 +122,15 @@ FetchContent_Declare(
 # FetchContent_GetProperties(VulkanHPP)
 # FetchContent_Populate(VulkanHPP)
 FetchContent_MakeAvailable(VulkanHPP)
+FetchContent_MakeAvailable(VulkanMemoryAllocator)
+FetchContent_MakeAvailable(FastGLTF)
+FetchContent_MakeAvailable(Falcon)
 
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE) # Disables google benchmark from creating its own test suite
 
 FetchContent_MakeAvailable(googletest)
 FetchContent_MakeAvailable(googlebenchmark)
 FetchContent_MakeAvailable(sdl3)
-FetchContent_MakeAvailable(glm)
 FetchContent_MakeAvailable(stb)
 FetchContent_MakeAvailable(tinyobj)
 FetchContent_MakeAvailable(quill)

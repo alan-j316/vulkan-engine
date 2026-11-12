@@ -16,10 +16,10 @@
 // TODO: Update command buffer to be singular
 namespace tempest::renderer
 {
-    class CommandBuffer
+    class VulkanCommandBuffer
     {
     public:
-        CommandBuffer(const RenderDevice& device, RenderQueue& queue, size_t count) noexcept;
+        VulkanCommandBuffer(const RenderDevice& device, RenderQueue& queue, size_t count) noexcept;
         void startRecording(uint32_t index) const noexcept;
         void endRecording(uint32_t index) const noexcept;
 

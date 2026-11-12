@@ -226,6 +226,7 @@ namespace tempest::renderer
                 { .synchronization2 = true, .dynamicRendering = true },                   // Vulkan 1.3 features
                 { .extendedDynamicState = true }                                          // Dynamic state
             };
+        const auto ext = _physicalDevice.enumerateDeviceExtensionProperties();
         vk::DeviceCreateInfo deviceCreateInfo{ .pNext                = &featureChain.get<vk::PhysicalDeviceFeatures2>(),
                                                .queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size()),
                                                .pQueueCreateInfos    = queueCreateInfos.data(),
@@ -234,6 +235,7 @@ namespace tempest::renderer
                                                .ppEnabledExtensionNames = requiredExtensions.data() };
 
         _device = vk::raii::Device(_physicalDevice, deviceCreateInfo);
+
 
         if (_device == nullptr)
             return false;

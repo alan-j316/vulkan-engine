@@ -11,10 +11,10 @@
 
 #define VULKAN_HPP_NO_STRUCT_CONSTRUCTORS
 #include "Buffer.h"
-#include "Image.h"
 #include "PipelineConfig.h"
 #include "RenderDevice.h"
 #include "Swapchain.h"
+#include "VulkanImage.h"
 
 #include <string>
 #include <vulkan/vulkan_raii.hpp>

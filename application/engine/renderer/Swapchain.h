@@ -41,7 +41,7 @@ namespace tempest::renderer
 
     private:
         void createImageViews() noexcept;
-        [[nodiscard]] vk::Extent2D chooseSwapChainExtent() const noexcept;
+        [[nodiscard]] vk::Extent2D _chooseSwapChainExtent() const noexcept;
         [[nodiscard]] uint32_t chooseMinImageCount() const noexcept;
         [[nodiscard]] PresentMode choosePresentationMode(PresentMode presentMode) const noexcept;
         [[nodiscard]] vk::SurfaceFormatKHR chooseSurfaceFormat() const noexcept;

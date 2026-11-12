@@ -4,10 +4,10 @@ add_library(
         ${vulkanhpp_SOURCE_DIR}
 
         Buffer.cpp
-        CommandBuffer.cpp
+        VulkanCommandBuffer.cpp
         RenderPipeline.cpp
         RenderDevice.cpp
-        Image.cpp
+        VulkanImage.cpp
         GraphicsContext.cpp
         Swapchain.cpp
         PresentMode.cpp
@@ -27,12 +27,12 @@ target_sources(TempestRenderer PUBLIC
         BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
         FILES
         Buffer.h
-        CommandBuffer.h
+        VulkanCommandBuffer.h
         RenderPipeline.h
         RenderDevice.h
         RenderQueue.h
         PipelineConfig.h
-        Image.h
+        VulkanImage.h
         GraphicsContext.h
         Swapchain.h
         PresentMode.h
