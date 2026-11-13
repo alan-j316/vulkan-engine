@@ -26,6 +26,7 @@ target_sources(
         Logger.h
         MemorySubsystem.h
         Event.h
+        Id.h
         Input.h
         Clock.h
         FileReader.h

@@ -57,6 +57,7 @@ namespace tempest::renderer
         [[nodiscard]] constexpr vk::raii::Queue& getGraphicsQueue() noexcept { return _graphicsQueue; }
         [[nodiscard]] constexpr vk::raii::Queue& getPresentQueue() noexcept { return _presentQueue; }
         [[nodiscard]] constexpr vk::raii::Queue& getTransferQueue() noexcept { return _transferQueue; }
+        constexpr vk::ResultValueType<void>::type waitIdle() const noexcept { _logicalDevice.waitIdle(); }
 
     private:
         bool pickPhysicalDevice(const vk::raii::Instance& instance, const vk::raii::SurfaceKHR& surface,

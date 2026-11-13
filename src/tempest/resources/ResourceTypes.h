@@ -9,16 +9,16 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
+#include <core/Id.h>
 #include <cstddef>
 #include <cstdint>
 
 namespace tempest
 {
-
     struct Texture
     {
-        uint32_t id;
-        uint32_t generation;
+        UID id;
+        UID generation;
         uint32_t width, height;
         void* data;
         uint8_t channelCount;

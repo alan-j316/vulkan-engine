@@ -9,6 +9,7 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
+#include <resources/ResourceTypes.h>
 #include <string>
 
 
@@ -42,9 +43,23 @@ namespace tempest::renderer
         flcn::Mat4F _reserved1;
     };
 
-    struct ModelUniform
+    struct ModelUniform // TODO: Rename this since its not really a uniform but a push constant
     {
         flcn::Mat4F model;
+    };
+
+    struct ObjectUniform
+    {
+        flcn::Vec4F diffuseColor;
+        flcn::Vec4F reserved0, reserved1, reserved2;
+    };
+
+    struct GeometryRenderData
+    {
+        static constexpr size_t MAX_TEXTURES{ 16 };
+        uint32_t objectId;
+        flcn::Mat4F model;
+        Texture* textures[MAX_TEXTURES];
     };
 
 

@@ -28,6 +28,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <resources/ResourceTypes.h>
 
 // TODO: Temporary REMOVE
 #define STB_IMAGE_IMPLEMENTATION
@@ -61,6 +62,7 @@ namespace tempest::renderer
         // TODO: REMOVE
         size_t activeIndices{ 0 };
         VulkanBuffer vertexBuffer{}, indexBuffer{};
+        float frameDeltaTime{ 0.0f };
     };
 
 
@@ -268,8 +270,7 @@ namespace tempest::renderer
             .topology             = vk::PrimitiveTopology::eTriangleList,
 
         };
-        _ctx->graphicsPipeline.create(_ctx->device, _ctx->swapChain, pipelineConfig, _ctx->vma);
-
+        _ctx->graphicsPipeline.create(_ctx->device, _ctx->swapChain, pipelineConfig, _ctx->vma, _ctx->allocator);
 
 
         /// TODO: TEMP REMOVE
@@ -293,54 +294,14 @@ namespace tempest::renderer
         };
         _ctx->indexBuffer.create(_ctx->vma, indexConfig);
 
-        //// TEXTURE PROCESSING
-        // const auto texture = readTexture();
-        // VulkanBuffer texBuffer{};
-        // const BufferConfig textureConfig{ .size       = texture.size,
-        //                                   .usageFlags = vk::BufferUsageFlagBits::eTransferSrc,
-        //                                   .property   = vk::MemoryPropertyFlagBits::eHostVisible |
-        //                                       vk::MemoryPropertyFlagBits::eHostCoherent,
-        //                                   .sharingMode = vk::SharingMode::eExclusive };
-        // texBuffer.create(_ctx->vma, textureConfig);
-        // void* data = texBuffer.map();
-        // memcpy(data, texture.pixels, texture.size);
-        // texBuffer.unmap();
-        // stbi_image_free(texture.pixels);
+        auto objectId = _ctx->graphicsPipeline.acquireResource();
+        if (objectId == INVALID_UID)
+        {
+            log::error("Failed to acquire resource");
+            return false;
+        }
 
-        // VulkanImageCreateInfo textureImgInfo{
-        //     .imageType = vk::ImageType::e2D,
-        //     .width     = static_cast<uint32_t>(texture.width),
-        //     .height    = static_cast<uint32_t>(texture.height),
-        //     .format    = vk::Format::eR8G8B8A8Srgb,
-        //     // TODO: Update property flags
-        //     .usage       = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
-        //     .properties  = vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible,
-        //     .aspectFlags = vk::ImageAspectFlagBits::eColor,
-        //     .tiling      = vk::ImageTiling::eOptimal,
-        //     .createView  = true,
-        //     .mipLevels   = 1,
-        //     .numSamples  = vk::SampleCountFlagBits::e1
-        // };
-        // VulkanImage textureImg{};
-        // textureImg.create(_ctx->device, textureImgInfo);
-        // // Transition layout for rendering
-        // const auto textureCmdId = _ctx->graphicsCmdPool.allocateAndStartSingleTimeRecording(_ctx->device);
-        // _ctx->graphicsCmdPool.makeActive(textureCmdId);
-        // VulkanLayoutTransitionConfig transitionConfig{ .srcAccessMask = {},
-        //                                                .srcStageMask  = vk::PipelineStageFlagBits2::eTopOfPipe,
-        //                                                .dstAccessMask = vk::AccessFlagBits2::eTransferWrite,
-        //                                                .dstStageMask  = vk::PipelineStageFlagBits2::eTransfer,
-        //                                                .oldLayout     = vk::ImageLayout::eUndefined,
-        //                                                .newLayout     = vk::ImageLayout::eTransferDstOptimal,
-        //                                                .aspectFlag    = vk::ImageAspectFlagBits::eColor };
-        // textureImg.transitionImageLayout(vk::ImageLayout::eTransferDstOptimal,transitionConfig,
-        // _ctx->graphicsCmdPool.get(textureCmdId));
-
-        // TODO:
-        // _ctx->graphicsCmdPool.endRecording();/
-
-        // texBuffer.destroy();
-        /// TODO: TEMP REMOVE
+        /// TODO: TEMP REMOVE END
 
         log::info("Vulkan Renderer Initialized");
         return _ctx->instance != nullptr;
@@ -358,7 +319,7 @@ namespace tempest::renderer
         // TODO: END REMOVE
 
 
-        _ctx->graphicsPipeline.destroy();
+        _ctx->graphicsPipeline.destroy(_ctx->device, _ctx->allocator);
 
         vmaDestroyAllocator(_ctx->vma);
 
@@ -395,9 +356,10 @@ namespace tempest::renderer
     }
 
 
-    bool VulkanBackend::beginFrame(float deltaTime) noexcept
+    bool VulkanBackend::beginFrame(const float deltaTime) noexcept
     {
         update();
+        _ctx->frameDeltaTime = deltaTime;
 
         // TODO: Handle swapchain recreation
         auto& device = _ctx->device.getLogicalDevice();
@@ -437,18 +399,6 @@ namespace tempest::renderer
         _ctx->graphicsCmdPool.bindPipeline(vk::PipelineBindPoint::eGraphics, _ctx->graphicsPipeline);
 
         // TODO: TEMP REMOVE
-        // const auto vertSize = vertices.size() * sizeof(core::Vertex);
-        // void* vertexMemory  = _ctx->vertexBuffer.map();
-        // memcpy(vertexMemory, vertices.data(), vertSize);
-        // _ctx->vertexBuffer.unmap();
-        // _ctx->graphicsCmdPool.bindVertexBuffer(bufferHandle, 0, _ctx->vertexBuffer);
-        //
-        // const auto idxSize = indices.size() * sizeof(uint32_t);
-        // void* indexMemory  = _ctx->indexBuffer.map();
-        // memcpy(indexMemory, indices.data(), idxSize);
-        // _ctx->indexBuffer.unmap();
-        // _ctx->graphicsCmdPool.bindIndexBuffer(bufferHandle, 0, vk::IndexType::eUint32, _ctx->indexBuffer);
-
         _ctx->graphicsCmdPool.bindVertexBuffer(0, _ctx->vertexBuffer);
         _ctx->graphicsCmdPool.bindIndexBuffer(0, vk::IndexType::eUint32, _ctx->indexBuffer);
         // TODO: TEMP REMOVE
@@ -507,7 +457,7 @@ namespace tempest::renderer
         _ctx->graphicsCmdPool.bindDescriptorSet(vk::PipelineBindPoint::eGraphics,
                                                 _ctx->graphicsPipeline.descriptorLayout(), 0,
                                                 _ctx->graphicsPipeline.descriptorSet(_ctx->frameIndex), nullptr);
-        // TODO: Needs to put the binding right here
+        // TODO: Needs to put the draw call right here
 
         return true;
     }
@@ -569,9 +519,10 @@ namespace tempest::renderer
                                                   const uint32_t channelCount, const uint8_t* pixels,
                                                   bool hasTransparency, bool autoRelease) noexcept
     {
-        Texture texture{
-            .generation = 0, .width = width, .height = height, .channelCount = static_cast<uint8_t>(channelCount)
-        };
+        Texture texture{ .generation   = INVALID_UID,
+                         .width        = width,
+                         .height       = height,
+                         .channelCount = static_cast<uint8_t>(channelCount) };
 
         // TODO: Use allocator
 
@@ -651,14 +602,19 @@ namespace tempest::renderer
                                            .unnormalizedCoordinates = vk::False };
         const auto sampler = _ctx->device.getLogicalDevice().createSampler(samplerInfo, _ctx->allocator);
         image->setSampler(sampler);
+
         texture.hasTransparency = hasTransparency;
         ++texture.generation;
+
+        stagingBuffer.destroy();
+
         return texture;
     }
 
     void VulkanBackend::destroyTexture(const Texture& texture) noexcept
     {
-        VulkanImage* image = static_cast<VulkanImage*>(texture.data);
+        _ctx->device.waitIdle();
+        const auto image = static_cast<VulkanImage*>(texture.data);
         vkDestroySampler(*_ctx->device.getLogicalDevice(), image->getSampler(), *_ctx->allocator);
         image->destroy();
         memory::free(image, sizeof(VulkanImage), memory::MemoryTag::MEMORY_TAG_TEXTURE);
@@ -670,17 +626,17 @@ namespace tempest::renderer
     {
         const auto cmdBufferHandle = _ctx->graphicsCommandBuffers[_ctx->frameIndex];
         _ctx->graphicsCmdPool.makeActive(cmdBufferHandle);
-        _ctx->graphicsPipeline.updateGlobalUBO(_ctx->frameIndex, GlobalUniform{ .view = view, .proj = projection });
+        _ctx->graphicsPipeline.updateGlobalUBO(_ctx->frameIndex, GlobalUniform{ .view = view, .proj = projection },
+                                               _ctx->frameDeltaTime);
         return true;
     }
 
 
-    bool VulkanBackend::updateObjectState(const flcn::Mat4F& model) noexcept
+    bool VulkanBackend::updateObjectState(const GeometryRenderData& renderData) noexcept
     {
         const auto cmdBufferHandle = _ctx->graphicsCommandBuffers[_ctx->frameIndex];
         const auto cmdBuffer       = _ctx->graphicsCmdPool.get(cmdBufferHandle);
-        const ModelUniform modelUniform{ .model = model };
-        _ctx->graphicsPipeline.updateObjectUBO(cmdBuffer, modelUniform);
+        _ctx->graphicsPipeline.updateObjectData(cmdBuffer, renderData, TODO, TODO);
         // TODO: TEMP REMOVE
         _ctx->graphicsCmdPool.drawIndexed(static_cast<uint32_t>(_ctx->activeIndices), 1, 0, 0, 0);
         // TODO: TEMP REMOVE END

@@ -121,4 +121,14 @@ namespace tempest::renderer
         UNALLOCATED,     ///< Initial command buffer state
     };
 
+    inline constexpr size_t VULKAN_MAX_OBJECT_DESCRIPTOR_COUNT = 1; // Descriptor per object.
+
+    inline constexpr size_t VULKAN_MAX_OBJECT_COUNT = 1024;
+
+    struct VulkanDescriptorState
+    {
+        // One per frame in flight
+        uint32_t generation[MAX_FRAMES_IN_FLIGHT_DEF];
+    };
+
 } // namespace tempest::renderer

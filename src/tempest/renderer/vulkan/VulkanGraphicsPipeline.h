@@ -10,6 +10,7 @@
  */
 
 #include "Application.h"
+#include "Id.h"
 #include "VulkanSwapChain.h"
 #include "containers/Vector.h"
 #include "renderer/RendererTypes.inl"
@@ -22,6 +23,12 @@
 
 namespace tempest::renderer
 {
+    struct VulkanShaderObjectState
+    {
+        vk::DescriptorSet descriptorSet[MAX_FRAMES_IN_FLIGHT_DEF];
+        VulkanDescriptorState descriptorStates[VULKAN_MAX_OBJECT_DESCRIPTOR_COUNT];
+    };
+
     struct GraphicsPipelineConfig
     {
         std::string vertShaderEntryPoint;
@@ -52,10 +59,11 @@ namespace tempest::renderer
          * @param swapChain
          * @param config The graphics pipeline configuration.
          * @param vmaAllocator
+         * @param allocator
          * @return `true` if pipeline was create successfully and `false` otherwise.
          */
         bool create(const VulkanDevice& device, const VulkanSwapChain& swapChain, const GraphicsPipelineConfig& config,
-                    const VmaAllocator& vmaAllocator);
+                    const VmaAllocator& vmaAllocator, vk::AllocationCallbacks* allocator);
 
         /**
          * Create a shader. The shader is not bound to the pipeline and must be manually bound using @ref bindShader.
@@ -69,20 +77,24 @@ namespace tempest::renderer
          * Updates the global uniform buffer object for the frame.
          * @param index The index of the current rendering frame.
          * @param ubo        The uniform object to update with.
+         * @param deltaTime
          */
-        void updateGlobalUBO(size_t index, const GlobalUniform& ubo) const noexcept;
+        void updateGlobalUBO(size_t index, const GlobalUniform& ubo, float deltaTime) const noexcept;
 
         /**
          * Update the model uniform buffer.
-         * @param model The model matrix of MVP.
+         * @param renderData
+         * @param imageIndex
+         * @param deltaTime
          */
-        void updateObjectUBO(vk::CommandBuffer cmdBuffer, const ModelUniform& model) const noexcept;
+        void updateObjectData(vk::CommandBuffer cmdBuffer, const GeometryRenderData& renderData, uint32_t imageIndex,
+                              float deltaTime) const noexcept;
 
 
         /**
          * Destroy the render pipeline.
          */
-        void destroy();
+        void destroy(const VulkanDevice& device, vk::AllocationCallbacks* allocator);
 
         /// Get the vulkan graphics pipeline.
         [[nodiscard]] const vk::raii::Pipeline& getBasePipeline() const { return _pipeline; }
@@ -96,6 +108,10 @@ namespace tempest::renderer
 
         /// Get the vulkan pipeline layout.
         [[nodiscard]] vk::PipelineLayout descriptorLayout() const noexcept { return *_pipelineLayout; }
+
+        UID acquireResource() noexcept;
+
+        void releaseResource(UID id) noexcept;
 
 
     private:
@@ -111,6 +127,12 @@ namespace tempest::renderer
         VulkanBuffer _globalUniformBuffers[MAX_FRAMES_IN_FLIGHT_DEF]{};
         void* _pGlobalUniformBuffers[MAX_FRAMES_IN_FLIGHT_DEF]{ nullptr, nullptr }; // Used for persistent mapping
 
-        // ------------------------ MODEL UBO ------------------------
+        // ------------------------ OBJECT UBO ------------------------
+        VulkanShaderObjectState _objectStates[VULKAN_MAX_OBJECT_COUNT]{}; // TODO: Make dynamic
+        vk::DescriptorSetLayout _objectDescriptorSetLayout{ nullptr };
+        vk::DescriptorPool _objectDescriptorPool{ nullptr };
+        VulkanBuffer _objectUniformBuffers{};
+        UID _objectBufferUniformIndex{};
+        void* _pObjectUnformBuffer{ nullptr };
     };
 } // namespace tempest::renderer

@@ -33,7 +33,7 @@ namespace tempest::renderer
         /// Update the renderer's global state.
         bool updateGlobalState(flcn::Mat4F projection, flcn::Mat4F view, flcn::Vec3F viewPosition,
                                flcn::Vec4F ambientColor, uint32_t mode) noexcept override;
-        bool updateObjectState(const flcn::Mat4F& model) noexcept override;
+        bool updateObjectState(const GeometryRenderData& renderData) noexcept override;
 
     private:
         Vector<const char*> getRequiredExtensions() const noexcept;
