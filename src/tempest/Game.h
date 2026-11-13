@@ -36,6 +36,13 @@ namespace tempest
 
         void setConfig(const AppConfig& config) { _config = config; }
 
+        inline bool registerListener(const core::EventCode code, core::Listener* listener)
+        { return core::registerEvent(code, listener); }
+
+        inline bool unregisterListener(const core::EventCode code, core::Listener* listener)
+        { return core::unregisterEvent(code, listener); }
+
+
     private:
         TempestContext* _ctx{};
         void* _state{};

@@ -27,6 +27,14 @@ namespace tempest::renderer
         void onResize(uint32_t width, uint32_t height) noexcept;
         bool drawFrame(const RenderPacket& packet) const noexcept;
 
+
+        /// +---------------------------------------------------------------------------------------+
+        /// |                              SETTERS/GETTERS                                          |
+        /// +---------------------------------------------------------------------------------------+
+
+        constexpr void setView(const flcn::Mat4F& view) { _view = view; }
+
+
         //// TEMPORARY EXPOSED
         bool uploadGeometry(const core::Geometry& geometry) noexcept;
 
@@ -37,7 +45,7 @@ namespace tempest::renderer
     private:
         class RendererBackend* _rendererBackend{};
         RendererType _activeBackend{ RendererType::INVALID_BACKEND };
-        flcn::Mat4F _projection{};
+        flcn::Mat4F _projection{}, _view{};
         float _farClip{ 0.01f }, _nearClip{ 10.0f };
     };
 

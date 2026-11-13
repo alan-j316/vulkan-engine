@@ -42,7 +42,7 @@ namespace tempest::renderer
         }
 
         _projection = tmp::makePersp(1280.0f / 720.0f, flcn::constants::PI<float> / 4, _farClip, _nearClip);
-
+        _view       = flcn::Mat4F::identity();
         return true;
     }
 
@@ -76,11 +76,9 @@ namespace tempest::renderer
         if (beginFrame(packet.deltaTime))
         {
             // TODO: TEMP REMOVE
-            flcn::Mat4F model = flcn::Mat4F::makeRotationX(-flcn::constants::PI<float> / 2);
+            const flcn::Mat4F model = flcn::Mat4F::makeRotationX(-flcn::constants::PI<float> / 2);
             _rendererBackend->updateObjectState(model);
-            auto view  = flcn::Mat4F::identity();
-            view(2, 3) = -3;
-            _rendererBackend->updateGlobalState(_projection, view, flcn::Vec3F::zero(), flcn::Vec4F::zero(), 0);
+            _rendererBackend->updateGlobalState(_projection, _view, flcn::Vec3F::zero(), flcn::Vec4F::zero(), 0);
             // TODO: TEMP REMOVE END
             // If the frame can't be ended then the error is fatal and application must be quit.
             if (const auto result = endFrame(packet.deltaTime); !result)

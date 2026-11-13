@@ -28,7 +28,9 @@ namespace tempest
 
     struct TempestContext
     {
-        core::AssetManager assetManager;
+        core::AssetManager* assetManager{};
+        // TODO: REMOVE RENDERER SHOULDN'T BE EXPOSED
+        renderer::RendererFrontend* renderer{};
     };
 
     namespace core
@@ -51,6 +53,7 @@ namespace tempest
             Clock _clock;
             bool _lockFrameRate{ false };
             renderer::RendererFrontend _renderer{};
+            AssetManager _assetManager{};
             TempestContext _context{};
 
             ApplicationEventListener _appEventListener;

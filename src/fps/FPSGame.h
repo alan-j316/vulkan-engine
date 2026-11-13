@@ -9,13 +9,19 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
-#include <Tempest.h>
 
+#include <Tempest.h>
+#include <core/Event.h>
+#include <core/Input.h>
 struct GameState
 {};
 
 namespace fps
 {
+
+    using namespace tempest::core;
+    using namespace tempest::log;
+
     class FPSGame: public tempest::Game
     {
     public:
@@ -25,6 +31,28 @@ namespace fps
         bool render(float deltaTime) override;
         void onResize(uint32_t width, uint32_t height) override;
 
+        // TODO: TEMP REMOVE
+        void recalculateViewMatrix() noexcept;
+        void cameraYaw(float angle);
+        void cameraPitch(float angle);
+        void cameraRoll(float angle);
+
+
     private:
+        flcn::Vec3F cameraRotation, cameraPosition;
+        flcn::Mat4F view;
+        bool isCameraDirty{ true };
+
+        // TODO: TEMP REMOVE
+        class KeyEventListener: public Listener
+        {
+        public:
+            explicit KeyEventListener(FPSGame& game): _game{ game } {}
+            bool onEvent(EventCode code, void* sender, EventContext context) override;
+
+        private:
+            FPSGame& _game;
+        };
+        KeyEventListener _keyListener{ *this };
     };
 } // namespace fps

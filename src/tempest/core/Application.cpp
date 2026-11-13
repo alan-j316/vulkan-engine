@@ -53,9 +53,7 @@ namespace tempest::core
         input::init();
 
         // Initialize the asset manager with the event queue
-        _context.assetManager.init(&_rendererEventQueue);
-
-
+        _assetManager.init(&_rendererEventQueue);
         _game = createGame(_context);
 
         const auto& [startPosX, startPosY, width, height, name] = _game->getConfig();
@@ -74,12 +72,16 @@ namespace tempest::core
             return false;
         }
 
+        // TODO: REMOVE
+        _context.renderer     = &_renderer;
+        _context.assetManager = &_assetManager;
+
         /// +---------------------------------------------------------------------------------------+
         /// |                       REGISTER EVENT LISTENERS                                        |
         /// +---------------------------------------------------------------------------------------+
         registerEvent(static_cast<EventCode>(SystemEventCode::APPLICATION_QUIT), &_appEventListener);
-        registerEvent(static_cast<EventCode>(SystemEventCode::KEY_PRESSED), &_keyEventListener);
-        registerEvent(static_cast<EventCode>(SystemEventCode::KEY_RELEASED), &_keyEventListener);
+        // registerEvent(static_cast<EventCode>(SystemEventCode::KEY_PRESSED), &_keyEventListener);
+        // registerEvent(static_cast<EventCode>(SystemEventCode::KEY_RELEASED), &_keyEventListener);
         registerEvent(static_cast<EventCode>(SystemEventCode::WINDOW_RESIZED), &_resizeEventListener);
 
 
@@ -166,8 +168,8 @@ namespace tempest::core
 
         // Unregister events
         unregisterEvent(static_cast<EventCode>(SystemEventCode::APPLICATION_QUIT), &_appEventListener);
-        unregisterEvent(static_cast<EventCode>(SystemEventCode::KEY_PRESSED), &_keyEventListener);
-        unregisterEvent(static_cast<EventCode>(SystemEventCode::KEY_RELEASED), &_keyEventListener);
+        // unregisterEvent(static_cast<EventCode>(SystemEventCode::KEY_PRESSED), &_keyEventListener);
+        // unregisterEvent(static_cast<EventCode>(SystemEventCode::KEY_RELEASED), &_keyEventListener);
         unregisterEvent(static_cast<EventCode>(SystemEventCode::WINDOW_RESIZED), &_resizeEventListener);
 
         event::shutdown();

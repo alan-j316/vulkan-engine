@@ -193,7 +193,9 @@ namespace tempest::renderer
 
         commandBuffer.pipelineBarrier2(dependencyInfo);
     }
-    void VulkanImage::copyFromBuffer(const VulkanBuffer& buffer, vk::CommandBuffer cmdBuffer) const noexcept
+
+
+    void VulkanImage::copyFromBuffer(const VulkanBuffer& buffer, const vk::CommandBuffer cmdBuffer) const noexcept
     {
         // We need to specify which part of the buffer will be copied to which part of the image.
         const vk::BufferImageCopy region{ .bufferOffset = 0,
