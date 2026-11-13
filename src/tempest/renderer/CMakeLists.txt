@@ -30,4 +30,5 @@ target_include_directories(${TEMPEST_RENDERER_LIB} PUBLIC ${TEMPEST_ROOT_DIR})
 target_link_libraries(
         ${TEMPEST_RENDERER_LIB} PUBLIC
         Tempest::Internal::Renderer::Vulkan
+        Tempest::Internal::Resources
 )

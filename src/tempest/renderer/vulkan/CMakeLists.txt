@@ -45,6 +45,7 @@ target_link_libraries(
         Vulkan::Hpp
         VulkanMemoryAllocator::Headers
         Tempest::Internal::Renderer::Events
+        Tempest::Internal::Resources
         # TODO: TEMP REMOVE
         std::stb
         #TODO: END TEMP

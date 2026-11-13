@@ -12,6 +12,8 @@
 #include "events/RendererEventQueue.h"
 #include "renderer/RendererTypes.inl"
 
+#include <resources/ResourceTypes.h>
+
 
 namespace tempest::renderer
 {
@@ -24,7 +26,10 @@ namespace tempest::renderer
         virtual void onResize(uint32_t width, uint32_t height) noexcept    = 0;
         virtual bool beginFrame(float deltaTime) noexcept                  = 0;
         virtual bool endFrame(float deltaTime) noexcept                    = 0;
-        virtual bool uploadGeometry(const core::Geometry& geometry)        = 0;
+        virtual Texture createTexture(std::string name, uint32_t width, uint32_t height, uint32_t channelCount,
+                                      const uint8_t* pixels, bool hasTransparency, bool autoRelease) noexcept = 0;
+        virtual void destroyTexture(const Texture& texture) noexcept = 0;
+
         /// Update the renderer's global state.
         virtual bool updateGlobalState(flcn::Mat4F projection, flcn::Mat4F view, flcn::Vec3F viewPosition,
                                        flcn::Vec4F ambientColor, uint32_t mode) noexcept = 0;

@@ -26,7 +26,9 @@ namespace tempest::renderer
         void onResize(uint32_t width, uint32_t height) noexcept override;
         bool beginFrame(float deltaTime) noexcept override;
         bool endFrame(float deltaTime) noexcept override;
-        bool uploadGeometry(const core::Geometry& geometry) override;
+        Texture createTexture(std::string name, uint32_t width, uint32_t height, uint32_t channelCount,
+                              const uint8_t* pixels, bool hasTransparency, bool autoRelease) noexcept override;
+        void destroyTexture(const Texture& texture) noexcept override;
 
         /// Update the renderer's global state.
         bool updateGlobalState(flcn::Mat4F projection, flcn::Mat4F view, flcn::Vec3F viewPosition,

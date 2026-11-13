@@ -13,8 +13,8 @@
 #include "renderer/RendererTypes.inl"
 
 #include <cstdint>
+#include <resources/ResourceTypes.h>
 #include <string>
-
 
 namespace tempest::renderer
 {
@@ -26,7 +26,9 @@ namespace tempest::renderer
         void shutdown() noexcept;
         void onResize(uint32_t width, uint32_t height) noexcept;
         bool drawFrame(const RenderPacket& packet) const noexcept;
-
+        Texture createTexture(std::string name, uint32_t width, uint32_t height, uint32_t channelCount,
+                              const uint8_t* pixels, bool hasTransparency, bool autoRelease) const noexcept;
+        void destroyTexture(const Texture& texture) const noexcept;
 
         /// +---------------------------------------------------------------------------------------+
         /// |                              SETTERS/GETTERS                                          |
@@ -34,9 +36,6 @@ namespace tempest::renderer
 
         constexpr void setView(const flcn::Mat4F& view) { _view = view; }
 
-
-        //// TEMPORARY EXPOSED
-        bool uploadGeometry(const core::Geometry& geometry) noexcept;
 
     private:
         bool beginFrame(float deltaTime) const noexcept;

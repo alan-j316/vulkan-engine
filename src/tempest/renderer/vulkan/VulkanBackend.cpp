@@ -76,35 +76,6 @@ namespace tempest::renderer
     static std::vector<const char*> VALIDATION_LAYERS{};
 #endif
 
-
-    /////////////////////////////////////
-    /// TODO: TEMPORARY METHODS REMOVE
-    /////////////////////////////////////
-    struct Texture
-    {
-        stbi_uc* pixels;
-        int32_t width, height, channels;
-        size_t size;
-    };
-
-
-    Texture readTexture()
-    {
-        Texture texture;
-        texture.pixels = stbi_load("assets/textures/viking_room.png", &texture.width, &texture.height,
-                                   &texture.channels, STBI_rgb_alpha);
-        texture.size   = texture.width * texture.height * 4;
-
-        if (texture.pixels == nullptr)
-        {
-            log::error("There was an error loading the image");
-        }
-        // NOT VERY GOOD ERROR HANDLING
-        return texture;
-    }
-    // TODO: Temporary REMOVE END
-
-
     /// Debug Callback
     static vk::Bool32 debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
                                     vk::DebugUtilsMessageTypeFlagsEXT type,
@@ -594,18 +565,103 @@ namespace tempest::renderer
     }
 
 
-    bool VulkanBackend::uploadGeometry(const core::Geometry& geometry)
+    tempest::Texture VulkanBackend::createTexture(std::string name, const uint32_t width, const uint32_t height,
+                                                  const uint32_t channelCount, const uint8_t* pixels,
+                                                  bool hasTransparency, bool autoRelease) noexcept
     {
-        // TODO: Update
-        // std::copy(geometry.vertices.begin(), geometry.vertices.end(), std::back_inserter(vertices));
-        // std::copy(geometry.indices.begin(), geometry.indices.end(), std::back_inserter(indices));
-        // const auto bufferHandle = _ctx->graphicsCommandBuffers[_ctx->frameIndex];
-        // _ctx->graphicsCommandPool.bindPipeline(bufferHandle, vk::PipelineBindPoint::eGraphics,
-        // _ctx->graphicsPipeline); const auto vertSize = geometry.vertices.size() * sizeof(core::Vertex); void*
-        // vertexMemory  = _ctx->vertexBuffer.map(); memcpy(vertexMemory, vertices.data(), vertices.size() *
-        // sizeof(core::Vertex)); _ctx->vertexBuffer.unmap(); _ctx->graphicsCommandPool.bindVertexBuffer(bufferHandle,
-        // 0, _ctx->vertexBuffer);
-        return true;
+        Texture texture{
+            .generation = 0, .width = width, .height = height, .channelCount = static_cast<uint8_t>(channelCount)
+        };
+
+        // TODO: Use allocator
+
+        vk::DeviceSize size = width * height * channelCount;
+        auto format         = vk::Format::eR8G8B8A8Srgb;
+
+        // Staging buffer
+        const BufferConfig stagingBufferConf{
+            .size        = size,
+            .usageFlags  = vk::BufferUsageFlagBits::eTransferSrc,
+            .property    = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+            .sharingMode = vk::SharingMode::eExclusive,
+        };
+        VulkanBuffer stagingBuffer;
+        stagingBuffer.create(_ctx->vma, stagingBufferConf);
+        void* buffer = stagingBuffer.map();
+        memcpy(buffer, pixels, size);
+        stagingBuffer.unmap();
+        // TODO: Tighten up usage flags(color attachment and transfer src may not be required)
+        VulkanImageCreateInfo imageCreateInfo{ .imageType = vk::ImageType::e2D,
+                                               .width     = width,
+                                               .height    = height,
+                                               .format    = format,
+                                               .usage     = vk::ImageUsageFlagBits::eTransferSrc |
+                                                   vk::ImageUsageFlagBits::eTransferDst |
+                                                   vk::ImageUsageFlagBits::eSampled |
+                                                   vk::ImageUsageFlagBits::eColorAttachment,
+                                               .properties  = vk::MemoryPropertyFlagBits::eDeviceLocal,
+                                               .aspectFlags = vk::ImageAspectFlagBits::eColor,
+                                               .tiling      = vk::ImageTiling::eOptimal,
+                                               .createView  = true,
+                                               .mipLevels   = 0,
+                                               .numSamples  = vk::SampleCountFlagBits::e1 };
+        texture.data = memory::alloc(sizeof(VulkanImage), memory::MemoryTag::MEMORY_TAG_TEXTURE);
+        auto image   = new (texture.data) VulkanImage();
+        image->create(_ctx->device, imageCreateInfo);
+
+        // Transition image layout to transfer dst
+        const auto cmdBufferHandle = _ctx->graphicsCmdPool.allocateAndStartSingleTimeRecording(_ctx->device);
+        _ctx->graphicsCmdPool.makeActive(cmdBufferHandle);
+        const auto cmdBuffer = _ctx->graphicsCmdPool.get(cmdBufferHandle);
+        VulkanLayoutTransitionConfig copyImageTransition{ .srcAccessMask = {},
+                                                          .srcStageMask  = vk::PipelineStageFlagBits2::eTopOfPipe,
+                                                          .dstAccessMask = vk::AccessFlagBits2::eTransferWrite,
+                                                          .dstStageMask  = vk::PipelineStageFlagBits2::eTransfer,
+                                                          .oldLayout     = vk::ImageLayout::eUndefined,
+                                                          .newLayout     = vk::ImageLayout::eTransferDstOptimal,
+                                                          .aspectFlag    = vk::ImageAspectFlagBits::eColor };
+        image->transitionImageLayout(copyImageTransition, cmdBuffer);
+        // Copy the image from staging buffer
+        image->copyFromBuffer(stagingBuffer, cmdBuffer);
+        // Transition image layout to shader read-only optimal
+        VulkanLayoutTransitionConfig shaderImageTransition{ .srcAccessMask = vk::AccessFlagBits2::eTransferWrite,
+                                                            .srcStageMask  = vk::PipelineStageFlagBits2::eTransfer,
+                                                            .dstAccessMask = vk::AccessFlagBits2::eShaderRead,
+                                                            .dstStageMask = vk::PipelineStageFlagBits2::eFragmentShader,
+                                                            .oldLayout    = vk::ImageLayout::eTransferDstOptimal,
+                                                            .newLayout    = vk::ImageLayout::eShaderReadOnlyOptimal,
+                                                            .aspectFlag   = vk::ImageAspectFlagBits::eColor };
+        _ctx->graphicsCmdPool.endRecording();
+
+        // Create a sampler
+        vk::SamplerCreateInfo samplerInfo{ .magFilter               = vk::Filter::eLinear,
+                                           .minFilter               = vk::Filter::eLinear,
+                                           .mipmapMode              = vk::SamplerMipmapMode::eLinear,
+                                           .addressModeU            = vk::SamplerAddressMode::eRepeat,
+                                           .addressModeV            = vk::SamplerAddressMode::eRepeat,
+                                           .addressModeW            = vk::SamplerAddressMode::eRepeat,
+                                           .mipLodBias              = 0.0f,
+                                           .anisotropyEnable        = vk::True,
+                                           .maxAnisotropy           = 16,
+                                           .compareEnable           = vk::False,
+                                           .compareOp               = vk::CompareOp::eAlways,
+                                           .minLod                  = 0.0f,
+                                           .maxLod                  = 0.0f,
+                                           .borderColor             = vk::BorderColor::eIntOpaqueBlack,
+                                           .unnormalizedCoordinates = vk::False };
+        const auto sampler = _ctx->device.getLogicalDevice().createSampler(samplerInfo, _ctx->allocator);
+        image->setSampler(sampler);
+        texture.hasTransparency = hasTransparency;
+        ++texture.generation;
+        return texture;
+    }
+
+    void VulkanBackend::destroyTexture(const Texture& texture) noexcept
+    {
+        VulkanImage* image = static_cast<VulkanImage*>(texture.data);
+        vkDestroySampler(*_ctx->device.getLogicalDevice(), image->getSampler(), *_ctx->allocator);
+        image->destroy();
+        memory::free(image, sizeof(VulkanImage), memory::MemoryTag::MEMORY_TAG_TEXTURE);
     }
 
 

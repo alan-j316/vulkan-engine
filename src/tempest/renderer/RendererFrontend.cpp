@@ -92,8 +92,14 @@ namespace tempest::renderer
     }
 
 
-    bool RendererFrontend::uploadGeometry(const core::Geometry& geometry) noexcept
-    { return _rendererBackend->uploadGeometry(geometry); }
+    Texture RendererFrontend::createTexture(std::string name, const uint32_t width, const uint32_t height,
+                                            const uint32_t channelCount, const uint8_t* pixels,
+                                            const bool hasTransparency, const bool autoRelease) const noexcept
+    { return _rendererBackend->createTexture(name, width, height, channelCount, pixels, hasTransparency, autoRelease); }
+
+
+    void RendererFrontend::destroyTexture(const Texture& texture) const noexcept
+    { _rendererBackend->destroyTexture(texture); }
 
 
 

@@ -161,12 +161,9 @@ namespace tempest::renderer
 
 
 
-    void VulkanImage::transitionImageLayout(const vk::ImageLayout newLayout, const VulkanLayoutTransitionConfig& config,
-                                            const vk::CommandBuffer& commandBuffer) noexcept
-    {
-        transitionImageLayout(_image, config, commandBuffer);
-        _layout = newLayout;
-    }
+    void VulkanImage::transitionImageLayout(const VulkanLayoutTransitionConfig& config,
+                                            const vk::CommandBuffer cmdBuffer) const noexcept
+    { transitionImageLayout(_image, config, cmdBuffer); }
 
 
     void VulkanImage::transitionImageLayout(const vk::Image& image, const VulkanLayoutTransitionConfig& config,

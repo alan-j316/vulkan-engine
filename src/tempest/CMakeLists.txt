@@ -32,6 +32,7 @@ add_subdirectory(renderer/events)
 add_subdirectory(core)
 add_subdirectory(platform)
 add_subdirectory(renderer)
+add_subdirectory(resources)
 
 target_link_libraries(
         ${ENGINE_NAME}
@@ -40,6 +41,7 @@ target_link_libraries(
         Tempest::Internal::Core
         Tempest::Internal::Platform
         Tempest::Internal::Renderer
+        Tempest::Internal::Resources
         SDL3::SDL3-static
         std::stb
 )
